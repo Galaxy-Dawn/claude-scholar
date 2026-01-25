@@ -1,4 +1,4 @@
-# My Claude Config
+# Oh My Claude Config
 
 个人 Claude Code 配置仓库，包含自定义技能、命令、代理和钩子。
 
@@ -83,7 +83,7 @@
 
 1. 克隆仓库到 `~/.claude`：
    ```bash
-   git clone https://github.com/Galaxy-Dawn/my-claude.git ~/.claude
+   git clone https://github.com/Galaxy-Dawn/oh-my-claude.git ~/.claude
    ```
 
 2. 确保 Git 钩子可执行：
