@@ -22,5 +22,13 @@
     },
     "installLocation": "/Users/gaoruizhang/.claude/plugins/marketplaces/anthropic-agent-skills",
     "lastUpdated": "2026-01-22T02:23:26.704Z"
+  },
+  "ai-research-skills": {
+    "source": {
+      "source": "github",
+      "repo": "zechenzhangAGI/AI-research-SKILLs"
+    },
+    "installLocation": "/Users/gaoruizhang/.claude/plugins/marketplaces/ai-research-skills",
+    "lastUpdated": "2026-01-25T14:58:37.422Z"
   }
 }

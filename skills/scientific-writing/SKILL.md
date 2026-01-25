@@ -1,7 +1,7 @@
 ---
 name: scientific-writing
-description: "This skill should be used when the user asks to \"write a paper\", \"polish my manuscript\", \"review this scientific text\", \"improve my academic writing\", \"help with submission\", \"remove AI writing patterns\", \"humanize this text\", or mentions scientific writing tasks. Covers research papers, conference submissions (NeurIPS, ICML, ICLR, KDD), and journal submissions (Nature, Science, Cell). Provides IMRAD structure, citation styles (APA/IEEE/Vancouver), figures/tables, anti-AI writing guidance, and reviewer-perspective polishing. Integrates with humanizer, humanizer-zh, and stop-slop skills for comprehensive AI-pattern removal. Includes real academic writing patterns from 378 published papers."
-version: 0.6.0
+description: "This skill should be used when the user asks to \"write a paper\", \"polish my manuscript\", \"review this scientific text\", \"improve my academic writing\", \"help with submission\", \"remove AI writing patterns\", \"humanize this text\", or mentions scientific writing tasks. Covers research papers, ML conference submissions (NeurIPS, ICML, ICLR, ACL, AAAI, COLM), CS conferences (KDD, CVPR), and journal submissions (Nature, Science, Cell, PNAS). Provides IMRAD structure, citation styles (APA/IEEE/Vancouver), figures/tables, anti-AI writing guidance, ML-specific workflows (narrative principle, citation verification, LaTeX templates), and reviewer-perspective polishing. Integrates with humanizer, humanizer-zh, and stop-slop skills for comprehensive AI-pattern removal. Includes ML writing philosophy from top researchers."
+version: 1.0.0
 ---
 
 # Scientific Writing
@@ -17,8 +17,13 @@ Scientific writing is a process for communicating research with precision and cl
 This skill should be used when:
 - Writing or revising any section of a scientific manuscript
 - Structuring a research paper using IMRAD or CS conference formats
-- Preparing submissions for top CS conferences (NeurIPS, ICML, ICLR, KDD, CVPR, AAAI)
+- Preparing submissions for top ML conferences (NeurIPS, ICML, ICLR, ACL, AAAI, COLM)
+- Preparing submissions for CS conferences (KDD, CVPR, etc.)
 - Writing for high-impact journals (Nature, Science, Cell, PNAS)
+- Starting a paper from a research repository
+- Verifying citations and preventing hallucinated references
+- Using LaTeX templates for ML conference submissions
+- Applying the Narrative Principle (What/Why/So What) to ML papers
 - Formatting citations and references
 - Creating or improving figures, tables, and data visualizations
 - Applying study-specific reporting guidelines
@@ -88,113 +93,48 @@ For comprehensive guidance on producing natural, human-like text, refer to `refe
 - Avoid overuse of "furthermore," "moreover," "additionally"
 - Maintain author voice and natural variation
 
-### 6. Real Academic Writing Patterns
+### 6. ML Conference Writing
 
-**Based on analysis of 378 published ArXiv papers** (top CS venues: NeurIPS, ICML, ICLR, KDD)
+**ML Conference Focus**: NeurIPS, ICML, ICLR, ACL, AAAI, COLM with specialized workflows.
 
-#### Title Structure Patterns (by frequency)
+**Key ML-Specific Capabilities:**
 
-**Pattern A: NAME: Description (64%)** - Most recommended
-```
-MethodName: Detailed Technical Description
+For detailed ML conference guidance, refer to `references/ml/` directory:
 
-Examples:
-• CORE: Contrastive Masked Feature Reconstruction on Graphs
-• ECHO: Toward Contextual Seq2Seq Paradigms in Large EEG Models
-```
+- `ml_conferences.md`: Complete ML conference requirements (page limits, checklists, reviewer criteria)
+- `citation_verification.md`: Citation verification workflow, API usage, preventing hallucinated references
+- `latex_templates.md`: LaTeX template management, compilation, best practices
+- `narrative_principle.md`: The Narrative Principle (What/Why/So What framework)
+- `collaborative_writing.md`: Proactive drafting philosophy for research repositories
+- `writing_philosophy.md`: Writing principles from top ML researchers (Gopen & Swan, Lipton, etc.)
 
-**Pattern B: X via Y (10%)** - Problem-Method correspondence
-```
-Goal/Problem via Method
+**ML Conference Requirements:**
 
-Examples:
-• Zero-shot Graph Anomaly Detection via Invariant Learning
-• Scaling VLA Training via Reinforcement Learning
-```
+| Conference | Pages | Key Requirements |
+|------------|-------|------------------|
+| NeurIPS 2025 | 9 | Checklist, lay summary |
+| ICML 2026 | 8+1 | Broader Impact Statement |
+| ICLR 2026 | 9+1 | LLM disclosure, limitations |
+| ACL 2025 | 8 | Limitations section mandatory |
+| AAAI 2026 | 7+1 | Strict style compliance |
+| COLM 2025 | 9+1 | Language model focus |
 
-**Pattern C: Verbing Noun for Purpose (7%)** - Action-oriented
-```
-Verb-ing Noun for Purpose
+**The Narrative Principle** (from Neel Nanda):
+- **The What**: 1-3 specific novel claims within cohesive theme
+- **The Why**: Rigorous empirical evidence supporting claims
+- **The So What**: Why readers should care
 
-Examples:
-• Enhancing RAG with Recursive Evaluation for Multi-Hop QA
-• Improving LLM Efficiency through Trajectory Reduction
-```
+**Citation Verification** (Critical - ~40% AI error rate):
+- NEVER generate BibTeX from memory
+- ALWAYS fetch programmatically via APIs
+- Use Semantic Scholar, CrossRef, arXiv APIs
+- Mark unverified citations as [CITATION NEEDED]
 
-#### Key Connectors
-
-| Connector | Frequency | Purpose | Example |
-|-----------|-----------|---------|---------|
-| **for** | 43% | Purpose/application | "for Time Series Forecasting" |
-| **via** | 10% | Method/approach | "via Reinforcement Learning" |
-| **with** | 20% | Accompanying feature | "with Adaptive Mechanisms" |
-| **and** | 18% | Parallel concepts | "Fast and Accurate" |
-
-**Avoid**:
-- ❌ "through" (3%) - too formal, "via" is preferred
-- ❌ "furthermore", "moreover", "additionally" - AI generation markers
-
-#### Technical Verbs (-ing forms)
-
-Most frequently used technical verbs:
-```
-Learning     (62) - learning processes
-Forecasting  (58) - prediction
-Reasoning    (39) - reasoning
-Decoding     (15) - decoding
-Training     (11) - training
-Modeling     (10) - modeling
-Scaling       (9) - scaling
-Enhancing     (8) - enhancement
-```
-
-**Usage principles**:
-- ✅ Use -ing for action-oriented: "Learning", "Forecasting"
-- ❌ Avoid static descriptions: "This is a learning approach" → "Learning Approach"
-
-#### Technical Adjectives
-
-Most frequently used technical adjectives:
-```
-Efficient    (15) - efficient
-Multi-Agent  (12) - multi-agent
-Dynamic      (11) - dynamic
-General      (11) - general
-Unified      (11) - unified
-Adaptive     (10) - adaptive
-Semantic      (9) - semantic
-Scalable      (7) - scalable
-Zero-shot     (6) - zero-shot
-```
-
-**Usage principles**:
-- ✅ Technical adjectives: "Efficient", "Scalable", "Unified"
-- ❌ Subjective adjectives: "important", "significant", "crucial", "pivotal"
-
-#### Title Length
-
-- **Average**: 9.1 words
-- **Median**: 9 words
-- **Recommended range**: 7-11 words
-
-#### Specialized Patterns
-
-**Framework Pattern** (21 papers):
-```
-MethodName: A [Adjective] Framework for [Application]
-
-Examples:
-• MiniOneRec: An Open-Source Framework for Scaling Recommendation
-• Wave2Word: A Multimodal Framework for EEG-Text Alignment
-```
-
-**Approach Pattern** (3 papers):
-```
-MethodName: A [Feature] Approach to [Problem]
-
-Examples:
-• MFRS: A Multi-Frequency Approach to Scalable Forecasting
-```
+**Proactive Writing Philosophy**:
+- Deliver complete drafts, then iterate
+- Ask questions WITH the draft, not before
+- Make reasonable choices, flag for review
+- Block only when genuinely uncertain
 
 ### 7. Field-Specific Language
 
@@ -235,6 +175,7 @@ For detailed field-specific guidance, refer to `references/field_specific_langua
    - "What is the submission deadline?"
 
 2. **Load the relevant reference** based on their response:
+   - ML conferences → Load `references/ml/ml_conferences.md`
    - CS conferences → Load `references/cs_conferences.md`
    - High-impact journals → Load `references/nature_submissions.md`
    - Field-specific guidelines → Load appropriate reference
@@ -330,6 +271,18 @@ For comprehensive guidance on polishing from a reviewer's perspective, refer to 
 - Missing transitions between sections
 
 ## References
+
+**ML Conference Writing:**
+- `references/ml/ml_conferences.md`: ML conference requirements (NeurIPS, ICML, ICLR, ACL, AAAI, COLM)
+- `references/ml/citation_verification.md`: Citation verification workflow and API usage
+- `references/ml/latex_templates.md`: LaTeX template management for ML conferences
+- `templates/`: LaTeX templates directory with conference-specific README files
+- `references/ml/narrative_principle.md`: The Narrative Principle (What/Why/So What)
+- `references/ml/collaborative_writing.md`: Proactive drafting philosophy for research repos
+- `references/ml/writing_philosophy.md`: Writing principles from top ML researchers
+- `references/ml/checklists.md`: Conference paper checklists (NeurIPS 16-item, ICML, ICLR, ACL)
+- `references/ml/reviewer_guidelines.md`: How reviewers evaluate papers at ML conferences
+- `references/ml/sources.md`: Complete bibliography of authoritative sources
 
 **General Writing:**
 - `references/imrad_structure.md`: Detailed guide to IMRAD format

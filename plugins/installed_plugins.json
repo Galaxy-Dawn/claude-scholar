@@ -92,6 +92,126 @@
         "lastUpdated": "2026-01-24T17:21:11.292Z",
         "gitCommitSha": "96276205880a60fd66bbae981f5ab568e70c4cbf"
       }
+    ],
+    "ml-paper-writing@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/ml-paper-writing/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T14:59:42.436Z",
+        "lastUpdated": "2026-01-25T14:59:42.436Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "model-architecture@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/model-architecture/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:00:18.828Z",
+        "lastUpdated": "2026-01-25T15:00:18.828Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "emerging-techniques@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/emerging-techniques/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:00:34.122Z",
+        "lastUpdated": "2026-01-25T15:00:34.122Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "distributed-training@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/distributed-training/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:00:45.701Z",
+        "lastUpdated": "2026-01-25T15:00:45.701Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "fine-tuning@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/fine-tuning/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:00:57.874Z",
+        "lastUpdated": "2026-01-25T15:00:57.874Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "post-training@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/post-training/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:01:22.271Z",
+        "lastUpdated": "2026-01-25T15:01:22.271Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "inference-serving@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/inference-serving/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:02:05.697Z",
+        "lastUpdated": "2026-01-25T15:02:05.697Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "mechanistic-interpretability@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/mechanistic-interpretability/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:02:22.413Z",
+        "lastUpdated": "2026-01-25T15:02:22.413Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "data-processing@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/data-processing/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:02:34.401Z",
+        "lastUpdated": "2026-01-25T15:02:34.401Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "mlops@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/mlops/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:02:58.749Z",
+        "lastUpdated": "2026-01-25T15:02:58.749Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "multimodal@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/multimodal/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:03:10.774Z",
+        "lastUpdated": "2026-01-25T15:03:10.774Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "tokenization@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/tokenization/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:03:44.053Z",
+        "lastUpdated": "2026-01-25T15:03:44.053Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
     ]
   }
 }
