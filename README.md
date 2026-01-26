@@ -16,10 +16,10 @@
 ```
 .claude/
 ├── skills/              # 自定义技能（22 个）
-├── commands/            # Slash 命令（11 个）
+├── commands/            # Slash 命令（13 个）
 │   └── sc/              # SuperClaude 命令集
 ├── agents/              # 自定义代理（7 个）
-├── hooks/               # 钩子脚本（6 个）
+├── hooks/               # 钩子脚本（6 个，JavaScript）
 ├── plugins/             # 插件系统
 │   └── marketplaces/    # 插件市场（4 个）
 ├── rules/               # 编码规范和配置
@@ -84,6 +84,7 @@
 | `/refactor-clean` | 重构和清理 |
 | `/learn` | 从代码中提取可重用模式 |
 | `/create_project` | 创建新项目 |
+| `/setup-pm` | 配置包管理器（uv/pnpm） |
 
 ### SuperClaude 命令集 (`/sc`)
 
@@ -115,16 +116,17 @@ SuperClaude 提供的高级命令集，包括：
 
 ## 钩子 (Hooks)
 
-自动化工作流的钩子脚本：
+自动化工作流的钩子脚本（JavaScript 实现，跨平台支持）：
 
 | 钩子 | 触发时机 | 功能 |
 |------|----------|------|
-| `session-start.sh` | 会话开始 | 初始化环境 |
-| `session-summary.sh` | 会话结束 | 生成总结 |
-| `stop-summary.sh` | 会话停止 | 最终总结 |
-| `skill_forced_eval.sh` | 用户输入 | 强制技能评估 |
-| `resource_forced_eval.sh` | 资源访问 | 资源权限检查 |
-| `security-guard.sh` | 安全检查 | 防护和验证 |
+| `session-start.js` | 会话开始 | 初始化环境 |
+| `session-summary.js` | 会话结束 | 生成总结 |
+| `stop-summary.js` | 会话停止 | 最终总结 |
+| `skill-forced-eval.js` | 用户输入 | 强制技能评估 |
+| `security-guard.js` | 安全检查 | 防护和验证 |
+
+注：所有 hooks 均使用 Node.js 编写，支持 Windows、macOS、Linux 跨平台运行。
 
 ## 插件市场
 
