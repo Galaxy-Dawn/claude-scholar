@@ -229,11 +229,307 @@ This file contains actionable sentence patterns, transition phrases, and writing
 **Attribution:** All patterns extracted from analyzed papers with source citations for traceability.
 
 
+---
 
-## 何凯明的写作技巧
+## "Surprisingly" Findings: Multi-Level Reporting Pattern
 
-> 来源: 分析了何凯明的 19 篇代表性论文
-> 添加时间: {datetime.now().strftime('%Y-%m-%d')}
+**Source**: Kaiming He et al., "Exploring Plain Vision Transformer Backbones for Object Detection" (ViTDet, ECCV 2022), "Mean Flows" (2025)
+
+**Paper Type**: Design simplification, unexpected findings
+
+### The Three-Level "Surprisingly" Pattern
+
+#### Level 1: Basic Surprise (Abstract/Opening)
+
+**Pattern**:
+```markdown
+Surprisingly, we observe: (i) [simple sufficient without common practice]
+and (ii) [simple sufficient without common practice]
+```
+
+**Example (ViTDet Abstract)**:
+```latex
+Surprisingly, we observe: (i) it is sufficient to build a simple feature
+pyramid from a single-scale feature map (without the common FPN design) and
+(ii) it is sufficient to use window attention (without shifting) aided with
+very few cross-window propagation blocks.
+```
+
+**Key Techniques**:
+- **Structured list**: Use (i) and (ii) to separate findings
+- **"sufficient"**: Scientific phrasing (not "optimal")
+- **"without [common practice]"**: Negative differentiation
+
+#### Level 2: Competitive Surprise (Introduction)
+
+**Pattern**:
+```markdown
+More surprisingly, under some circumstances, our [method] can compete
+with the leading [competitors].
+```
+
+**Example (ViTDet Introduction)**:
+```latex
+More surprisingly, under some circumstances, our plain-backbone detector,
+named ViTDet, can compete with the leading hierarchical-backbone detectors
+(e.g., Swin, MViT).
+```
+
+**Key Techniques**:
+- **"More surprisingly"**: Progressive emphasis
+- **"under some circumstances"**: Measured claim
+- **"can compete with"**: Not "beat", competitive
+- **Name competitors**: Specific (Swin, MViT)
+
+#### Level 3: Superiority Surprise (Results)
+
+**Pattern**:
+```markdown
+With [specific condition], our [method] can outperform the [competitors]
+that use [stronger condition]. The gains are more prominent for [condition].
+```
+
+**Example**:
+```latex
+With Masked Autoencoder (MAE) pre-training, our plain-backbone detector can
+outperform the hierarchical counterparts that are pre-trained on ImageNet-1K/21K
+with supervision (Figure 3). The gains are more prominent for larger model sizes.
+```
+
+**Key Techniques**:
+- **Specific conditions compared**: MAE vs ImageNet supervised
+- **"outperform"**: Stronger claim here (qualified by conditions)
+- **"The gains are more prominent for..."**: Pattern observation
+
+---
+
+### "Surprisingly" Variants
+
+#### "Interestingly" - Pattern Observation + Explanation
+
+**Pattern**:
+```markdown
+Interestingly, [observation]. This is in line with the observation in [paper]
+that [their finding]. [Additional explanation].
+```
+
+**Example (ViTDet)**:
+```latex
+Interestingly, performing propagation in the last 4 blocks is nearly as
+good as even placement. This is in line with the observation in ViT [14]
+that ViT has longer attention distance in later blocks and is more localized
+in earlier ones.
+```
+
+**Use when**: You have literature support for your observation
+
+#### "Notably" - Important Detail
+
+**Pattern**:
+```markdown
+Notably, [counter-intuitive result or impressive number].
+```
+
+**Examples**:
+- "Notably, even embedding only the interval t−r yields reasonable results."
+- "Notably, our method is self-contained and trained entirely from scratch."
+
+**Use when**: Emphasizing importance or counter-intuitive finding
+
+#### "It is worth noting that" - Caveat/Clarification
+
+**Pattern**:
+```markdown
+It is worth noting that [technical caveat or clarification].
+```
+
+**Examples**:
+- "It is worth noting that even when the conditional flows are designed to be straight ('rectified'), the marginal velocity field typically induces a curved trajectory."
+- "It is worth noting that the 3.34× memory (49G) is estimated as if the same training implementation could be used, which is not practical and requires special memory optimization."
+
+**Use when**: Preventing misunderstanding or clarifying technical details
+
+---
+
+### When to Use "Surprisingly"
+
+**DO use**:
+- When finding genuinely contradicts common practice
+- When simple solution works as well as complex one
+- When you have explanation (literature, hypothesis, theory)
+- With measured claims ("under some circumstances", "can compete")
+- With "sufficient" not "optimal"
+
+**DON'T use**:
+- For incremental improvements (use "additionally" instead)
+- Without explanation/justification
+- Overgeneralizing ("always", "proves")
+- For expected results
+
+---
+
+## Ablation Study Writing Techniques
+
+**Source**: Kaiming He papers (ViTDet, MeanFlows, MoCo v2)
+
+### Table Design: Incremental Progression
+
+**Pattern**:
+```markdown
+Table X: [Component] Ablation
+┌──────────────────────────────────────────┐
+│ no [component]        | AP     | Δ       │
+│ (a) [common variant]  | AP     | +X.X    │
+│ (b) [another variant] | AP     | +Y.Y    │
+│ (c) ours: simple      | AP     | +Z.Z ✓  │
+└──────────────────────────────────────────┘
+```
+
+**Example (ViTDet Table 1)**:
+```latex
+pyramid design              APbox   APmask
+─────────────────────────────────────────
+no feature pyramid          47.8    42.5
+(a) FPN, 4-stage           50.3    44.9
+(b) FPN, last-map          50.9    45.3
+(c) simple feature pyramid  51.2    45.5
+```
+
+**Techniques**:
+- **Baseline**: "no [X]" shows it's needed
+- **(a), (b), (c)**: Progressive variations
+- **Δ标注**: (+2.5) - Show incremental gains
+- **Correspondence**: "The entries (a-c) correspond to Figure X (a-c)"
+- **Conclusion**: "our simple pyramid is sufficient"
+
+---
+
+### Destructive Ablation: Proving Necessity
+
+**Pattern**:
+```markdown
+We conduct a destructive comparison in which [wrong choice] is intentionally
+performed. Meaningful results are achieved only when [correct choice].
+```
+
+**Example (MeanFlows Table 1b)**:
+```latex
+In Tab. 1b, we conduct a destructive comparison in which incorrect JVP
+computation is intentionally performed.
+
+jvp tangent          FID, 1-NFE
+(v, 0, 1) [correct]   61.06
+(v, 0, 0) [wrong]     268.06
+(v, 1, 0) [wrong]     329.22
+(v, 1, 1) [wrong]     137.96
+
+It shows that meaningful results are achieved only when the JVP computation
+is correct.
+```
+
+**Use when**: You need to prove a design choice is necessary (not just optional)
+
+---
+
+### Ablation Narrative: Observation → Explanation
+
+**Pattern 1: Observation + Literature Support**
+```latex
+We observe that [observation]. This is consistent with the observation in
+[paper] that [their finding].
+```
+
+**Pattern 2: Observation + Hypothesis**
+```latex
+We hypothesize that this is because [reason 1] and also because [reason 2].
+```
+
+**Pattern 3: Observation + Theory**
+```latex
+[Observation]. This indicates that [theoretical explanation].
+```
+
+---
+
+## Theory-Driven Paper Keywords
+
+**Source**: Kaiming He et al., "Mean Flows for One-step Generative Modeling" (2025)
+
+### Naturalness Keywords (use to describe your theory)
+
+- **"naturally"** - "This naturally leads to..."
+- **"intrinsic"** - "intrinsic relation between..."
+- **"well-defined"** - "well-defined problem"
+- **"principled"** - "principled basis for..."
+- **"first principles"** - "from first principles"
+- **"solely originated from"** - "solely from definition"
+
+### Independence Keywords
+
+- **"does not depend on"** - Theory independence from implementation
+- **"independent of"** - Independent of specific choices
+- **"self-contained"** - System independence
+- **"from scratch"** - No external dependencies
+- **"without any X"** - Negative list (what you don't need)
+
+### Differentiation Keywords
+
+- **"in contrast to"** - Conceptual contrast
+- **"unlike"** - Direct comparison
+- **"typically"** - "typically modeled" (their approach)
+- **"prior works typically rely on"** - Their limitation
+- **"imposed as"** - Artificial constraint (theirs)
+
+### Avoid (Too Promotional)
+
+- ❌ "revolutionary" - Let others say it
+- ❌ "breakthrough" - Overused
+- ❌ "completely eliminates" - Too absolute
+- ✅ "significantly outperforms" - Strong but measured
+- ✅ "substantial improvement" - Professional
+
+---
+
+## Design Simplification Paper Keywords
+
+**Source**: Kaiming He et al., "Exploring Plain Vision Transformer Backbones for Object Detection" (ViTDet, 2022)
+
+### Philosophy Keywords
+
+- **"minimal"** - "minimal adaptations"
+- **"sufficient"** - "is sufficient to" (not "optimal")
+- **"simple"** - "simple feature pyramid"
+- **"plain"** - "plain backbone"
+- **"decouple"** - "decouple pre-training from fine-tuning"
+- **"independence"** - "independence of upstream vs downstream"
+
+### Direction Keywords
+
+- **"pursue a different direction"** - Clear positioning
+- **"in contrast to"** - Differentiation
+- **"abandons"** - What you give up (respectfully)
+- **"enables"** - What your approach allows
+
+### Measured Claim Keywords
+
+- **"under some circumstances"** - Not always
+- **"can compete with"** - Competitive, not dominant
+- **"more prominent for"** - When effect is stronger
+- **"is sufficient"** - Necessary, not maximal
+
+
+---
+
+## Updated: 何凯明的写作技巧
+
+> 来源: 分析了何凯明的 11 篇代表性论文（扩展分析，包括 MeanFlows、ViTDet、MAR 等）
+> 添加时间: 2026-01-26
+
+> 扩展内容包括：
+> - "Surprisingly" 发现的多层次报告模式
+> - Ablation Study 的增量式和破坏性实验设计
+> - 理论驱动型论文的关键词策略
+> - 设计简化型论文的关键词策略
 
 ### 句子结构偏好
 

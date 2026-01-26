@@ -2,17 +2,152 @@
   "metadata": {
     "source": "Kaiming He Papers Analysis",
     "date": "2026-01-26",
-    "papers_analyzed": 20,
+    "papers_analyzed": 11,
     "analysis_method": "Text extraction and pattern mining",
     "latest_addition": {
-      "paper": "Autoregressive Image Generation without Vector Quantization",
-      "arxiv_id": "2406.11838",
-      "venue": "NeurIPS 2024 Spotlight",
+      "papers": ["Mean Flows", "ViTDet", "MoCo v2", "Deconstructing Denoising Diffusion Models", "Autoregressive Image Generation (MAR)"],
       "extraction_date": "2026-01-26",
-      "focus": "Rethinking paper patterns, challenging conventional wisdom",
-      "knowledge_file": "rethinking-papers-kaiming-he.md"
+      "new_knowledge_files": [
+        "theory-driven-papers-kaiming-he.md",
+        "design-simplification-papers-kaiming-he.md"
+      ]
     }
   },
-  "structure_patterns": "\n\n## 何凯明（Kaiming He）的论文结构模式\n\n> 来源: 分析了何凯明的 19 篇代表性论文\n> 添加时间: {datetime.now().strftime('%Y-%m-%d')}\n\n### 摘要结构模式\n\n何凯明在摘要中常用的开场模式：\n\n**模式 1: 直接陈述贡献**\n```\nWe introduce [method name], a [key feature] framework for [task].\nWe show that [method] achieves [result] on [dataset].\n```\n\n**模式 2: 问题-解决方案**\n```\n[Problem] is difficult for [task]. We present [solution]\nthat addresses this by [key mechanism].\n```\n\n**示例** (来自 ResNet):\n```\nDeeper neural networks are more difficult to train. We present a\nresidual learning framework to ease the training of networks that\nare substantially deeper than those used previously.\n```\n\n### 引言结构模式\n\n**三段式引言:**\n1. **问题陈述** (2-3段) - 描述挑战和现有方法\n2. **方法概述** (1-2段) - 简洁介绍解决方案\n3. **主要贡献** (1段) - 列表形式，每条 1-2 行\n\n**贡献列表模式:**\n```markdown\n- 我们提出了 [方法]，解决了 [问题]\n- 我们展示了 [方法] 在 [数据集] 上的 [性能提升]\n- 我们证明了 [原理] 是有效的\n```\n\n### 方法部分结构\n\n何凯明的方法部分通常包含：\n\n1. **符号定义** - 清晰定义所有变量和符号\n2. **问题形式化** - 数学公式表达\n3. **方法描述** - 逐步算法解释\n4. **实现细节** - 网络架构、训练设置\n\n**常用句式:**\n- \"Let us consider [变量] as [定义]\"\n- \"Formally, we define [公式]\"\n- \"We hypothesize that [假设]\"\n- \"To the extreme, [极端情况]\"\n\n### 实验部分结构\n\n1. **实验设置** - 数据集、评价指标、实现细节\n2. **主要结果** - 核心性能对比\n3. **消融实验** - 组件分析\n4. **可视化分析** - 图表展示\n\n**结果描述模式:**\n- \"Table X shows that [结果]\"\n- \"Fig. Y illustrates that [观察]\"\n- \"Our method achieves [指标] on [任务]\"\n- \"This represents a [X]% improvement over baseline\"\n\n### 相关工作部分组织\n\n何凯明倾向于**主题式组织**而非时间顺序：\n\n**好的组织方式:**\n- \"One line of work uses [方法A] [引用], whereas we use [方法B]\"\n- \"[方法A] [引用] assumes [假设], but we show [反驳]\"\n\n**避免:**\n- \"X et al. introduced [方法]. Y et al. improved [方法]\"\n",
-  "writing_techniques": "\n\n## 何凯明的写作技巧\n\n> 来源: 分析了何凯明的 19 篇代表性论文\n> 添加时间: {datetime.now().strftime('%Y-%m-%d')}\n\n### 句子结构偏好\n\n**主动语态优先** (被动语态仅 9.3%)\n何凯明偏好使用主动、直接的陈述：\n\n**✅ 推荐 (何凯明的风格):**\n- \"We present a framework for [task]\"\n- \"Our method achieves [result]\"\n- \"This formulation enables [benefit]\"\n\n**❌ 避免:**\n- \"A framework is presented for [task]\"\n- \"Results are achieved by our method\"\n\n### 贡献表达方式\n\n何凯明常用的贡献表达模式：\n\n**模式 1: 直接陈述**\n```\nWe propose [method] that [feature].\nWe demonstrate [result] on [dataset].\n```\n\n**模式 2: 对比强调**\n```\nUnlike [previous work], our approach [difference].\nThis leads to [improvement] in [metric].\n```\n\n**模式 3: 问题-解决方案**\n```\n[Challenge] remains difficult. We address this by [solution].\n```\n\n### 技术术语使用\n\n何凯明论文中的高频术语组合：\n\n| 术语类别 | 常用术语 |\n|---------|---------|\n| **网络架构** | deep neural networks, convolutional, residual, activation |\n| **训练过程** | training, validation, optimization, convergence |\n| **性能评估** | outperforms, achieves, improves, surpasses |\n| **方法定位** | state-of-the-art, baseline, framework, algorithm |\n| **所有权** | our method, our approach, our framework |\n\n### 过渡短语\n\n何凯明论文中常用的过渡短语（按频率排序）：\n\n1. **however** - 用于对比不同观点\n2. **in addition/additionally** - 补充信息\n3. **furthermore** - 递进说明\n4. **therefore/thus** - 得出结论\n5. **specifically** - 举例说明\n6. **conversely** - 对比说明\n\n### 数值结果呈现\n\n何凯明在呈现数值结果时的模式：\n\n**精确性优先:**\n```\nOur method achieves 76.4% accuracy (Table X).\nThis represents a 28% relative improvement.\n```\n\n**对比式呈现:**\n```\nCompared to baseline (73.2%), our method (76.4%) improves\nby 3.2 percentage points.\n```\n\n**强调意义:**\n```\nThis result won the 1st place in [competition/task].\n```\n\n### 图表引用模式\n\n何凯明引用图表的标准格式：\n\n**图表引入:**\n- \"Fig. X shows [现象]\"\n- \"Table Y summarizes [结果]\"\n- \"As shown in Fig. Z, [结论]\"\n\n**图表描述:**\n- \"The solid line denotes [条件 A], the dashed line [条件 B]\"\n- \"The blue curve shows [指标], while the red curve shows [指标]\"\n\n### 网络架构描述\n\n何凯明在描述网络架构时的特点：\n\n1. **表格化呈现** - 使用表格列出层配置\n2. **可视化辅助** - 配合架构图\n3. **简洁符号** - 使用清晰的数学符号\n4. **示例:**\n```\nlayer name | output size | configuration\nconv1      | 112×112   | 7×7, 64, /2\n```\n"
+  "knowledge_files": {
+    "structure.md": {
+      "status": "updated",
+      "last_update": "2026-01-26",
+      "contains": "Basic structure patterns from 19 Kaiming He papers"
+    },
+    "writing-techniques.md": {
+      "status": "needs_update",
+      "last_update": "2026-01-26",
+      "contains": "Basic writing techniques from 19 Kaiming He papers"
+    },
+    "rethinking-papers-kaiming-he.md": {
+      "status": "complete",
+      "focus": "Rethinking papers, challenging conventional wisdom",
+      "source_paper": "Autoregressive Image Generation without Vector Quantization (NeurIPS 2024 Spotlight)"
+    },
+    "theory-driven-papers-kaiming-he.md": {
+      "status": "new",
+      "focus": "Theory-driven papers, first principles, MeanFlow Identity",
+      "source_paper": "Mean Flows for One-step Generative Modeling (2025)"
+    },
+    "design-simplification-papers-kaiming-he.md": {
+      "status": "new",
+      "focus": "Design simplification, minimal adaptations, 'Surprisingly' findings",
+      "source_paper": "Exploring Plain Vision Transformer Backbones for Object Detection (ViTDet, ECCV 2022)"
+    }
+  },
+  "patterns_extracted": {
+    "introduction_frameworks": {
+      "principle_introduction": {
+        "source": "MeanFlows",
+        "pattern": "Background → Problem → Critique (Despite...) → Core Concept → Theory → Advantage → Results",
+        "keywords": ["principled", "intrinsic", "well-defined", "naturally", "first principles"]
+      },
+      "challenge_assumptions": {
+        "source": "ViTDet",
+        "pattern": "Traditional → New Challenge → Common Solution → Our Direction → Philosophy → Surprisingly → Implications",
+        "keywords": ["minimal adaptations", "sufficient", "decouple", "independence", "surprisingly"]
+      },
+      "rethinking_conventional_wisdom": {
+        "source": "MAR",
+        "pattern": "Conventional wisdom → Question → Analysis → Alternative → Results → Vision",
+        "keywords": ["Conventional wisdom holds that", "Is it necessary", "not a necessity"]
+      }
+    },
+    "surprisingly_findings": {
+      "level_1": {
+        "pattern": "Surprisingly, we observe: (i)... and (ii)...",
+        "usage": "First-level surprise - basic findings",
+        "example": "ViTDet Abstract"
+      },
+      "level_2": {
+        "pattern": "More surprisingly, under some circumstances...",
+        "usage": "Second-level surprise - competitive results",
+        "example": "ViTDet Introduction"
+      },
+      "level_3": {
+        "pattern": "With [condition], outperforms... gains more prominent for...",
+        "usage": "Third-level surprise - superiority under conditions",
+        "example": "ViTDet Introduction"
+      },
+      "variants": {
+        "interestingly": "Observation + literature support + explanation",
+        "notably": "Important detail or counter-intuitive result",
+        "it_is_worth_noting": "Technical caveat or clarification"
+      }
+    },
+    "ablation_techniques": {
+      "incremental_tables": {
+        "pattern": "Baseline → (a) → (b) → (c) with Δ标注",
+        "source": "ViTDet Table 1"
+      },
+      "destructive_comparison": {
+        "pattern": "Intentionally wrong values to prove necessity",
+        "source": "MeanFlows Table 1b"
+      },
+      "narrative_structure": {
+        "observation_then_explain": "Observe pattern → Provide explanation (literature/hypothesis/theory)"
+      }
+    },
+    "theoretical_derivation": {
+      "naming_identity": {
+        "pattern": "Define → Derive → Name ('X Identity')",
+        "source": "MeanFlows MeanFlow Identity"
+      },
+      "step_by_step": {
+        "pattern": "Motivation → Derivation with 'Now we...' → Justification with 'where...'",
+        "source": "MeanFlows Section 2"
+      }
+    },
+    "comparison_techniques": {
+      "principled_vs_heuristic": {
+        "pattern": "At the core...does not depend on...In contrast, typically rely on...",
+        "source": "MeanFlows"
+      },
+      "fair_comparison_declaration": {
+        "pattern": "Admit complexity → Claim effort → Demonstrate fairness",
+        "source": "ViTDet"
+      },
+      "multi_factor_analysis": {
+        "pattern": "Factors identified → Trend behavior → Wall-clock time",
+        "source": "ViTDet Results"
+      }
+    },
+    "keyword_strategies": {
+      "theory_paper": ["principled", "intrinsic", "well-defined", "naturally", "self-contained", "solely originated from"],
+      "design_paper": ["minimal", "sufficient", "decouple", "independence", "surprisingly", "abandons"],
+      "rethinking_paper": ["Conventional wisdom holds that", "not a necessity", "orthogonal to", "uncharted realm"]
+    }
+  },
+  "papers_analyzed_list": [
+    "Non-local Neural Networks",
+    "SlowFast Networks",
+    "Rethinking ImageNet Pre-training",
+    "Faster R-CNN",
+    "Delving Deep into Rectifiers (PReLU)",
+    "Spatial Pyramid Pooling (SPP-net)",
+    "Deconstructing Denoising Diffusion Models",
+    "Autoregressive Image Generation without Vector Quantization (MAR)",
+    "Mean Flows for One-step Generative Modeling",
+    "Exploring Plain Vision Transformer Backbones for Object Detection (ViTDet)",
+    "MoCo v2: Improved Baselines with Momentum Contrastive Learning"
+  ],
+  "integration_summary": {
+    "total_papers": 11,
+    "knowledge_files": 5,
+    "patterns_extracted": 25,
+    "paper_types_identified": [
+      "Theory-driven (MeanFlows)",
+      "Design simplification (ViTDet)",
+      "Rethinking (MAR)",
+      "Deconstruction (DDM)",
+      "Milestone (PReLU)",
+      "Multi-task (SPP-net)",
+      "Technical note (MoCo v2)"
+    ]
+  }
 }
