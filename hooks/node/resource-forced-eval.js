@@ -225,9 +225,9 @@ function formatList(list) {
 // 收集资源
 const LOCAL_SKILLS = collectLocalSkills();
 const LOCAL_COMMANDS = collectLocalCommands();
-const PLUGIN_SKILLS = collectPluginSkills();
-const PLUGIN_COMMANDS = collectPluginCommands();
-const AI_RESEARCH_PLUGINS = collectAIResearchPlugins();
+// const PLUGIN_SKILLS = collectPluginSkills();
+// const PLUGIN_COMMANDS = collectPluginCommands();
+// const AI_RESEARCH_PLUGINS = collectAIResearchPlugins();
 
 // 生成输出
 const output = `## 指令：资源可用性检查
@@ -241,21 +241,20 @@ ${formatList(LOCAL_SKILLS)}
 ${formatList(LOCAL_COMMANDS)}
 
 ### 🔌 插件 Skills (plugins/*/skills/)
-${formatList(PLUGIN_SKILLS)}
+（已禁用）
 
 ### 🔌 插件 Commands (plugins/*/commands/)
-${formatList(PLUGIN_COMMANDS)}
+（已禁用）
 
 ### 🧠 AI Research Skills (ai-research-skills)
-${formatList(AI_RESEARCH_PLUGINS)}
+（已禁用）
 
 ---
 
 **使用指南**：
 - 对于本地 skills，直接使用技能名称（如：agent-identifier）
 - 对于本地 commands，直接使用命令名称（如：/plan）
-- 对于插件资源，使用完整路径（如：document-skills:pdf 或 /superpowers:write-plan）
-- AI Research Skills 可作为知识库参考，包含模型架构、微调、数据处理等主题
+- 插件资源已暂时禁用
 `;
 
 console.log(output);
