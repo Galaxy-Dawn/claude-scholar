@@ -18,6 +18,7 @@ file-history/
 cache/
 debug/
 downloads/
+ide/
 logs/
 paste-cache/
 todos/
