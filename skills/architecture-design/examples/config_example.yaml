@@ -1,0 +1,131 @@
+# Hydra Configuration Example
+# This demonstrates the config structure for training pipeline
+
+# Run with: python train.py --config-name=config_example
+
+defaults:
+  - training: default
+  - dataset: brain_decoder
+  - model: transformer
+  - override hydra/launcher: submitit_local
+
+# Project settings
+project_name: brain_decoder
+experiment_name: transformer_baseline
+
+# Random seed
+seed: 42
+
+# Device settings
+device: cuda
+num_workers: 4
+pin_memory: true
+
+# Training configuration
+training:
+  epochs: 100
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  gradient_clip: 1.0
+  early_stopping:
+    patience: 10
+    min_delta: 0.001
+
+  # Optimizer settings
+  optimizer: adamw
+  optimizer_params:
+    betas: [0.9, 0.999]
+    eps: 1.0e-08
+
+  # Scheduler settings
+  scheduler: cosine
+  scheduler_params:
+    warmup_epochs: 10
+    min_lr: 1.0e-06
+
+  # Checkpoint settings
+  checkpoint:
+    save_every: 5
+    save_best: true
+    monitor: val_loss
+    mode: min
+
+# Dataset configuration
+dataset:
+  name: brain_decoder
+  task: movement_classification
+  target_size:
+    movement_classification: 5
+    reconstruction: [64, 64]
+
+  # Data paths
+  data_dir: ${dir.data_dir}/processed
+  train_split: train
+  val_split: val
+  test_split: test
+
+  # Data loading
+  num_channels: 64
+  sampling_rate: 1000
+  sequence_length: 1000
+
+  # Augmentation
+  augmentation:
+    name: composed
+    time_shift: true
+    amplitude_scale: true
+    gaussian_noise: true
+    max_shift: 10
+    min_scale: 0.8
+    max_scale: 1.2
+    noise_mean: 0.0
+    noise_std: 0.1
+
+# Model configuration
+model:
+  name: Transformer
+  hidden_dim: 256
+  num_heads: 8
+  num_layers: 6
+  dropout: 0.1
+  activation: gelu
+
+  # Architecture specific
+  encoder:
+    input_dim: 64
+    embedding_dim: 256
+    positional_encoding: true
+
+  decoder:
+    output_dim: ${dataset.target_size.${dataset.task}}
+    pooling: avg
+
+# Logging configuration
+logging:
+  logger: wandb
+  log_every: 10
+  log_grads: false
+
+  # TensorBoard
+  tensorboard: true
+  histogram: true
+
+  # W&B
+  wandb:
+    project: ${project_name}
+    entity: null
+    tags: ["baseline", "transformer"]
+
+# Output directories
+dir:
+  data_dir: ./data
+  output_dir: ./outputs
+  log_dir: ${dir.output_dir}/logs
+  checkpoint_dir: ${dir.output_dir}/checkpoints
+  figure_dir: ${dir.output_dir}/figures
+  table_dir: ${dir.output_dir}/tables
+
+# Debug settings
+debug: false
+fast_dev_run: false

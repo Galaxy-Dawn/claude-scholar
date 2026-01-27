@@ -1,0 +1,217 @@
+{
+  "version": 2,
+  "plugins": {
+    "superpowers@claude-plugins-official": [
+      {
+        "scope": "project",
+        "projectPath": "/Users/gaoruizhang",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/claude-plugins-official/superpowers/4.0.3",
+        "version": "4.0.3",
+        "installedAt": "2026-01-19T03:21:20.197Z",
+        "lastUpdated": "2026-01-19T10:13:00.674Z",
+        "gitCommitSha": "ac471e69c2a672f50e491a45f6ff56b104d0e562"
+      }
+    ],
+    "hookify@claude-plugins-official": [
+      {
+        "scope": "project",
+        "projectPath": "/Users/gaoruizhang",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/claude-plugins-official/hookify/96276205880a",
+        "version": "96276205880a",
+        "installedAt": "2026-01-19T10:13:00.674Z",
+        "lastUpdated": "2026-01-19T10:13:00.674Z",
+        "gitCommitSha": "96276205880a60fd66bbae981f5ab568e70c4cbf"
+      }
+    ],
+    "code-simplifier@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/claude-plugins-official/code-simplifier/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-01-20T16:21:45.496Z",
+        "lastUpdated": "2026-01-20T16:21:45.496Z",
+        "gitCommitSha": "96276205880a60fd66bbae981f5ab568e70c4cbf"
+      }
+    ],
+    "ralph-loop@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/claude-plugins-official/ralph-loop/e30768372b41",
+        "version": "e30768372b41",
+        "installedAt": "2026-01-20T16:22:04.721Z",
+        "lastUpdated": "2026-01-26T06:04:47.497Z",
+        "gitCommitSha": "96276205880a60fd66bbae981f5ab568e70c4cbf"
+      }
+    ],
+    "figma@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/claude-plugins-official/figma/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-01-20T16:22:23.336Z",
+        "lastUpdated": "2026-01-20T16:22:23.336Z",
+        "gitCommitSha": "20aca44ee6ba6092037e943c151c067896828360"
+      }
+    ],
+    "superpowers@superpowers-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/superpowers-marketplace/superpowers/4.0.3",
+        "version": "4.0.3",
+        "installedAt": "2026-01-20T16:23:00.071Z",
+        "lastUpdated": "2026-01-20T16:23:00.071Z",
+        "gitCommitSha": "a01a135fe185559ff9dc84dd70d6e9bb57d92bdf"
+      }
+    ],
+    "github@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/claude-plugins-official/github/e30768372b41",
+        "version": "e30768372b41",
+        "installedAt": "2026-01-20T16:53:49.988Z",
+        "lastUpdated": "2026-01-26T06:04:47.504Z",
+        "gitCommitSha": "96276205880a60fd66bbae981f5ab568e70c4cbf"
+      }
+    ],
+    "document-skills@anthropic-agent-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/anthropic-agent-skills/document-skills/69c0b1a06741",
+        "version": "69c0b1a06741",
+        "installedAt": "2026-01-22T02:25:44.385Z",
+        "lastUpdated": "2026-01-22T02:25:44.385Z",
+        "gitCommitSha": "69c0b1a0674149f27b61b2635f935524b6add202"
+      }
+    ],
+    "rust-analyzer-lsp@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/claude-plugins-official/rust-analyzer-lsp/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-01-24T17:21:11.292Z",
+        "lastUpdated": "2026-01-24T17:21:11.292Z",
+        "gitCommitSha": "96276205880a60fd66bbae981f5ab568e70c4cbf"
+      }
+    ],
+    "ml-paper-writing@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/ml-paper-writing/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T14:59:42.436Z",
+        "lastUpdated": "2026-01-25T14:59:42.436Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "model-architecture@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/model-architecture/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:00:18.828Z",
+        "lastUpdated": "2026-01-25T15:00:18.828Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "emerging-techniques@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/emerging-techniques/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:00:34.122Z",
+        "lastUpdated": "2026-01-25T15:00:34.122Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "distributed-training@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/distributed-training/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:00:45.701Z",
+        "lastUpdated": "2026-01-25T15:00:45.701Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "fine-tuning@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/fine-tuning/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:00:57.874Z",
+        "lastUpdated": "2026-01-25T15:00:57.874Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "post-training@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/post-training/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:01:22.271Z",
+        "lastUpdated": "2026-01-25T15:01:22.271Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "inference-serving@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/inference-serving/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:02:05.697Z",
+        "lastUpdated": "2026-01-25T15:02:05.697Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "mechanistic-interpretability@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/mechanistic-interpretability/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:02:22.413Z",
+        "lastUpdated": "2026-01-25T15:02:22.413Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "data-processing@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/data-processing/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:02:34.401Z",
+        "lastUpdated": "2026-01-25T15:02:34.401Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "mlops@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/mlops/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:02:58.749Z",
+        "lastUpdated": "2026-01-25T15:02:58.749Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "multimodal@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/multimodal/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:03:10.774Z",
+        "lastUpdated": "2026-01-25T15:03:10.774Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ],
+    "tokenization@ai-research-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gaoruizhang/.claude/plugins/cache/ai-research-skills/tokenization/98184810f14d",
+        "version": "98184810f14d",
+        "installedAt": "2026-01-25T15:03:44.053Z",
+        "lastUpdated": "2026-01-25T15:03:44.053Z",
+        "gitCommitSha": "98184810f14d8f27bc9d4ad413744f47ec2f4ce1"
+      }
+    ]
+  }
+}

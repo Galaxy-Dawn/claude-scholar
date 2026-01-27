@@ -1,0 +1,153 @@
+{
+  "metadata": {
+    "source": "Kaiming He Papers Analysis",
+    "date": "2026-01-26",
+    "papers_analyzed": 11,
+    "analysis_method": "Text extraction and pattern mining",
+    "latest_addition": {
+      "papers": ["Mean Flows", "ViTDet", "MoCo v2", "Deconstructing Denoising Diffusion Models", "Autoregressive Image Generation (MAR)"],
+      "extraction_date": "2026-01-26",
+      "new_knowledge_files": [
+        "theory-driven-papers-kaiming-he.md",
+        "design-simplification-papers-kaiming-he.md"
+      ]
+    }
+  },
+  "knowledge_files": {
+    "structure.md": {
+      "status": "updated",
+      "last_update": "2026-01-26",
+      "contains": "Basic structure patterns from 19 Kaiming He papers"
+    },
+    "writing-techniques.md": {
+      "status": "needs_update",
+      "last_update": "2026-01-26",
+      "contains": "Basic writing techniques from 19 Kaiming He papers"
+    },
+    "rethinking-papers-kaiming-he.md": {
+      "status": "complete",
+      "focus": "Rethinking papers, challenging conventional wisdom",
+      "source_paper": "Autoregressive Image Generation without Vector Quantization (NeurIPS 2024 Spotlight)"
+    },
+    "theory-driven-papers-kaiming-he.md": {
+      "status": "new",
+      "focus": "Theory-driven papers, first principles, MeanFlow Identity",
+      "source_paper": "Mean Flows for One-step Generative Modeling (2025)"
+    },
+    "design-simplification-papers-kaiming-he.md": {
+      "status": "new",
+      "focus": "Design simplification, minimal adaptations, 'Surprisingly' findings",
+      "source_paper": "Exploring Plain Vision Transformer Backbones for Object Detection (ViTDet, ECCV 2022)"
+    }
+  },
+  "patterns_extracted": {
+    "introduction_frameworks": {
+      "principle_introduction": {
+        "source": "MeanFlows",
+        "pattern": "Background → Problem → Critique (Despite...) → Core Concept → Theory → Advantage → Results",
+        "keywords": ["principled", "intrinsic", "well-defined", "naturally", "first principles"]
+      },
+      "challenge_assumptions": {
+        "source": "ViTDet",
+        "pattern": "Traditional → New Challenge → Common Solution → Our Direction → Philosophy → Surprisingly → Implications",
+        "keywords": ["minimal adaptations", "sufficient", "decouple", "independence", "surprisingly"]
+      },
+      "rethinking_conventional_wisdom": {
+        "source": "MAR",
+        "pattern": "Conventional wisdom → Question → Analysis → Alternative → Results → Vision",
+        "keywords": ["Conventional wisdom holds that", "Is it necessary", "not a necessity"]
+      }
+    },
+    "surprisingly_findings": {
+      "level_1": {
+        "pattern": "Surprisingly, we observe: (i)... and (ii)...",
+        "usage": "First-level surprise - basic findings",
+        "example": "ViTDet Abstract"
+      },
+      "level_2": {
+        "pattern": "More surprisingly, under some circumstances...",
+        "usage": "Second-level surprise - competitive results",
+        "example": "ViTDet Introduction"
+      },
+      "level_3": {
+        "pattern": "With [condition], outperforms... gains more prominent for...",
+        "usage": "Third-level surprise - superiority under conditions",
+        "example": "ViTDet Introduction"
+      },
+      "variants": {
+        "interestingly": "Observation + literature support + explanation",
+        "notably": "Important detail or counter-intuitive result",
+        "it_is_worth_noting": "Technical caveat or clarification"
+      }
+    },
+    "ablation_techniques": {
+      "incremental_tables": {
+        "pattern": "Baseline → (a) → (b) → (c) with Δ标注",
+        "source": "ViTDet Table 1"
+      },
+      "destructive_comparison": {
+        "pattern": "Intentionally wrong values to prove necessity",
+        "source": "MeanFlows Table 1b"
+      },
+      "narrative_structure": {
+        "observation_then_explain": "Observe pattern → Provide explanation (literature/hypothesis/theory)"
+      }
+    },
+    "theoretical_derivation": {
+      "naming_identity": {
+        "pattern": "Define → Derive → Name ('X Identity')",
+        "source": "MeanFlows MeanFlow Identity"
+      },
+      "step_by_step": {
+        "pattern": "Motivation → Derivation with 'Now we...' → Justification with 'where...'",
+        "source": "MeanFlows Section 2"
+      }
+    },
+    "comparison_techniques": {
+      "principled_vs_heuristic": {
+        "pattern": "At the core...does not depend on...In contrast, typically rely on...",
+        "source": "MeanFlows"
+      },
+      "fair_comparison_declaration": {
+        "pattern": "Admit complexity → Claim effort → Demonstrate fairness",
+        "source": "ViTDet"
+      },
+      "multi_factor_analysis": {
+        "pattern": "Factors identified → Trend behavior → Wall-clock time",
+        "source": "ViTDet Results"
+      }
+    },
+    "keyword_strategies": {
+      "theory_paper": ["principled", "intrinsic", "well-defined", "naturally", "self-contained", "solely originated from"],
+      "design_paper": ["minimal", "sufficient", "decouple", "independence", "surprisingly", "abandons"],
+      "rethinking_paper": ["Conventional wisdom holds that", "not a necessity", "orthogonal to", "uncharted realm"]
+    }
+  },
+  "papers_analyzed_list": [
+    "Non-local Neural Networks",
+    "SlowFast Networks",
+    "Rethinking ImageNet Pre-training",
+    "Faster R-CNN",
+    "Delving Deep into Rectifiers (PReLU)",
+    "Spatial Pyramid Pooling (SPP-net)",
+    "Deconstructing Denoising Diffusion Models",
+    "Autoregressive Image Generation without Vector Quantization (MAR)",
+    "Mean Flows for One-step Generative Modeling",
+    "Exploring Plain Vision Transformer Backbones for Object Detection (ViTDet)",
+    "MoCo v2: Improved Baselines with Momentum Contrastive Learning"
+  ],
+  "integration_summary": {
+    "total_papers": 11,
+    "knowledge_files": 5,
+    "patterns_extracted": 25,
+    "paper_types_identified": [
+      "Theory-driven (MeanFlows)",
+      "Design simplification (ViTDet)",
+      "Rethinking (MAR)",
+      "Deconstruction (DDM)",
+      "Milestone (PReLU)",
+      "Multi-task (SPP-net)",
+      "Technical note (MoCo v2)"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+# Claude 配置 Git 忽略文件
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 敏感和本地配置
+settings.local.json
+*.backup
+
+# 历史和会话数据
+history.jsonl
+session-env/
+shell-snapshots/
+file-history/
+
+# 缓存和临时文件
+cache/
+debug/
+downloads/
+ide/
+logs/
+paste-cache/
+todos/
+
+# 遥测和统计
+telemetry/
+stats-cache.json
+statsig/
+
+# 其他临时文件
+docs/
+plan/
+plans/
+projects/
+temp/
