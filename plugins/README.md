@@ -2,10 +2,6 @@
 
 This document lists the recommended plugins for Claude Scholar. These plugins enhance functionality but are **optional** - the core skills and commands work without them.
 
-## What are Plugins?
-
-Plugins extend Claude Code with additional **skills**, **commands**, and **agents** from external sources.
-
 ## Installation Steps
 
 ### Step 1: Add Plugin Marketplace
@@ -59,7 +55,6 @@ claude plugin marketplace add https://github.com/zechenzhangAGI/AI-research-SKIL
 Then install skills:
 ```bash
 claude plugin install ml-paper-writing@ai-research-skills
-claude plugin install model-architecture@ai-research-skills
 ```
 
 ---
