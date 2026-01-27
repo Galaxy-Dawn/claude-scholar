@@ -147,13 +147,12 @@ claude-scholar/
 
 ## 功能亮点
 
-### 技能（22 个）
+### 技能（21 个）
 
 **写作与学术：**
 - `ml-paper-writing` - 顶级会议/期刊的完整论文写作指导
 - `writing-anti-ai` - 移除 AI 写作模式（双语支持）
 - `doc-coauthoring` - 结构化文档协作工作流
-- `daily-paper-generator` - 每日论文摘要生成
 - `latex-conference-template-organizer` - LaTeX 模板管理
 
 **开发：**

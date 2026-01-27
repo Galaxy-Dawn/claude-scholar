@@ -147,13 +147,12 @@ claude-scholar/
 
 ## Feature Highlights
 
-### Skills (22 total)
+### Skills (21 total)
 
 **Writing & Academic:**
 - `ml-paper-writing` - Full paper writing guidance for top conferences/journals
 - `writing-anti-ai` - Remove AI writing patterns (bilingual support)
 - `doc-coauthoring` - Structured document collaboration workflow
-- `daily-paper-generator` - Daily paper summary generation
 - `latex-conference-template-organizer` - LaTeX template management
 
 **Development:**

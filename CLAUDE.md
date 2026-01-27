@@ -34,12 +34,11 @@
 
 ## Skills Directory Structure
 
-### 📝 Writing & Academic (5 skills)
+### 📝 Writing & Academic (4 skills)
 
 - **ml-paper-writing**: Academic paper writing assistance for top conferences (NeurIPS, ICML, ICLR, KDD) and high-impact journals (Nature, Science, Cell, PNAS). Includes logic analysis, anti-AI writing, reviewer perspective polishing.
 - **writing-anti-ai**: Remove AI writing patterns (English & Chinese bilingual). Based on Wikipedia's "Signs of AI Writing" guide, detects and fixes inflated symbolism, promotional language, superficial analysis, vague attribution, AI vocabulary, negative parallelism.
 - **doc-coauthoring**: Structured document collaboration workflow
-- **daily-paper-generator**: Daily paper summary generation
 - **latex-conference-template-organizer**: LaTeX conference template organization
 
 ### 💻 Development (7 skills)
