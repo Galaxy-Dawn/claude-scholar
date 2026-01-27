@@ -206,6 +206,34 @@ mkdir -p output/{text,figures,tables,styles}
 \end{document}
 ```
 
+### KDD 2026 匿名投稿特殊配置
+
+对于 KDD 2026（使用 ACM acmart 模板），需要在文档类中添加 `nonacm` 选项来移除脚注：
+
+```latex
+%% ============================================================================
+%% Document Class - KDD 2026 匿名投稿配置
+%% 投稿版本：\documentclass[sigconf,anonymous,review,nonacm]{acmart}
+%% Camera-ready：\documentclass[sigconf]{acmart}
+%% ============================================================================
+\documentclass[sigconf,anonymous,review,nonacm]{acmart}
+
+%% ============================================================================
+%% 禁用 ACM 相关元数据（仅投稿版本需要）
+%% ============================================================================
+\settopmatter{printacmref=false}  % 禁用 ACM Reference Format
+\setcopyright{none}               % 禁用版权声明
+\acmConference[]{}{}{}            % 清空会议信息（移除脚注中的会议信息）
+\acmYear{}                        % 清空年份
+\acmISBN{}                        % 清空 ISBN
+\acmDOI{}                         % 清空 DOI
+
+%% Camera-ready 版本需要恢复的内容：
+%% \acmConference[KDD '26]{Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining}{August 09--13, 2026}{Jeju, Korea}
+%% \acmISBN{978-1-4503-XXXX-X/26/08}
+%% \acmDOI{10.1145/nnnnnnn.nnnnnnn}
+```
+
 ### 创建章节文件 (text/)
 
 为每个章节创建独立的 .tex 文件，**只包含章节内容**，不包含 `\begin{document}` 等：
@@ -423,11 +451,38 @@ echo "请将 output/ 目录上传到 Overleaf 测试编译。"
 
 | 会议 | 文档类 | 特点 |
 |------|--------|------|
+| **KDD (ACM SIGKDD)** | `acmart` | **匿名投稿需添加 `nonacm` 选项移除脚注** |
 | ACM 会议 | `acmart` | 需要匿名模式 `\acmReview{anonymous}` |
 | CVPR/ICCV | `cvpr` | 双栏，严格页数限制 |
 | NeurIPS | `neurips_2025` | 匿名评审，无页数限制 |
 | ICLR | `iclr2025_conference` | 双栏，需要会话信息 |
 | AAAI | `aaai25` | 双栏，8页+参考文献 |
+
+### KDD 匿名投稿配置说明
+
+KDD 2026 使用 ACM acmart 模板，匿名投稿时需要特殊配置：
+
+**投稿版本**（移除所有 ACM 元数据脚注）：
+```latex
+\documentclass[sigconf,anonymous,review,nonacm]{acmart}
+\settopmatter{printacmref=false}
+\setcopyright{none}
+\acmConference[]{}{}{}
+\acmYear{}
+\acmISBN{}
+\acmDOI{}
+```
+
+**Camera-ready 版本**（恢复 ACM 元数据）：
+```latex
+\documentclass[sigconf]{acmart}
+\settopmatter{printacmref=true}
+\setcopyright{acmcopyright}
+\acmConference[KDD '26]{...}{...}{...}
+\acmYear{2026}
+\acmISBN{978-1-4503-XXXX-X/26/08}
+\acmDOI{10.1145/nnnnnnn.nnnnnnn}
+```
 
 ## 快速参考
 
