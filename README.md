@@ -1,5 +1,7 @@
 # Claude Scholar
 
+**Language**: [English](README.md) | [中文](README.zh-CN.md)
+
 A comprehensive Claude Code configuration for data science, AI research, and academic writing.
 
 ## Introduction
