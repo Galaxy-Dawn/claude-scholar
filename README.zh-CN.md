@@ -30,14 +30,14 @@ Claude Scholar 是一个生产就绪的 Claude Code CLI 配置系统，专为研
 从想法到发表的完整生命周期：
 
 ```
-模板准备 → 写作 → 去AI化 → 投稿 → 反驳
+模板准备 → 写作 → 去AI化 → 投稿 → 审稿意见回复
 ```
 
 - **模板准备** (`latex-conference-template-organizer`): 下载官方会议模板 .zip 文件 → 技能提取主文件，删除示例内容 → 输出适合 Overleaf 的干净模板结构
 - **写作** (`ml-paper-writing`): 从研究仓库到最终草稿的系统指导 → 包括叙事框架、摘要公式（5句式）、文献搜索与引文验证、分节起草与反馈循环
 - **去AI化** (`writing-anti-ai`): 模式检测移除夸大象征、宣传语言、模糊归因 → 添加人性化的声音和变化的节奏 → 支持中英文
 - **投稿**: 会议特定检查清单（NeurIPS 16项、ICML 更广泛影响、ICLR LLM 披露）和页数限制执行
-- **反驳**: paper-miner 知识库中的策略 → 从成功的会议反驳中提取 → 解决技术问题和额外实验请求
+- **审稿意见回复**: paper-miner 知识库中的策略 → 从成功的会议回复中提取 → 解决技术问题和额外实验请求
 
 ### 3. 代码组织工作流
 
@@ -68,7 +68,7 @@ skill-development → skill-quality-reviewer → skill-improver
 
 两个专门的挖掘代理持续提取知识以改进技能：
 
-- **paper-miner** (agent): 分析研究论文（PDF/DOCX/arXiv 链接）→ 提取写作模式、结构见解、会议要求、反驳策略 → 使用分类条目更新 `ml-paper-writing/references/knowledge/`（structure.md、writing-techniques.md、submission-guides.md、review-response.md）
+- **paper-miner** (agent): 分析研究论文（PDF/DOCX/arXiv 链接）→ 提取写作模式、结构见解、会议要求、审稿意见回复策略 → 使用分类条目更新 `ml-paper-writing/references/knowledge/`（structure.md、writing-techniques.md、submission-guides.md、review-response.md）
 - **kaggle-miner** (agent): 研究获胜的 Kaggle 竞赛解决方案 → 提取工程最佳实践、数据处理管道、模型架构模式 → 将见解输入到 `architecture-design`、`bug-detective` 和相关开发技能
 
 **知识反馈循环**: 每篇分析的论文或解决方案都会丰富知识库，创建一个随您研究进化的自我改进系统。
@@ -91,7 +91,7 @@ claude-scholar/
 │   │       ├── structure.md           # 论文组织模式
 │   │       ├── writing-techniques.md  # 句子模板、过渡
 │   │       ├── submission-guides.md   # 会议要求（页数限制等）
-│   │       └── review-response.md     # 反驳策略
+│   │       └── review-response.md     # 审稿意见回复策略
 │   │
 │   ├── writing-anti-ai/         # 移除 AI 模式：象征主义、宣传语言
 │   │   └── references/
