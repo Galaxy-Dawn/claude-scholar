@@ -8,7 +8,17 @@ A comprehensive Claude Code configuration for data science, AI research, and aca
 
 Claude Scholar is a production-ready configuration system for Claude Code CLI, optimized for researchers, data scientists, and ML engineers. It provides skills, commands, agents, and hooks that streamline the complete research workflow—from idea to publication.
 
-## Research Workflow Pain Points Solved
+## Quick Navigation
+
+| Topic | Description |
+|-------|-------------|
+| 🚀 [Quick Start](#quick-start) | Get up and running in minutes |
+| 📚 [Core Workflows](#core-workflows) | Paper writing, code organization, skill evolution |
+| 🛠️ [What's Included](#whats-included) | Skills, commands, agents overview |
+| 📖 [Installation Guide](#installation-options) | Full, minimal, or selective setup |
+| 🔧 [Project Rules](#project-rules) | Coding style and agent orchestration |
+
+## Core Workflows
 
 ### 1. Automated Enforcement Workflow
 
@@ -285,40 +295,6 @@ After installation, the hooks provide automated workflow assistance:
 2. **Session starts** with `session-start` → displays project context
 3. **Sessions end** with `session-summary` → generates work log with recommendations
 4. **Session stops** with `stop-summary` → provides status check
-
-## Feature Highlights
-
-The 3-step improvement process ensures continuous skill evolution:
-
-### Step 1: Develop
-
-Use `skill-development` to create properly structured skills:
-- Clear description and use cases
-- Proper triggering conditions
-- Comprehensive documentation
-
-### Step 2: Review
-
-Use `skill-quality-reviewer` to assess skill quality:
-- Description quality scoring
-- Content organization review
-- Writing style analysis
-- Structural integrity check
-
-### Step 3: Improve
-
-Use `skill-improver` to apply improvements:
-- Merge suggested changes
-- Update skill documentation
-- Iterate on feedback
-
-### Knowledge Feedback Loop
-
-The `paper-miner` and `kaggle-miner` agents continuously extract:
-- Paper writing techniques → feed into `ml-paper-writing`
-- Engineering practices → feed into `architecture-design`, `bug-detective`
-
-This creates a self-improving system that evolves with your research.
 
 ## Project Rules
 
