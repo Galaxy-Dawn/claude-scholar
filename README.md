@@ -79,7 +79,7 @@ skill-development → skill-quality-reviewer → skill-improver
 Two specialized mining agents continuously extract knowledge to improve skills:
 
 - **paper-miner** (agent): Analyze research papers (PDF/DOCX/arXiv links) → extracts writing patterns, structure insights, venue requirements, rebuttal strategies → updates `ml-paper-writing/references/knowledge/` with categorized entries (structure.md, writing-techniques.md, submission-guides.md, review-response.md)
-- **kaggle-miner** (agent): Study winning Kaggle competition solutions → extracts engineering best practices, data processing pipelines, model architecture patterns → feeds insights into `architecture-design`, `bug-detective`, and related development skills
+- **kaggle-miner** (agent): Study winning Kaggle competition solutions → extract competition briefs, front-runner detailed technical analysis, code templates, best practices → update the `kaggle-learner` skill's knowledge base (`references/knowledge/[domain]/` directories, categorized by NLP/CV/Time Series/Tabular/Multimodal)
 
 **Knowledge feedback loop**: Each paper or solution analyzed enriches the knowledge base, creating a self-improving system that evolves with your research.
 

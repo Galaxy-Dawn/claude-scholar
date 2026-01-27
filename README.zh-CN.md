@@ -79,7 +79,7 @@ skill-development → skill-quality-reviewer → skill-improver
 两个专门的挖掘代理持续提取知识以改进技能：
 
 - **paper-miner** (agent): 分析研究论文（PDF/DOCX/arXiv 链接）→ 提取写作模式、结构见解、会议要求、审稿意见回复策略 → 使用分类条目更新 `ml-paper-writing/references/knowledge/`（structure.md、writing-techniques.md、submission-guides.md、review-response.md）
-- **kaggle-miner** (agent): 研究获胜的 Kaggle 竞赛解决方案 → 提取工程最佳实践、数据处理管道、模型架构模式 → 将见解输入到 `architecture-design`、`bug-detective` 和相关开发技能
+- **kaggle-miner** (agent): 研究获胜的 Kaggle 竞赛解决方案 → 提取竞赛简介、前排方案详细技术分析、代码模板、最佳实践 → 更新 `kaggle-learner` skill 的知识库（`references/knowledge/[domain]/` 目录，按 NLP/CV/Time Series/Tabular/Multimodal 分类）
 
 **知识反馈循环**: 每篇分析的论文或解决方案都会丰富知识库，创建一个随您研究进化的自我改进系统。
 
