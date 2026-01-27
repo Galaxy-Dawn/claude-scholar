@@ -1,43 +1,53 @@
 # Recommended Plugins
 
-This document lists the recommended plugins for Claude Scholar. These plugins enhance functionality but are optional - the core skills and commands work without them.
+This document lists the recommended plugins for Claude Scholar. These plugins enhance functionality but are **optional** - the core skills and commands work without them.
 
-## Official Plugins
+## Official Plugins (claude-plugins-official)
 
-### Superpowers (Required)
+### Superpowers
+**Purpose:** Essential superpowers commands for project management, brainstorming, and development workflows.
+
 **Installation:**
 ```bash
-claude mcp add superpowers -- npx -y mcp-remote "https://mcp.superpowers.ai/v1"
+claude mcp add superpowers -- github anthropics/claude-plugins-official
 ```
-
-**Purpose:** Provides essential superpowers commands for project management, brainstorming, and development workflows.
 
 ---
 
-### GitHub Integration
+### GitHub
+**Purpose:** GitHub integration for creating repositories, managing issues, and pull requests.
+
 **Installation:**
 ```bash
-claude mcp add github -- npx -y mcp-remote "https://mcp.github.io"
+claude mcp add github -- github anthropics/claude-plugins-official
 ```
-
-**Purpose:** Enables GitHub integration for creating repositories, managing issues, and pull requests.
 
 ---
 
-### Figma Integration
+### Figma
+**Purpose:** Figma integration for design system creation and implementation.
+
 **Installation:**
 ```bash
-claude mcp add figma -- npx -y mcp-remote "https://mcp.figma.com"
+claude mcp add figma -- github anthropics/claude-plugins-official
 ```
 
-**Purpose:** Enables Figma integration for design system creation and implementation.
+---
+
+### Hookify
+**Purpose:** Hook development and event handling capabilities.
+
+**Installation:**
+```bash
+claude mcp add hookify -- github anthropics/claude-plugins-official
+```
 
 ---
 
 ## Marketplace Plugins
 
 ### AI Research Skills
-**Marketplace:** `ai-research-skills`
+**Repository:** `zechenzhangAGI/AI-research-SKILLs`
 
 **Skills Included:**
 - `ml-paper-writing` - Academic paper writing guidance
@@ -45,54 +55,53 @@ claude mcp add figma -- npx -y mcp-remote "https://mcp.figma.com"
 - `emerging-techniques` - Latest research techniques
 - `distributed-training` - Distributed training patterns
 - `fine-tuning` - Model fine-tuning workflows
+- `post-training` - Post-training techniques
+- `inference-serving` - Model serving
+- `mechanistic-interpretability` - Interpretability methods
+- `data-processing` - Data processing pipelines
 - And more...
 
 **Installation:**
 ```bash
-claude mcp add ai-research-skills -- "https://github.com/zechenzhangAGI/ai-research-SKILLs"
+claude mcp add ai-research-skills -- github zechenzhangAGI/AI-research-SKILLs
 ```
 
 ---
 
 ### Document Skills
-**Marketplace:** `anthropic-agent-skills`
+**Repository:** `anthropics/skills`
 
 **Skills Included:**
-- Document processing (PDF, DOCX, PPTX)
-- Collaboration workflows
-- Design tools
+- Document processing (PDF, DOCX, PPTX, XLSX)
+- Collaboration workflows (doc-coauthoring)
+- Design tools (canvas-design, brand-guidelines)
+- Algorithmic art generation
 - And more...
 
 **Installation:**
 ```bash
-claude mcp add document-skills -- "https://github.com/anthropics/anthropic-agent-skills"
+claude mcp add document-skills -- github anthropics/skills
 ```
 
 ---
 
-## Installation Summary
-
-To install all recommended plugins:
+## Quick Install All Recommended Plugins
 
 ```bash
-# Core functionality
-claude mcp add superpowers -- npx -y mcp-remote "https://mcp.superpowers.ai/v1"
+# Official plugins
+claude mcp add superpowers -- github anthropics/claude-plugins-official
+claude mcp add github -- github anthropics/claude-plugins-official
+claude mcp add figma -- github anthropics/claude-plugins-official
+claude mcp add hookify -- github anthropics/claude-plugins-official
 
-# GitHub integration
-claude mcp add github -- npx -y mcp-remote "https://mcp.github.io"
-
-# Figma integration
-claude mcp add figma -- npx -y mcp-remote "https://mcp.figma.com"
-
-# AI research skills
-claude mcp add ai-research-skills -- "https://github.com/zechenzhangAGI/ai-research-SKILLs"
-
-# Document skills
-claude mcp add document-skills -- "https://github.com/anthropics/anthropic-agent-skills"
+# Marketplace plugins
+claude mcp add ai-research-skills -- github zechenzhangAGI/AI-research-SKILLs
+claude mcp add document-skills -- github anthropics/skills
 ```
 
-## Note
+## Notes
 
 - All plugins are **optional** - Claude Scholar works without them
 - Plugins provide **enhanced functionality** for specific workflows
 - Install plugins based on your specific needs
+- Some plugins may require additional setup (check their documentation)
