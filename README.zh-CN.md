@@ -231,29 +231,7 @@ git clone https://github.com/Galaxy-Dawn/claude-scholar.git ~/.claude
 
 **包含**：所有 22 个技能、30+ 命令、7 个代理、5 个钩子和项目规则。
 
-#### 选项 2：最小化安装
-
-仅核心钩子和基本技能（加载更快，复杂度更低）：
-
-```bash
-# 克隆仓库
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-
-# 仅复制钩子和核心技能
-mkdir -p ~/.claude/hooks ~/.claude/skills
-cp /tmp/claude-scholar/hooks/*.js ~/.claude/hooks/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/git-workflow ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/bug-detective ~/.claude/skills/
-
-# 清理
-rm -rf /tmp/claude-scholar
-```
-
-**包含**：5 个钩子、4 个核心技能。
-
-#### 选项 3：选择性安装
+#### 选项 2：选择性安装
 
 选择和选择特定组件：
 
@@ -284,7 +262,7 @@ cp rules/agents.md ~/.claude/rules/
 
 - Claude Code CLI
 - Git
-- （可选）Node.js（用于钩子）
+- Node.js（用于钩子）
 - （可选）uv、Python（用于 Python 开发）
 
 ### 首次运行

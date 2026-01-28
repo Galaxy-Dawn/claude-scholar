@@ -231,29 +231,7 @@ git clone https://github.com/Galaxy-Dawn/claude-scholar.git ~/.claude
 
 **Includes**: All 22 skills, 30+ commands, 7 agents, 5 hooks, and project rules.
 
-#### Option 2: Minimal Installation
-
-Core hooks and essential skills only (faster load, less complexity):
-
-```bash
-# Clone repository
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-
-# Copy only hooks and core skills
-mkdir -p ~/.claude/hooks ~/.claude/skills
-cp /tmp/claude-scholar/hooks/*.js ~/.claude/hooks/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/git-workflow ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/bug-detective ~/.claude/skills/
-
-# Cleanup
-rm -rf /tmp/claude-scholar
-```
-
-**Includes**: 5 hooks, 4 core skills.
-
-#### Option 3: Selective Installation
+#### Option 2: Selective Installation
 
 Pick and choose specific components:
 
@@ -284,7 +262,7 @@ cp rules/agents.md ~/.claude/rules/
 
 - Claude Code CLI
 - Git
-- (Optional) Node.js (for hooks)
+- Node.js (for hooks)
 - (Optional) uv, Python (for Python development)
 
 ### First Run
