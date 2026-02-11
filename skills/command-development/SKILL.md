@@ -629,15 +629,16 @@ Generate documentation for $1 following template structure.
 
 **Multi-script pattern:**
 
-```markdown
+```text
 ---
 description: Complete build workflow
 allowed-tools: Bash(*)
 ---
 
-Build: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/build.sh`
-Test: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/test.sh`
-Package: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/package.sh`
+# Example commands (remove # to use):
+# Build: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/build.sh`
+# Test: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/test.sh`
+# Package: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/package.sh`
 
 Review outputs and report workflow status.
 ```

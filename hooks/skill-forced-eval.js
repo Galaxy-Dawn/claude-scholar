@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * UserPromptSubmit Hook: 强制技能激活流程（跨平台版本）
+ * UserPromptSubmit Hook: Forced skill activation flow (cross-platform version)
  *
- * 事件: UserPromptSubmit
- * 功能: 强制 AI 评估可用技能并在激活后开始实现
+ * Event: UserPromptSubmit
+ * Function: Force AI to evaluate available skills and begin implementation after activation
  */
 
 const path = require('path');
@@ -11,7 +11,7 @@ const fs = require('fs');
 const os = require('os');
 const common = require('./hook-common');
 
-// 读取 stdin 输入
+// Read stdin input
 let input = {};
 try {
   const stdinData = require('fs').readFileSync(0, 'utf8');
@@ -19,21 +19,21 @@ try {
     input = JSON.parse(stdinData);
   }
 } catch {
-  // 使用默认空对象
+  // Use default empty object
 }
 
 const userPrompt = input.user_prompt || '';
 
-// 检查是否是斜杠命令（转义）
+// Check if it is a slash command (escape)
 if (userPrompt.startsWith('/')) {
-  // 区分命令和路径：
-  // - 命令：/commit, /update-github (斜杠后不包含第二个斜杠)
-  // - 路径：/Users/xxx, /path/to/file (包含路径分隔符)
+  // Distinguish commands from paths:
+  // - Commands: /commit, /update-github (no second slash after the first)
+  // - Paths: /Users/xxx, /path/to/file (contains path separators)
   const rest = userPrompt.substring(1);
   if (rest.includes('/')) {
-    // 这是路径，继续进行 skill 扫描
+    // This is a path, continue with skill scanning
   } else {
-    // 这是命令，跳过 skill 评估
+    // This is a command, skip skill evaluation
     console.log(JSON.stringify({ continue: true }));
     process.exit(0);
   }
@@ -41,12 +41,12 @@ if (userPrompt.startsWith('/')) {
 
 const homeDir = os.homedir();
 
-// 动态收集技能列表
+// Dynamically collect skill list
 function collectSkills() {
   const skills = [];
   const skillsDir = path.join(homeDir, '.claude', 'skills');
 
-  // 1. 收集本地技能
+  // 1. Collect local skills
   if (fs.existsSync(skillsDir)) {
     const skillDirs = fs.readdirSync(skillsDir, { withFileTypes: true })
       .filter(d => d.isDirectory())
@@ -57,7 +57,7 @@ function collectSkills() {
     }
   }
 
-  // 2. 收集插件技能
+  // 2. Collect plugin skills
   const pluginsCache = path.join(homeDir, '.claude', 'plugins', 'cache');
 
   if (fs.existsSync(pluginsCache)) {
@@ -97,34 +97,34 @@ function collectSkills() {
     }
   }
 
-  // 去重
+  // Deduplicate
   return [...new Set(skills)].sort();
 }
 
-// 生成技能列表
+// Generate skill list
 const SKILL_LIST = collectSkills();
 
-// 生成输出
-const output = `## 指令：强制技能激活流程（必须执行）
+// Generate output
+const output = `## Instruction: Forced Skill Activation (Mandatory)
 
-### 步骤 1 - 评估技能
-针对以下每个技能，陈述：[技能名] - 是/否 - [理由]
+### Step 1 - Evaluate Skills
+For each skill below, state: [skill name] - Yes/No - [reason]
 
-可用技能列表：
+Available skills:
 ${SKILL_LIST.map(skill => `- ${skill}`).join('\n')}
-### 步骤 2 - 激活
-如果任何技能为"是" → 立即使用 Skill(技能) 工具激活
-如果所有技能为"否" → 说明"不需要技能"并继续
+### Step 2 - Activate
+If any skill is "Yes" → Immediately activate using the Skill tool
+If all skills are "No" → State "No skills needed" and continue
 
-### 步骤 3 - 实现
-只有在步骤 2 完成后，才能开始实现。
+### Step 3 - Implement
+Only begin implementation after Step 2 is complete.
 
-**关键规划**：
-1.你必须在步骤2调用Skill()工具，不要跳过直接实现；
-2.首先评估步骤1的所有技能，不要跳过任何一个技能；
-3.多个技能相关时，全部激活；
-4.判断仅包含是或否：是 = 明确相关且必需，否 = 不相关或非必需，去掉"可能"选项；
-5.只有完成上述步骤之后才开始实现。
+**Critical Rules**:
+1. You must call Skill() tool in Step 2, do not skip directly to implementation;
+2. First evaluate all skills in Step 1, do not skip any skill;
+3. When multiple skills are relevant, activate all of them;
+4. Judgment must be only Yes or No: Yes = clearly relevant and required, No = not relevant or not required, remove the "maybe" option;
+5. Only begin implementation after completing the above steps.
 `;
 
 console.log(output);

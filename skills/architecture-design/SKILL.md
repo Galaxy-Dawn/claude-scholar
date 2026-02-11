@@ -1,7 +1,26 @@
 ---
 name: architecture-design
-description: This skill should be used when the user asks to "modify code structure", "add new modules", "understand the codebase", "follow project architecture", "maintain code consistency", or mentions creating new components following the template pattern. Provides the ML project code framework and design patterns for maintaining architectural consistency.
-version: 1.1.0
+description: |
+  Use ONLY when creating NEW registrable components in ML projects that require Factory/Registry patterns.
+
+  ✅ USE when:
+  - Creating a new Dataset class (needs @register_dataset)
+  - Creating a new Model class (needs @register_model)
+  - Creating a new module directory with __init__.py factory
+  - Initializing a new ML project structure from scratch
+  - Adding new component types (Augmentation, CollateFunction, Metrics)
+
+  ❌ DO NOT USE when:
+  - Modifying existing functions or methods
+  - Fixing bugs in existing code
+  - Adding helper functions or utilities
+  - Refactoring without adding new registrable components
+  - Simple code changes to a single file
+  - Modifying configuration files
+  - Reading or understanding existing code
+
+  Key indicator: Does the task require @register_* decorator or Factory pattern? If no, skip this skill.
+version: 1.2.0
 ---
 
 # Architecture Design - ML Project Template

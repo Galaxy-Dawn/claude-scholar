@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * PreToolUse Hook: 安全防护层（跨平台版本）
+ * PreToolUse Hook: Security guard layer (cross-platform version)
  *
- * 事件: PreToolUse
- * 功能: 检测危险命令和敏感文件操作，提供安全保护
+ * Event: PreToolUse
+ * Function: Detect dangerous commands and sensitive file operations, provide security protection
  */
 
 const path = require('path');
 
-// 读取 stdin 输入
+// Read stdin input
 let input = {};
 try {
   const stdinData = require('fs').readFileSync(0, 'utf8');
@@ -16,7 +16,7 @@ try {
     input = JSON.parse(stdinData);
   }
 } catch {
-  // 使用默认空对象
+  // Use default empty object
 }
 
 const toolName = input.tool_name || '';
@@ -26,11 +26,11 @@ let decision = 'allow';
 let reason = '';
 let systemMessage = '';
 
-// === Bash 命令安全检查 ===
+// === Bash command security check ===
 if (toolName === 'Bash') {
   const command = input.tool_input?.command || '';
 
-  // 危险命令黑名单检测
+  // Dangerous command blacklist detection
   function isDangerous(cmd) {
     const dangerousPatterns = [
       /rm\s+-rf\s+\//,                    // rm -rf /
@@ -52,7 +52,7 @@ if (toolName === 'Bash') {
     return dangerousPatterns.some(pattern => pattern.test(cmd));
   }
 
-  // 警告模式检测
+  // Warning pattern detection
   function checkWarning(cmd) {
     const warningPatterns = [
       { pattern: /rm\s+-[rf]/, label: 'rm -' },
@@ -60,9 +60,9 @@ if (toolName === 'Bash') {
       { pattern: /\bcp\s/, label: 'cp' },
       { pattern: /chmod\s+777/, label: 'chmod 777' },
       { pattern: /chown\s/, label: 'chown' },
-      { pattern: /(wget|curl)\s/, label: '网络下载' },
-      { pattern: /(pip|npm|yarn|bun|brew|apt-get|yum)\s+install/, label: '软件安装' },
-      { pattern: /sudo\s+(apt-get|yum)/, label: 'sudo 安装' }
+      { pattern: /(wget|curl)\s/, label: 'Network download' },
+      { pattern: /(pip|npm|yarn|bun|brew|apt-get|yum)\s+install/, label: 'Software install' },
+      { pattern: /sudo\s+(apt-get|yum)/, label: 'sudo install' }
     ];
 
     for (const { pattern, label } of warningPatterns) {
@@ -74,25 +74,25 @@ if (toolName === 'Bash') {
     return null;
   }
 
-  // 检查危险命令
+  // Check dangerous commands
   if (isDangerous(command)) {
     decision = 'deny';
-    reason = '检测到危险命令';
+    reason = 'Dangerous command detected';
   }
 
-  // 警告级别检查
+  // Warning level check
   if (decision === 'allow') {
     const warningPattern = checkWarning(command);
     if (warningPattern) {
-      systemMessage = `⚠️ 安全提醒: 正在执行敏感操作 (${warningPattern})`;
+      systemMessage = `⚠️ Security notice: Executing sensitive operation (${warningPattern})`;
     }
   }
 
-// === 文件写入安全检查 ===
+// === File write security check ===
 } else if (toolName === 'Write' || toolName === 'Edit') {
   const filePath = input.tool_input?.file_path || '';
 
-  // 敏感路径黑名单
+  // Sensitive path blacklist
   const sensitivePaths = [
     '/etc/',
     '/usr/bin/',
@@ -108,12 +108,12 @@ if (toolName === 'Bash') {
   for (const sensitivePath of sensitivePaths) {
     if (filePath.startsWith(sensitivePath)) {
       decision = 'deny';
-      reason = `禁止写入系统路径: ${sensitivePath}`;
+      reason = `Writing to system path denied: ${sensitivePath}`;
       break;
     }
   }
 
-  // 检查敏感文件
+  // Check sensitive files
   const sensitiveFiles = [
     '.env',
     '.env.local',
@@ -130,38 +130,38 @@ if (toolName === 'Bash') {
     const fileName = path.basename(filePath);
     for (const sensitiveFile of sensitiveFiles) {
       if (fileName === sensitiveFile) {
-        systemMessage = `⚠️ 安全提醒: 正在修改敏感文件 (${sensitiveFile})`;
+        systemMessage = `⚠️ Security notice: Modifying sensitive file (${sensitiveFile})`;
         break;
       }
     }
   }
 
-  // 检查路径遍历攻击
+  // Check path traversal attack
   if (filePath.includes('..')) {
     decision = 'deny';
-    reason = '检测到路径遍历攻击';
+    reason = 'Path traversal attack detected';
   }
 
-  // 检查绝对路径注入
+  // Check absolute path injection
   if (filePath.includes('~/') && !filePath.startsWith(cwd)) {
-    systemMessage = '⚠️ 路径提醒: 文件路径不在项目目录内';
+    systemMessage = '⚠️ Path notice: File path is outside project directory';
   }
 }
 
-// === 构建输出 ===
+// === Build output ===
 if (decision === 'deny') {
-  // 阻止执行
+  // Block execution
   const errorOutput = {
     hookSpecificOutput: {
       permissionDecision: 'deny'
     },
-    systemMessage: `🛑 安全拦截: ${reason}\n\n如需执行此操作，请手动在终端运行。`
+    systemMessage: `🛑 Security blocked: ${reason}\n\nTo perform this operation, run it manually in the terminal.`
   };
 
   console.error(JSON.stringify(errorOutput));
   process.exit(2);
 } else {
-  // 允许执行（可选警告消息）
+  // Allow execution (with optional warning message)
   const result = {
     continue: true
   };

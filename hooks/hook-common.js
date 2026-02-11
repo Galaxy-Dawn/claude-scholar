@@ -1,6 +1,6 @@
 /**
- * 跨平台 Hook 共享函数库
- * 为 Claude Code Hooks 提供跨平台兼容的共享函数
+ * Cross-platform Hook shared utility library
+ * Provides cross-platform compatible shared functions for Claude Code Hooks
  *
  * @module hook-common
  */
@@ -10,19 +10,19 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 /**
- * 获取 Git 状态信息
- * @param {string} cwd - 当前工作目录
- * @returns {Object} Git 信息对象
+ * Get Git status information
+ * @param {string} cwd - Current working directory
+ * @returns {Object} Git info object
  */
 function getGitInfo(cwd) {
   try {
-    // 检查是否是 Git 仓库
+    // Check if this is a Git repository
     execSync('git rev-parse --git-dir', {
       cwd,
       stdio: 'pipe'
     });
 
-    // 获取分支名
+    // Get branch name
     let branch = 'unknown';
     try {
       branch = execSync('git branch --show-current', {
@@ -34,7 +34,7 @@ function getGitInfo(cwd) {
       branch = 'unknown';
     }
 
-    // 获取变更文件
+    // Get changed files
     let changes = '';
     try {
       changes = execSync('git status --porcelain', {
@@ -68,9 +68,9 @@ function getGitInfo(cwd) {
 }
 
 /**
- * 获取待办事项信息
- * @param {string} cwd - 当前工作目录
- * @returns {Object} 待办事项信息
+ * Get todo item information
+ * @param {string} cwd - Current working directory
+ * @returns {Object} Todo item information
  */
 function getTodoInfo(cwd) {
   const todoFiles = [
@@ -118,9 +118,9 @@ function getTodoInfo(cwd) {
 }
 
 /**
- * 获取 Git 变更详情
- * @param {string} cwd - 当前工作目录
- * @returns {Object} 变更统计
+ * Get Git change details
+ * @param {string} cwd - Current working directory
+ * @returns {Object} Change statistics
  */
 function getChangesDetails(cwd) {
   try {
@@ -149,9 +149,9 @@ function getChangesDetails(cwd) {
 }
 
 /**
- * 按文件类型分析变更
- * @param {string} cwd - 当前工作目录
- * @returns {Object} 文件类型统计
+ * Analyze changes by file type
+ * @param {string} cwd - Current working directory
+ * @returns {Object} File type statistics
  */
 function analyzeChangesByType(cwd) {
   const gitInfo = getGitInfo(cwd);
@@ -184,15 +184,15 @@ function analyzeChangesByType(cwd) {
 }
 
 /**
- * 检测临时文件
- * @param {string} cwd - 当前工作目录
- * @returns {Object} 临时文件信息
+ * Detect temporary files
+ * @param {string} cwd - Current working directory
+ * @returns {Object} Temporary file information
  */
 function detectTempFiles(cwd) {
   const tempFiles = [];
   const gitInfo = getGitInfo(cwd);
 
-  // 从 Git 未跟踪文件中查找
+  // Find temp files from Git untracked files
   if (gitInfo.is_repo) {
     for (const change of gitInfo.changes) {
       if (change.startsWith('??')) {
@@ -204,7 +204,7 @@ function detectTempFiles(cwd) {
     }
   }
 
-  // 检查已知临时目录
+  // Check known temporary directories
   const tempDirs = ['plan', 'docs/plans', '.claude/temp', 'tmp', 'temp'];
   for (const dir of tempDirs) {
     const dirPath = path.join(cwd, dir);
@@ -215,7 +215,7 @@ function detectTempFiles(cwd) {
           tempFiles.push(path.relative(cwd, file));
         }
       } catch {
-        // 忽略错误
+        // Ignore errors
       }
     }
   }
@@ -227,9 +227,9 @@ function detectTempFiles(cwd) {
 }
 
 /**
- * 递归获取目录下所有文件
- * @param {string} dirPath - 目录路径
- * @returns {Array<string>} 文件路径列表
+ * Recursively get all files in a directory
+ * @param {string} dirPath - Directory path
+ * @returns {Array<string>} List of file paths
  */
 function getAllFiles(dirPath) {
   const files = [];
@@ -250,10 +250,10 @@ function getAllFiles(dirPath) {
 }
 
 /**
- * 生成智能推荐
- * @param {string} cwd - 当前工作目录
- * @param {Object} gitInfo - Git 信息
- * @returns {Array<string>} 推荐列表
+ * Generate smart recommendations
+ * @param {string} cwd - Current working directory
+ * @param {Object} gitInfo - Git information
+ * @returns {Array<string>} List of recommendations
  */
 function generateRecommendations(cwd, gitInfo) {
   const recommendations = [];
@@ -267,40 +267,40 @@ function generateRecommendations(cwd, gitInfo) {
     }
 
     if (typeAnalysis.test_files > 0) {
-      recommendations.push('运行测试套件验证修改');
+      recommendations.push('Run test suite to verify changes');
     }
     if (typeAnalysis.docs_files > 0) {
-      recommendations.push('检查文档与代码同步');
+      recommendations.push('Check documentation is in sync with code');
     }
     if (typeAnalysis.sql_files > 0) {
-      recommendations.push('更新所有相关数据库脚本');
+      recommendations.push('Update all related database scripts');
     }
     if (typeAnalysis.config_files > 0) {
-      recommendations.push('检查是否需要更新环境变量');
+      recommendations.push('Check if environment variables need updating');
     }
     if (typeAnalysis.service_files > 0) {
-      recommendations.push('更新 API 文档');
+      recommendations.push('Update API documentation');
     }
   }
 
-  // 待办事项提醒
+  // Todo reminder
   const todoInfo = getTodoInfo(cwd);
   if (todoInfo.found && todoInfo.pending > 0) {
-    recommendations.push(`查看待办事项: ${todoInfo.file} (还有 ${todoInfo.pending} 项未完成)`);
+    recommendations.push(`Check todos: ${todoInfo.file} (${todoInfo.pending} items remaining)`);
   }
 
-  // 非仓库环境提醒
+  // Non-repo environment reminder
   if (!gitInfo.is_repo) {
-    recommendations.push('记得备份重要文件到 git 仓库或云存储');
+    recommendations.push('Remember to back up important files to a git repo or cloud storage');
   }
 
   return recommendations;
 }
 
 /**
- * 获取已启用的插件列表
- * @param {string} homeDir - 用户主目录
- * @returns {Array<Object>} 插件列表
+ * Get list of enabled plugins
+ * @param {string} homeDir - User home directory
+ * @returns {Array<Object>} Plugin list
  */
 function getEnabledPlugins(homeDir) {
   const settingsFile = path.join(homeDir, '.claude', 'settings.json');
@@ -331,14 +331,14 @@ function getEnabledPlugins(homeDir) {
 }
 
 /**
- * 获取可用命令列表
- * @param {string} homeDir - 用户主目录
- * @returns {Array<Object>} 命令列表
+ * Get list of available commands
+ * @param {string} homeDir - User home directory
+ * @returns {Array<Object>} Command list
  */
 function getAvailableCommands(homeDir) {
   const commands = [];
 
-  // 只收集本地命令，不收集插件命令
+  // Only collect local commands, not plugin commands
   const localCommandsDir = path.join(homeDir, '.claude', 'commands');
   if (fs.existsSync(localCommandsDir)) {
     const commandFiles = fs.readdirSync(localCommandsDir)
@@ -358,16 +358,16 @@ function getAvailableCommands(homeDir) {
 }
 
 /**
- * 获取命令描述
- * @param {string} cmdPath - 命令文件路径
- * @returns {string} 命令描述
+ * Get command description
+ * @param {string} cmdPath - Command file path
+ * @returns {string} Command description
  */
 function getCommandDescription(cmdPath) {
   try {
     const content = fs.readFileSync(cmdPath, 'utf8');
     const lines = content.split('\n');
 
-    // 尝试从 frontmatter 获取 description
+    // Try to get description from frontmatter
     let inFrontmatter = false;
     for (const line of lines) {
       if (line.trim() === '---') {
@@ -387,7 +387,7 @@ function getCommandDescription(cmdPath) {
       }
     }
 
-    // 尝试从标题获取
+    // Try to get from heading
     for (const line of lines) {
       const match = line.match(/^#+\s*(.+)$/);
       if (match) {
@@ -402,9 +402,9 @@ function getCommandDescription(cmdPath) {
 }
 
 /**
- * 收集本地技能
- * @param {string} homeDir - 用户主目录
- * @returns {Array<Object>} 技能列表
+ * Collect local skills
+ * @param {string} homeDir - User home directory
+ * @returns {Array<Object>} Skill list
  */
 function collectLocalSkills(homeDir) {
   const skills = [];
@@ -430,7 +430,7 @@ function collectLocalSkills(homeDir) {
           description = match[1].trim();
         }
       } catch {
-        // 忽略
+        // Ignore
       }
     }
 
@@ -445,9 +445,9 @@ function collectLocalSkills(homeDir) {
 }
 
 /**
- * 收集插件技能
- * @param {string} homeDir - 用户主目录
- * @returns {Array<Object>} 技能列表
+ * Collect plugin skills
+ * @param {string} homeDir - User home directory
+ * @returns {Array<Object>} Skill list
  */
 function collectPluginSkills(homeDir) {
   const skills = [];
@@ -462,7 +462,7 @@ function collectPluginSkills(homeDir) {
     .map(d => d.name);
 
   for (const marketplace of marketplaces) {
-    // 跳过 ai-research-skills
+    // Skip ai-research-skills
     if (marketplace === 'ai-research-skills') continue;
 
     const marketplacePath = path.join(pluginsCache, marketplace);
@@ -505,9 +505,9 @@ function collectPluginSkills(homeDir) {
 }
 
 /**
- * 格式化日期时间
- * @param {Date} date - 日期对象
- * @returns {string} 格式化的日期时间字符串
+ * Format date and time
+ * @param {Date} date - Date object
+ * @returns {string} Formatted date-time string
  */
 function formatDateTime(date = new Date()) {
   const year = date.getFullYear();
@@ -521,23 +521,23 @@ function formatDateTime(date = new Date()) {
 }
 
 /**
- * 检查 CLAUDE.md 是否需要更新
- * @param {string} homeDir - 用户主目录
- * @returns {Object} 检查结果
+ * Check if CLAUDE.md needs updating
+ * @param {string} homeDir - User home directory
+ * @returns {Object} Check result
  */
 function checkClaudeMdUpdate(homeDir) {
   const claudeMdPath = path.join(homeDir, '.claude', 'CLAUDE.md');
   const lastSyncPath = path.join(homeDir, '.claude', '.last-memory-sync');
 
-  // 如果 CLAUDE.md 不存在，直接返回
+  // If CLAUDE.md does not exist, return immediately
   if (!fs.existsSync(claudeMdPath)) {
     return { needsUpdate: false, reason: 'CLAUDE.md not found' };
   }
 
-  // 获取 CLAUDE.md 的修改时间
+  // Get CLAUDE.md modification time
   const claudeMdMtime = fs.statSync(claudeMdPath).mtimeMs;
 
-  // 获取上次同步时间（如果不存在则使用 CLAUDE.md 的创建时间）
+  // Get last sync time (use CLAUDE.md creation time if not available)
   let lastSyncMtime = claudeMdMtime;
   if (fs.existsSync(lastSyncPath)) {
     try {
@@ -549,7 +549,7 @@ function checkClaudeMdUpdate(homeDir) {
 
   const referenceTime = Math.max(claudeMdMtime, lastSyncMtime);
 
-  // 定义需要监控的源文件目录
+  // Define source file directories to monitor
   const sourceDirs = [
     { dir: path.join(homeDir, '.claude', 'skills'), pattern: /skill\.md$/, type: 'skill' },
     { dir: path.join(homeDir, '.claude', 'commands'), pattern: /\.md$/, type: 'command' },
@@ -563,7 +563,7 @@ function checkClaudeMdUpdate(homeDir) {
   let totalAgents = 0;
   let totalHooks = 0;
 
-  // 扫描每个源目录
+  // Scan each source directory
   for (const { dir, pattern, type } of sourceDirs) {
     if (!fs.existsSync(dir)) continue;
 
@@ -573,23 +573,23 @@ function checkClaudeMdUpdate(homeDir) {
       try {
         const mtime = fs.statSync(file).mtimeMs;
 
-        // 统计总数
+        // Count totals
         if (type === 'skill') totalSkills++;
         else if (type === 'command') totalCommands++;
         else if (type === 'agent') totalAgents++;
         else if (type === 'hook') totalHooks++;
 
-        // 检查是否比参考时间新
+        // Check if newer than reference time
         if (mtime > referenceTime) {
           changedFiles.push({
             path: file,
             type,
             relativePath: path.relative(homeDir, file),
-            mtime: new Date(mtime).toLocaleString('zh-CN')
+            mtime: new Date(mtime).toLocaleString('en-US')
           });
         }
       } catch {
-        // 忽略无法访问的文件
+        // Ignore inaccessible files
       }
     }
   }
@@ -603,28 +603,28 @@ function checkClaudeMdUpdate(homeDir) {
       agents: totalAgents,
       hooks: totalHooks
     },
-    claudeMdMtime: new Date(claudeMdMtime).toLocaleString('zh-CN'),
-    lastSyncMtime: new Date(lastSyncMtime).toLocaleString('zh-CN')
+    claudeMdMtime: new Date(claudeMdMtime).toLocaleString('en-US'),
+    lastSyncMtime: new Date(lastSyncMtime).toLocaleString('en-US')
   };
 }
 
 /**
- * 更新同步时间戳
- * @param {string} homeDir - 用户主目录
+ * Update sync timestamp
+ * @param {string} homeDir - User home directory
  */
 function updateSyncTimestamp(homeDir) {
   const lastSyncPath = path.join(homeDir, '.claude', '.last-memory-sync');
   try {
     fs.writeFileSync(lastSyncPath, Date.now().toString(), 'utf8');
   } catch {
-    // 忽略写入错误
+    // Ignore write errors
   }
 }
 
 /**
- * 创建临时文件
- * @param {string} prefix - 文件名前缀
- * @returns {string} 临时文件路径
+ * Create a temporary file
+ * @param {string} prefix - Filename prefix
+ * @returns {string} Temporary file path
  */
 function createTempFile(prefix = 'claude-temp') {
   const os = require('os');
@@ -633,7 +633,7 @@ function createTempFile(prefix = 'claude-temp') {
   return path.join(tmpDir, `${prefix}-${randomSuffix}.tmp`);
 }
 
-// 导出所有函数
+// Export all functions
 module.exports = {
   getGitInfo,
   getTodoInfo,

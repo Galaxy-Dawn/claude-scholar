@@ -1,22 +1,23 @@
-# Claude 配置 Git 忽略文件
+# Claude Configuration Git Ignore
 
-# 系统文件
+# System files
 .DS_Store
 Thumbs.db
 
-# 敏感和本地配置
+# Sensitive and local configuration
 .env
 .env.local
-settings.local.json
+settings*.json
+settings*.json.bak
 *.backup
 
-# 历史和会话数据
+# History and session data
 history.jsonl
 session-env/
 shell-snapshots/
 file-history/
 
-# 缓存和临时文件
+# Cache and temporary files
 cache/
 debug/
 downloads/
@@ -25,12 +26,12 @@ logs/
 paste-cache/
 todos/
 
-# 遥测和统计
+# Telemetry and statistics
 telemetry/
 stats-cache.json
 statsig/
 
-# 其他临时文件
+# Other temporary files
 docs/
 plan/
 plans/

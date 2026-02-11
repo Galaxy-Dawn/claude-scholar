@@ -892,75 +892,139 @@ When resubmitting after rejection:
 ### The Golden Rule
 
 ```
-IF you cannot programmatically fetch a citation:
+IF you cannot verify a citation through web search:
     → Mark it as [CITATION NEEDED] or [PLACEHOLDER - VERIFY]
     → Tell the scientist explicitly
     → NEVER invent a plausible-sounding reference
 ```
 
+**MANDATORY**: Use WebSearch tool to verify EVERY citation before adding to bibliography.
+
 ### Workflow 2: Adding Citations
 
 ```
 Citation Verification (MANDATORY for every citation):
-- [ ] Step 1: Search using Exa MCP or Semantic Scholar API
-- [ ] Step 2: Verify paper exists in 2+ sources (Semantic Scholar + arXiv/CrossRef)
-- [ ] Step 3: Retrieve BibTeX via DOI (programmatically, not from memory)
-- [ ] Step 4: Verify the claim you're citing actually appears in the paper
-- [ ] Step 5: Add verified BibTeX to bibliography
-- [ ] Step 6: If ANY step fails → mark as placeholder, inform scientist
+- [ ] Step 1: Use WebSearch to find the paper
+- [ ] Step 2: Verify paper exists on Google Scholar
+- [ ] Step 3: Confirm paper details (title, authors, year, venue)
+- [ ] Step 4: Retrieve BibTeX from Google Scholar or DOI
+- [ ] Step 5: Verify the claim you're citing actually appears in the paper
+- [ ] Step 6: Add verified BibTeX to bibliography
+- [ ] Step 7: If ANY step fails → mark as placeholder, inform scientist
 ```
 
-**Step 0: Use Exa MCP for Initial Search (Recommended)**
+**Step 1: Use WebSearch to Find the Paper**
 
-If Exa MCP is installed, use it to find relevant papers:
+When you need to cite a paper, ALWAYS start with web search:
+
 ```
-Search: "RLHF language model alignment 2023"
-Search: "sparse autoencoders interpretability"
-Search: "attention mechanism transformers Vaswani"
-```
-
-Then verify each result with Semantic Scholar and fetch BibTeX via DOI.
-
-**Step 1: Search Semantic Scholar**
-
-```python
-from semanticscholar import SemanticScholar
-
-sch = SemanticScholar()
-results = sch.search_paper("attention mechanism transformers", limit=5)
-for paper in results:
-    print(f"{paper.title} - {paper.paperId}")
-    print(f"  DOI: {paper.externalIds.get('DOI', 'N/A')}")
+WebSearch query examples:
+- "Attention is All You Need Vaswani 2017"
+- "RLHF language model alignment 2023"
+- "sparse autoencoders interpretability Anthropic"
+- "transformer architecture NeurIPS"
 ```
 
-**Step 2: Verify Existence**
+**What to look for in search results:**
+- Paper title matches your intended citation
+- Authors are correct
+- Publication year is correct
+- Venue (conference/journal) is identified
 
-Confirm paper appears in at least two sources (Semantic Scholar + CrossRef/arXiv).
+**Step 2: Verify on Google Scholar**
 
-**Step 3: Retrieve BibTeX via DOI**
+After finding the paper, verify it exists on Google Scholar:
 
-```python
-import requests
+```
+WebSearch query: "site:scholar.google.com [paper title] [first author]"
 
-def doi_to_bibtex(doi: str) -> str:
-    """Get verified BibTeX from DOI via CrossRef."""
-    response = requests.get(
-        f"https://doi.org/{doi}",
-        headers={"Accept": "application/x-bibtex"}
-    )
-    response.raise_for_status()
-    return response.text
-
-# Example
-bibtex = doi_to_bibtex("10.48550/arXiv.1706.03762")
-print(bibtex)
+Example: "site:scholar.google.com Attention is All You Need Vaswani"
 ```
 
-**Step 4: Verify Claims**
+**Verification checklist:**
+- ✅ Paper appears in Google Scholar results
+- ✅ Title matches exactly (or very close)
+- ✅ Authors match
+- ✅ Year matches
+- ✅ Venue is listed (conference/journal)
+- ✅ Citation count is reasonable (not 0 for old papers)
 
-Before citing for a specific claim, access the paper and confirm the attributed claim actually appears.
+**If paper NOT found on Google Scholar:**
+- ❌ STOP - Do not cite
+- Mark as `[CITATION NEEDED - not found on Google Scholar]`
+- Inform scientist explicitly
 
-**Step 5: Handle Failures Explicitly**
+**Step 3: Confirm Paper Details**
+
+Before retrieving BibTeX, double-check all details:
+
+```
+Verification checklist:
+- Title: [exact title from Google Scholar]
+- Authors: [all authors, in order]
+- Year: [publication year]
+- Venue: [conference/journal name]
+- DOI: [if available]
+```
+
+**Step 4: Retrieve BibTeX**
+
+**Option 1: From Google Scholar (Recommended)**
+
+1. Find the paper on Google Scholar
+2. Click "Cite" button below the paper
+3. Select "BibTeX" format
+4. Copy the BibTeX entry
+
+**Option 2: From DOI (if available)**
+
+1. Use WebSearch to find: `"doi.org/[DOI]"`
+2. Look for BibTeX export option on the publisher's page
+3. Copy the BibTeX entry
+
+**Option 3: From arXiv (for preprints)**
+
+1. Find paper on arXiv
+2. Click "Export BibTeX Citation" on the right sidebar
+3. Copy the BibTeX entry
+
+**CRITICAL**: Never write BibTeX from memory. Always copy from verified source.
+
+**Step 5: Verify the Claim**
+
+Before citing for a specific claim, verify the claim actually appears in the paper:
+
+```
+Verification process:
+1. Use WebSearch to access the paper (PDF or HTML)
+2. Search for keywords related to your claim
+3. Confirm the claim is explicitly stated or clearly implied
+4. Note the section/page where claim appears
+```
+
+**If you cannot access the paper:**
+- ❌ Do not cite for specific claims
+- Only cite for general contributions (if verified on Google Scholar)
+- Mark as `[CLAIM NOT VERIFIED - no access to paper]`
+
+**Step 6: Add Verified BibTeX to Bibliography**
+
+Only after completing all verification steps:
+
+```latex
+% Add to your .bib file
+@inproceedings{vaswani2017attention,
+  title={Attention is All You Need},
+  author={Vaswani, Ashish and Shazeer, Noam and ...},
+  booktitle={Advances in Neural Information Processing Systems},
+  year={2017}
+}
+
+% Use in your paper
+\cite{vaswani2017attention}
+```
+
+**Step 7: Handle Failures Explicitly**
 
 If you cannot verify a citation at ANY step:
 
@@ -974,7 +1038,7 @@ If you cannot verify a citation at ANY step:
 
 **Always inform the scientist:**
 > "I could not verify the following citations and have marked them as placeholders:
-> - Smith et al. 2023 on reward hacking - could not find in Semantic Scholar
+> - Smith et al. 2023 on reward hacking - not found on Google Scholar
 > - Jones 2022 on scaling laws - found similar paper but different authors
 > Please verify these before submission."
 
@@ -982,15 +1046,52 @@ If you cannot verify a citation at ANY step:
 
 | Situation | Action |
 |-----------|--------|
-| Found paper, got DOI, fetched BibTeX | ✅ Use the citation |
-| Found paper, no DOI | ✅ Use arXiv BibTeX or manual entry from paper |
-| Paper exists but can't fetch BibTeX | ⚠️ Mark placeholder, inform scientist |
-| Uncertain if paper exists | ❌ Mark `[CITATION NEEDED]`, inform scientist |
+| Found on Google Scholar, verified details, got BibTeX | ✅ Use the citation |
+| Found paper, verified on Google Scholar, no BibTeX | ✅ Create BibTeX from Google Scholar info |
+| Paper exists but details don't match | ⚠️ Mark placeholder, inform scientist |
+| Not found on Google Scholar | ❌ Mark `[CITATION NEEDED]`, inform scientist |
 | "I think there's a paper about X" | ❌ **NEVER cite** - search first or mark placeholder |
 
-**🚨 NEVER generate BibTeX from memory—always fetch programmatically. 🚨**
+**🚨 NEVER generate BibTeX from memory—always verify through WebSearch and Google Scholar. 🚨**
 
-See [references/citation-workflow.md](references/citation-workflow.md) for complete API documentation.
+### Complete Citation Workflow Example
+
+**Scenario**: You need to cite the Transformer paper.
+
+```
+Step 1: WebSearch
+Query: "Attention is All You Need Vaswani 2017"
+Result: Found paper on multiple sources
+
+Step 2: Google Scholar Verification
+Query: "site:scholar.google.com Attention is All You Need Vaswani"
+Result: ✅ Paper found, 50,000+ citations, NeurIPS 2017
+
+Step 3: Confirm Details
+- Title: "Attention is All You Need"
+- Authors: Vaswani, Ashish; Shazeer, Noam; Parmar, Niki; ...
+- Year: 2017
+- Venue: NeurIPS (NIPS)
+- DOI: Available
+
+Step 4: Retrieve BibTeX
+- Click "Cite" on Google Scholar
+- Select BibTeX format
+- Copy entry
+
+Step 5: Verify Claim
+- Access paper via WebSearch
+- Confirm claim appears in paper
+- Note section/page
+
+Step 6: Add to Bibliography
+- Paste BibTeX to .bib file
+- Use \cite{vaswani2017attention} in paper
+
+Step 7: Success
+- Citation verified and added
+- No placeholder needed
+```
 
 ---
 

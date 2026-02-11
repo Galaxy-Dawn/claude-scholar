@@ -1,45 +1,46 @@
 ---
 name: latex-conference-template-organizer
-description: 当用户要求"整理 LaTeX 会议模板"、"清理 .zip 模板文件"、"准备 Overleaf 投稿模板"，或提供会议模板 .zip 文件并提到需要整理/清理/预处理时使用此技能
+description: Organize messy conference LaTeX template .zip files into clean Overleaf-ready structure. Use when the user asks to "organize LaTeX template", "clean up .zip template", or "prepare Overleaf submission template".
+version: 0.1.0
 ---
 
-# LaTeX 会议模板整理器
+# LaTeX Conference Template Organizer
 
-## 概述
+## Overview
 
-将混乱的会议 LaTeX 模板 .zip 文件整理成适合 Overleaf 投稿的干净模板结构。会议官方提供的模板通常包含大量示例内容、说明注释和混乱的文件结构，本技能将其转换为可直接用于写作的模板。
+Transform messy conference LaTeX template .zip files into clean, Overleaf-ready submission templates. Official conference templates often contain excessive example content, instructional comments, and disorganized file structures. This skill converts them into templates ready for writing.
 
-## 工作模式
+## Working Mode
 
-**分析后确认模式**：先分析问题并向用户展示，等待确认后再执行整理。
+**Analyze-then-confirm mode**: First analyze issues and present them to the user, then execute cleanup after confirmation.
 
-## 完整工作流程
+## Complete Workflow
 
 ```
-接收 .zip 文件
+Receive .zip file
     ↓
-1. 解压并分析文件结构
+1. Extract and analyze file structure
     ↓
-2. 识别主文件和依赖关系
+2. Identify main file and dependencies
     ↓
-3. 诊断问题（向用户展示）
+3. Diagnose issues (present to user)
     ↓
-4. 询问会议信息（链接/名称）
+4. Ask for conference info (link/name)
     ↓
-5. 等待用户确认整理方案
+5. Wait for user confirmation of cleanup plan
     ↓
-6. 执行整理，创建输出目录
+6. Execute cleanup, create output directory
     ↓
-7. 生成 README（结合官网信息）
+7. Generate README (with official website info)
     ↓
-8. 输出完成
+8. Output complete
 ```
 
-## 步骤 1：解压与分析
+## Step 1: Extract and Analyze
 
-### 解压文件
+### Extract Files
 
-将 .zip 解压到临时目录：
+Extract .zip to a temporary directory:
 
 ```bash
 unzip -q template.zip -d /tmp/latex-template-temp
@@ -47,132 +48,132 @@ cd /tmp/latex-template-temp
 find . -type f -name "*.tex" -o -name "*.sty" -o -name "*.cls" -o -name "*.bib"
 ```
 
-### 识别文件类型
+### Identify File Types
 
-| 文件类型 | 用途 |
-|---------|------|
-| `.tex` | LaTeX 源文件 |
-| `.sty` / `.cls` | 样式文件 |
-| `.bib` | 参考文献数据库 |
-| `.pdf` / `.png` / `.jpg` | 图片文件 |
+| File Type | Purpose |
+|-----------|---------|
+| `.tex` | LaTeX source files |
+| `.sty` / `.cls` | Style files |
+| `.bib` | Bibliography database |
+| `.pdf` / `.png` / `.jpg` | Image files |
 
-### 识别主文件
+### Identify Main File
 
-**常见主文件名**：
+**Common main file names:**
 - `main.tex`
 - `paper.tex`
 - `document.tex`
 - `sample-sigconf.tex`
 - `template.tex`
 
-**识别方法**：
-1. 检查文件名是否匹配常见模式
-2. 搜索包含 `\documentclass` 的文件
-3. 如果有多个候选，向用户确认
+**Identification methods:**
+1. Check if filename matches common patterns
+2. Search for files containing `\documentclass`
+3. If multiple candidates exist, ask user to confirm
 
 ```bash
-# 查找包含 \documentclass 的文件
+# Find files containing \documentclass
 grep -l "\\documentclass" *.tex
 ```
 
-## 步骤 2：诊断问题
+## Step 2: Diagnose Issues
 
-向用户展示发现的问题：
+Present discovered issues to the user:
 
-### 文件结构混乱
+### Disorganized File Structure
 
-- 多级目录嵌套
-- .tex 文件散乱分布
-- 不清楚主文件是哪个
+- Multi-level directory nesting
+- .tex files scattered across directories
+- Unclear which file is the main file
 
-### 冗余内容
+### Redundant Content
 
-检测以下模式并标记为需要清理：
-- 文件名包含：`sample`, `example`, `demo`, `test`
-- 注释包含：`sample`, `example`, `template`, `delete this`
+Detect the following patterns and flag for cleanup:
+- Filenames containing: `sample`, `example`, `demo`, `test`
+- Comments containing: `sample`, `example`, `template`, `delete this`
 
-### 依赖问题
+### Dependency Issues
 
-- 引用的 `.sty`/`.cls` 文件缺失
-- 图片/表格引用路径错误
+- Referenced `.sty`/`.cls` files missing
+- Image/table reference paths incorrect
 
-## 步骤 3：询问会议信息
+## Step 3: Ask for Conference Information
 
-向用户询问以下信息：
-
-```markdown
-请提供以下信息（可选）：
-
-1. **会议投稿链接**（推荐）：用于提取官方投稿要求
-2. **会议名称**：如无链接
-3. **其他特殊要求**：如页数限制、匿名要求等
-```
-
-## 步骤 4：展示整理计划
-
-向用户展示整理计划并等待确认：
+Ask the user for the following information:
 
 ```markdown
-## 整理计划
+Please provide the following information (optional):
 
-### 发现的问题
-- [列出诊断发现的问题]
-
-### 整理方案
-1. 主文件：main.tex（清理示例内容）
-2. 章节分离：text/ 目录
-3. 资源目录：figures/, tables/, styles/
-
-### 输出结构
-[展示输出目录结构]
-
-是否确认执行整理？[Y/n]
+1. **Conference submission link** (recommended): Used to extract official submission requirements
+2. **Conference name**: If no link available
+3. **Other special requirements**: Such as page limits, anonymity requirements, etc.
 ```
 
-## 步骤 5：执行整理
+## Step 4: Present Cleanup Plan
 
-### 创建输出目录结构
+Present the cleanup plan to the user and wait for confirmation:
+
+```markdown
+## Cleanup Plan
+
+### Issues Found
+- [List diagnosed issues]
+
+### Cleanup Approach
+1. Main file: main.tex (clean example content)
+2. Section separation: text/ directory
+3. Resource directories: figures/, tables/, styles/
+
+### Output Structure
+[Show output directory structure]
+
+Confirm execution? [Y/n]
+```
+
+## Step 5: Execute Cleanup
+
+### Create Output Directory Structure
 
 ```bash
 mkdir -p output/{text,figures,tables,styles}
 ```
 
-### 整理主文件 (main.tex)
+### Clean Up Main File (main.tex)
 
-**保留**：
-- `\documentclass` 声明
-- 必要的包引用
-- 核心配置（如匿名模式）
+**Keep:**
+- `\documentclass` declaration
+- Required package imports
+- Core configuration (e.g., anonymous mode)
 
-**清理**：
-- 示例章节内容
-- 冗长的说明注释
-- 示例作者/标题信息
+**Remove:**
+- Example section content
+- Verbose instructional comments
+- Example author/title information
 
-**添加**：
-- 用 `\input{text/XX-section}` 导入章节
+**Add:**
+- Import sections with `\input{text/XX-section}`
 
-**示例 main.tex 结构**（ACM 模板标准格式）：
+**Example main.tex structure** (ACM template standard format):
 ```latex
-\documentclass[...]{...}  % 保留原模板的文档类
+\documentclass[...]{...}  % Keep original template document class
 
-% 必要的包（保留原模板的包声明）
+% Required packages (keep original template package declarations)
 
 %% ============================================================================
-%% Preamble: 在 \begin{document} 之前
+%% Preamble: Before \begin{document}
 %% ============================================================================
 
-%% 标题和作者信息
+%% Title and author information
 \title{Your Paper Title}
 \author{Author Name}
 \affiliation{...}
 
-%% 摘要（在 preamble 中，\maketitle 之前）
+%% Abstract (in preamble, before \maketitle)
 \begin{abstract}
 % TODO: Write abstract content
 \end{abstract}
 
-%% CCS Concepts 和 Keywords（在 preamble 中）
+%% CCS Concepts and Keywords (in preamble)
 \begin{CCSXML}
 <ccs2012>
    <concept>
@@ -193,7 +194,7 @@ mkdir -p output/{text,figures,tables,styles}
 
 \maketitle
 
-%% 章节内容（从 text/ 导入）
+%% Section content (imported from text/)
 \input{text/01-introduction}
 \input{text/02-related-work}
 \input{text/03-method}
@@ -206,37 +207,37 @@ mkdir -p output/{text,figures,tables,styles}
 \end{document}
 ```
 
-### KDD 2026 匿名投稿特殊配置
+### KDD 2026 Anonymous Submission Special Configuration
 
-对于 KDD 2026（使用 ACM acmart 模板），需要在文档类中添加 `nonacm` 选项来移除脚注：
+For KDD 2026 (using ACM acmart template), add the `nonacm` option to the document class to remove footnotes:
 
 ```latex
 %% ============================================================================
-%% Document Class - KDD 2026 匿名投稿配置
-%% 投稿版本：\documentclass[sigconf,anonymous,review,nonacm]{acmart}
-%% Camera-ready：\documentclass[sigconf]{acmart}
+%% Document Class - KDD 2026 Anonymous Submission Configuration
+%% Submission version: \documentclass[sigconf,anonymous,review,nonacm]{acmart}
+%% Camera-ready: \documentclass[sigconf]{acmart}
 %% ============================================================================
 \documentclass[sigconf,anonymous,review,nonacm]{acmart}
 
 %% ============================================================================
-%% 禁用 ACM 相关元数据（仅投稿版本需要）
+%% Disable ACM metadata (submission version only)
 %% ============================================================================
-\settopmatter{printacmref=false}  % 禁用 ACM Reference Format
-\setcopyright{none}               % 禁用版权声明
-\acmConference[]{}{}{}            % 清空会议信息（移除脚注中的会议信息）
-\acmYear{}                        % 清空年份
-\acmISBN{}                        % 清空 ISBN
-\acmDOI{}                         % 清空 DOI
+\settopmatter{printacmref=false}  % Disable ACM Reference Format
+\setcopyright{none}               % Disable copyright notice
+\acmConference[]{}{}{}            % Clear conference info (removes footnote)
+\acmYear{}                        % Clear year
+\acmISBN{}                        % Clear ISBN
+\acmDOI{}                         % Clear DOI
 
-%% Camera-ready 版本需要恢复的内容：
+%% Content to restore for camera-ready version:
 %% \acmConference[KDD '26]{Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining}{August 09--13, 2026}{Jeju, Korea}
 %% \acmISBN{978-1-4503-XXXX-X/26/08}
 %% \acmDOI{10.1145/nnnnnnn.nnnnnnn}
 ```
 
-### 创建章节文件 (text/)
+### Create Section Files (text/)
 
-为每个章节创建独立的 .tex 文件，**只包含章节内容**，不包含 `\begin{document}` 等：
+Create independent .tex files for each section, **containing only section content** without `\begin{document}` etc.:
 
 **text/01-introduction.tex**:
 ```latex
@@ -268,44 +269,44 @@ mkdir -p output/{text,figures,tables,styles}
 % TODO: Write conclusion content
 ```
 
-**重要提示**：
-- **摘要** 应该放在 main.tex 的 preamble 中（`\begin{document}` 之前），`\maketitle` 之后
-- **text/ 目录中的文件只包含章节**，以 `\section{...}` 开头
-- 不要在 text/ 文件中包含 `\begin{document}` 或其他包装
+**Important notes:**
+- **Abstract** should be placed in main.tex preamble (before `\begin{document}`), after `\maketitle`
+- **Files in text/ contain only sections**, starting with `\section{...}`
+- Do not include `\begin{document}` or other wrappers in text/ files
 
-### 复制样式文件 (styles/)
+### Copy Style Files (styles/)
 
-从原模板复制所有 `.sty` 和 `.cls` 文件到 `styles/`：
+Copy all `.sty` and `.cls` files from the original template to `styles/`:
 
 ```bash
 find /tmp/latex-template-temp -type f \( -name "*.sty" -o -name "*.cls" \) -exec cp {} output/styles/ \;
 ```
 
-**注意**：保持原模板的目录结构（如 `acmart/`），只移动到 `styles/` 下。
+**Note:** Maintain the original template's directory structure (e.g., `acmart/`), only move to `styles/`.
 
-### 处理图片和表格
+### Handle Images and Tables
 
 ```bash
-# 复制图片文件
+# Copy image files
 find /tmp/latex-template-temp -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.pdf" \) -exec cp {} output/figures/ \;
 
-# 复制表格文件（如有）
+# Copy table files (if any)
 find /tmp/latex-template-temp -type f -name "*.tex" | grep -i table | while read f; do cp "$f" output/tables/; done
 ```
 
-### 创建示例表格文件
+### Create Example Table File
 
-**重要**：Overleaf 会自动删除空目录。为防止 `tables/` 目录被删除，需创建一个示例表格文件：
+**Important:** Overleaf automatically deletes empty directories. To prevent the `tables/` directory from being deleted, create an example table file:
 
 ```bash
-# 创建示例表格文件
+# Create example table file
 cat > output/tables/example-table.tex << 'EOF'
-% 示例表格文件
-% 可以删除或替换为自己的表格
+% Example table file
+% Can be deleted or replaced with your own tables
 
 \begin{table}[h]
     \centering
-    \caption{示例表格}
+    \caption{Example Table}
     \label{tab:example}
     \begin{tabular}{lccc}
         \toprule
@@ -320,149 +321,149 @@ cat > output/tables/example-table.tex << 'EOF'
 EOF
 ```
 
-**注意**：
-- 如果原模板已有表格文件，此步骤可跳过
-- 示例表格仅供防止目录被删除，可删除或替换
-- 在论文中引用表格使用 `\input{tables/example-table.tex}` 或将表格内容直接复制到章节文件中
+**Notes:**
+- If the original template already has table files, this step can be skipped
+- The example table is only to prevent directory deletion; it can be deleted or replaced
+- Reference tables in the paper using `\input{tables/example-table.tex}` or copy table content directly into section files
 
-### 复制参考文献
+### Copy Bibliography
 
 ```bash
-# 复制 .bib 文件
+# Copy .bib files
 find /tmp/latex-template-temp -type f -name "*.bib" -exec cp {} output/ \;
 ```
 
-## 步骤 6：生成 README
+## Step 6: Generate README
 
-### 信息来源优先级
+### Information Source Priority
 
-1. **用户提供的会议链接** → 使用 WebFetch 提取
-2. **模板文件注释** → 从 .tex 文件提取
-3. **默认推断** → 从 `\documentclass` 推断
+1. **Conference link provided by user** → Extract using WebFetch
+2. **Template file comments** → Extract from .tex files
+3. **Default inference** → Infer from `\documentclass`
 
-### README 模板
+### README Template
 
 ```markdown
-# [会议名称] 投稿模板
+# [Conference Name] Submission Template
 
-## 模板信息
-- **会议**: [会议名称]
-- **官网**: [会议链接]
-- **模板版本**: [从模板或官网获取]
-- **文档类**: [提取的 documentclass]
+## Template Information
+- **Conference**: [Conference name]
+- **Website**: [Conference link]
+- **Template version**: [From template or website]
+- **Document class**: [Extracted documentclass]
 
-## 投稿要求
+## Submission Requirements
 
-### 页面与格式
-- **页数限制**: [从官网或模板提取]
-- **双栏/单栏**: [检测 layout]
-- **字体大小**: [10pt/11pt 等]
+### Page and Format
+- **Page limit**: [From website or template]
+- **Two-column/Single-column**: [Detect layout]
+- **Font size**: [10pt/11pt etc.]
 
-### 匿名要求
-- **是否需要盲审**: [检测 template mode]
-- **作者信息处理**: [说明如何填写]
+### Anonymity Requirements
+- **Blind review required**: [Detect template mode]
+- **Author information handling**: [Instructions]
 
-### 编译要求
-- **推荐编译器**: [XeLaTeX/pdfLaTeX/LuaLaTeX]
-- **特殊包要求**: [如有]
+### Compilation Requirements
+- **Recommended compiler**: [XeLaTeX/pdfLaTeX/LuaLaTeX]
+- **Special package requirements**: [If any]
 
-## Overleaf 使用
+## Overleaf Usage
 
-### 上传步骤
-1. 在 Overleaf 创建新项目
-2. 上传整个 `output/` 目录
-3. 设置编译器为 [指定编译器]
-4. 点击 Recompile 测试
+### Upload Steps
+1. Create a new project on Overleaf
+2. Upload the entire `output/` directory
+3. Set compiler to [specified compiler]
+4. Click Recompile to test
 
-### 文件说明
-- `main.tex` - 主文件，从这里开始
-- `text/` - 章节内容，按需编辑
-- `figures/` - 放置图片
-- `tables/` - 放置表格
-- `styles/` - 样式文件，无需修改
-- `references.bib` - 参考文献数据库
+### File Description
+- `main.tex` - Main file, start here
+- `text/` - Section content, edit as needed
+- `figures/` - Place images here
+- `tables/` - Place tables here
+- `styles/` - Style files, no modification needed
+- `references.bib` - Bibliography database
 
-## 常用操作
+## Common Operations
 
-### 添加图片
+### Adding Images
 ```latex
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.8\linewidth]{figures/your-image.pdf}
-    \caption{图片标题}
+    \caption{Image caption}
     \label{fig:your-label}
 \end{figure}
 ```
 
-### 添加表格
+### Adding Tables
 ```latex
 \begin{table}[h]
     \centering
     \begin{tabular}{|c|c|}
         \hline
-        列1 & 列2 \\
+        Column 1 & Column 2 \\
         \hline
-        内容1 & 内容2 \\
+        Content 1 & Content 2 \\
         \hline
     \end{tabular}
-    \caption{表格标题}
+    \caption{Table caption}
     \label{tab:your-label}
 \end{table}
 ```
 
-### 添加参考文献
-在 `references.bib` 中添加条目，在文中使用 `\cite{key}` 引用。
+### Adding References
+Add entries to `references.bib` and cite in text using `\cite{key}`.
 
-## 注意事项
-- [从模板注释中提取的警告]
-- [从官网提取的重要提示]
+## Notes
+- [Warnings extracted from template comments]
+- [Important notes extracted from website]
 ```
 
-### 从网站提取信息（如果用户提供了链接）
+### Extract Information from Website (if user provided a link)
 
-使用 WebFetch 获取会议投稿页面内容，提取：
-- 页数限制
-- 匿名要求
-- 格式要求
-- 截稿日期
+Use WebFetch to get conference submission page content and extract:
+- Page limits
+- Anonymity requirements
+- Format requirements
+- Submission deadlines
 
-## 步骤 7：清理与输出
+## Step 7: Cleanup and Output
 
 ```bash
-# 清理临时文件
+# Clean up temporary files
 rm -rf /tmp/latex-template-temp
 
-# 输出完成信息
-echo "模板整理完成！输出目录：output/"
-echo "请将 output/ 目录上传到 Overleaf 测试编译。"
+# Output completion message
+echo "Template cleanup complete! Output directory: output/"
+echo "Please upload the output/ directory to Overleaf to test compilation."
 ```
 
-## 错误处理
+## Error Handling
 
-| 错误情况 | 处理方式 |
-|---------|---------|
-| 找不到主文件 | 列出所有 .tex 文件，让用户选择 |
-| 依赖文件缺失 | 警告用户，尝试从模板目录定位 |
-| 无法提取会议信息 | 使用模板中的默认信息，标记为 [待确认] |
-| 网站无法访问 | 回退到模板注释，提示用户手动补充 |
-| 解压失败 | 提示用户检查 .zip 文件完整性 |
+| Error Scenario | Handling Approach |
+|----------------|-------------------|
+| Main file not found | List all .tex files, let user choose |
+| Dependency file missing | Warn user, attempt to locate from template directory |
+| Cannot extract conference info | Use default info from template, mark as [To be confirmed] |
+| Website inaccessible | Fall back to template comments, prompt user to fill in manually |
+| Extraction failed | Prompt user to check .zip file integrity |
 
-## 常见会议模板类型
+## Common Conference Template Types
 
-| 会议 | 文档类 | 特点 |
-|------|--------|------|
-| **KDD (ACM SIGKDD)** | `acmart` | **匿名投稿需添加 `nonacm` 选项移除脚注** |
-| ACM 会议 | `acmart` | 需要匿名模式 `\acmReview{anonymous}` |
-| CVPR/ICCV | `cvpr` | 双栏，严格页数限制 |
-| NeurIPS | `neurips_2025` | 匿名评审，无页数限制 |
-| ICLR | `iclr2025_conference` | 双栏，需要会话信息 |
-| AAAI | `aaai25` | 双栏，8页+参考文献 |
+| Conference | Document Class | Notes |
+|------------|---------------|-------|
+| **KDD (ACM SIGKDD)** | `acmart` | **Anonymous submission requires `nonacm` option to remove footnotes** |
+| ACM Conferences | `acmart` | Requires anonymous mode `\acmReview{anonymous}` |
+| CVPR/ICCV | `cvpr` | Two-column, strict page limits |
+| NeurIPS | `neurips_2025` | Anonymous review, no page limit |
+| ICLR | `iclr2025_conference` | Two-column, requires session info |
+| AAAI | `aaai25` | Two-column, 8 pages + references |
 
-### KDD 匿名投稿配置说明
+### KDD Anonymous Submission Configuration Notes
 
-KDD 2026 使用 ACM acmart 模板，匿名投稿时需要特殊配置：
+KDD 2026 uses the ACM acmart template and requires special configuration for anonymous submission:
 
-**投稿版本**（移除所有 ACM 元数据脚注）：
+**Submission version** (remove all ACM metadata footnotes):
 ```latex
 \documentclass[sigconf,anonymous,review,nonacm]{acmart}
 \settopmatter{printacmref=false}
@@ -473,7 +474,7 @@ KDD 2026 使用 ACM acmart 模板，匿名投稿时需要特殊配置：
 \acmDOI{}
 ```
 
-**Camera-ready 版本**（恢复 ACM 元数据）：
+**Camera-ready version** (restore ACM metadata):
 ```latex
 \documentclass[sigconf]{acmart}
 \settopmatter{printacmref=true}
@@ -484,25 +485,25 @@ KDD 2026 使用 ACM acmart 模板，匿名投稿时需要特殊配置：
 \acmDOI{10.1145/nnnnnnn.nnnnnnn}
 ```
 
-## 快速参考
+## Quick Reference
 
-### 检测文档类型
+### Detect Document Type
 ```bash
-# 检测文档类
+# Detect document class
 grep "\\documentclass" main.tex
 
-# 检测匿名模式
+# Detect anonymous mode
 grep -i "anonymous\|review\|blind" main.tex
 
-# 检测页数设置
+# Detect page settings
 grep "pagelimit\|pageLimit\|page_limit" main.tex
 ```
 
-### 常用清理模式
+### Common Cleanup Patterns
 ```bash
-# 移除示例文件
+# Remove example files
 rm -f sample-* example-* demo-* test-*
 
-# 移除临时文件
+# Remove temporary files
 rm -f *.aux *.log *.out *.bbl *.blg
 ```

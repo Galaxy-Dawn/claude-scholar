@@ -1,4 +1,4 @@
-# Oh My Claude
+# Claude Scholar
 
 **Language**: [English](README.md) | [中文](README.zh-CN.md)
 
@@ -6,11 +6,11 @@ Personal Claude Code configuration repository, optimized for academic research a
 
 ## Introduction
 
-Oh My Claude is a personal configuration system for Claude Code CLI, providing rich skills, commands, agents, and hooks optimized for:
-- **Academic Research** - ML/AI paper writing, literature management, conference submissions
-- **Software Development** - Git workflows, code review, test-driven development
-- **Plugin Development** - Skill, Command, Agent, Hook development guides
-- **Project Management** - Planning documents, code standards, automated workflows
+Claude Scholar is a personal configuration system for Claude Code CLI, providing rich skills, commands, agents, and hooks optimized for:
+- **Academic Research** - Complete research lifecycle: idea generation → experimentation → results analysis → paper writing → review response → conference preparation
+- **Software Development** - Git workflows, code review, test-driven development, ML project architecture
+- **Plugin Development** - Skill, Command, Agent, Hook development guides with quality assessment
+- **Project Management** - Planning documents, code standards, automated workflows with cross-platform hooks
 
 ## Quick Navigation
 
@@ -24,7 +24,121 @@ Oh My Claude is a personal configuration system for Claude Code CLI, providing r
 
 ## Core Workflows
 
-### 1. Automated Enforcement Workflow
+### Primary Workflows
+
+Complete academic research lifecycle - 7 stages from idea to publication.
+
+#### 1. Research Ideation
+
+Systematic research startup with idea generation and literature review:
+
+**Tools**: `research-ideation` skill + `literature-reviewer` agent
+
+**Process**:
+- **5W1H Brainstorming**: What, Why, Who, When, Where, How → structured thinking framework
+- **Literature Review**: arXiv + Semantic Scholar integration → automated paper search and classification
+- **Gap Analysis**: 5 types (Literature, Methodological, Application, Interdisciplinary, Temporal) → identify research opportunities
+- **Research Question**: SMART principles → formulate specific, measurable questions
+
+**Command**: `/research-init "topic"` → launches complete research startup workflow
+
+#### 2. ML Project Development
+
+Maintainable ML project structure for experiment code:
+
+**Tools**: `architecture-design` skill + `code-reviewer` agent + `git-workflow` skill
+
+**Process**:
+- **Structure**: Factory & Registry patterns → config-driven models (only `cfg` parameter) → enforced by `rules/coding-style.md`
+- **Code Style**: 200-400 line files → type hints required → `@dataclass(frozen=True)` for configs → max 3-level nesting
+- **Debug** (`bug-detective`): Error pattern matching for Python/Bash/JS → stack trace analysis → anti-pattern identification
+- **Git**: Conventional Commits (`feat/scope: message`) → branch strategy (master/develop/feature) → merge with `--no-ff`
+
+**Commands**: `/plan`, `/commit`, `/code-review`, `/tdd`
+
+#### 3. Experiment Analysis
+
+Statistical analysis and visualization of experimental results:
+
+**Tools**: `results-analysis` skill + `data-analyst` agent
+
+**Process**:
+- **Data Processing**: Automated cleaning and preprocessing of experiment logs
+- **Statistical Testing**: t-test, ANOVA, Wilcoxon signed-rank → validate significance
+- **Visualization**: matplotlib/seaborn integration → publication-ready figures (line plots, bar charts, heatmaps)
+- **Ablation Studies**: Systematic component analysis → understand contribution of each part
+
+**Command**: `/analyze-results <experiment_dir>` → generates analysis report with figures and statistics
+
+#### 4. Paper Writing
+
+Systematic paper writing from template to final draft:
+
+**Tools**: `ml-paper-writing` skill + `paper-miner` agent + `latex-conference-template-organizer` skill
+
+**Process**:
+- **Template Preparation**: Download conference .zip → extract main files → remove sample content → clean Overleaf-ready structure
+- **Citation Verification** (`citation-verification`): Multi-layer validation (Format → API → Information → Content) → prevents hallucinations
+- **Systematic Writing**: Narrative framing → 5-sentence abstract formula → section-by-section drafting with feedback cycles
+- **Anti-AI Processing** (`writing-anti-ai`): Remove inflated symbolism, promotional language, vague attributions → add human voice and rhythm → bilingual support (EN/CN)
+
+**Venues**: NeurIPS, ICML, ICLR, ACL, AAAI, COLM, Nature, Science, Cell, PNAS
+
+#### 5. Paper Self-Review
+
+Quality assurance before submission:
+
+**Tools**: `paper-self-review` skill
+
+**Process**:
+- **Structure Check**: Logical flow, section balance, narrative coherence
+- **Logic Validation**: Argument soundness, claim-evidence alignment, assumption clarity
+- **Citation Audit**: Reference accuracy, proper attribution, citation completeness
+- **Figure Quality**: Visual clarity, caption completeness, color accessibility
+- **Writing Polish**: Grammar, clarity, conciseness, academic tone
+- **Compliance**: Page limits, formatting requirements, ethical disclosures
+
+**6-item checklist** → systematic quality assessment
+
+#### 6. Submission & Rebuttal
+
+Paper submission and review response:
+
+**Tools**: `review-response` skill + `rebuttal-writer` agent
+
+**Submission Process**:
+- **Pre-submission**: Conference-specific checklists (NeurIPS 16-item, ICML Broader Impact, ICLR LLM disclosure)
+- **Format Check**: Page limits, anonymization, supplementary materials
+- **Final Review**: Proofread, check references, verify figures
+
+**Rebuttal Process**:
+- **Review Analysis**: Parse and classify comments (Major/Minor/Typo/Misunderstanding)
+- **Response Strategy**: Accept/Defend/Clarify/Experiment → tailored approach per comment type
+- **Rebuttal Writing**: Structured response with evidence and reasoning
+- **Tone Management**: Professional, respectful, evidence-based language
+
+**Command**: `/rebuttal <review_file>` → generates complete rebuttal document with experiment plan
+
+#### 7. Post-Acceptance Processing
+
+Conference preparation and research promotion:
+
+**Tools**: `post-acceptance` skill
+
+**Process**:
+- **Presentation**: Slide creation guidance (15/20/30 min formats) → visual design principles → storytelling structure
+- **Poster**: Academic poster templates (A0/A1 sizes) → layout optimization → visual hierarchy
+- **Promotion**: Social media content (Twitter/X, LinkedIn) → blog posts → press releases → research summaries
+
+**Commands**: `/presentation`, `/poster`, `/promote` → automated content generation
+
+**Coverage**: 90% of academic research lifecycle (from idea to publication)
+
+### Supporting Workflows
+
+These workflows run in the background to enhance the primary workflows.
+
+#### Automated Enforcement Workflow
 
 Cross-platform hooks (Node.js) automate workflow enforcement:
 
@@ -39,36 +153,18 @@ Session Start → Skill Evaluation → Session End → Session Stop
 
 **Cross-platform**: All hooks use Node.js (not shell scripts) ensuring Windows/macOS/Linux compatibility.
 
-### 2. Paper Writing Workflow
+#### Knowledge Extraction Workflow
 
-Complete lifecycle from idea to publication:
+Two specialized mining agents continuously extract knowledge to improve skills:
 
-```
-Template Preparation → Writing → Anti-AI → Submission → Rebuttal
-```
+- **paper-miner** (agent): Analyze research papers (PDF/DOCX/arXiv links) → extracts writing patterns, structure insights, venue requirements, rebuttal strategies → updates `ml-paper-writing/references/knowledge/` with categorized entries (structure.md, writing-techniques.md, submission-guides.md, review-response.md)
+- **kaggle-miner** (agent): Study winning Kaggle competition solutions → extract competition briefs, front-runner detailed technical analysis, code templates, best practices → update the `kaggle-learner` skill's knowledge base (`references/knowledge/[domain]/` directories, categorized by NLP/CV/Time Series/Tabular/Multimodal)
 
-- **Template Prep** (`latex-conference-template-organizer`): Download official conference template .zip files → skill extracts main files, removes sample content → outputs clean template structure ready for Overleaf
-- **Writing** (`ml-paper-writing`): Systematic guidance from research repository to final draft → includes narrative framing, abstract formulas (5-sentence), literature search with citation verification, section-by-section drafting with feedback cycles
-- **Anti-AI** (`writing-anti-ai`): Pattern detection removes inflated symbolism, promotional language, vague attributions → adds human voice and varied rhythm → supports English and Chinese
-- **Submission**: Conference-specific checklists (NeurIPS 16-item, ICML Broader Impact, ICLR LLM disclosure) and page limit enforcement
-- **Rebuttal**: Strategies from paper-miner knowledge base → extracted from successful conference rebuttals → addresses technical questions and additional experiment requests
+**Knowledge feedback loop**: Each paper or solution analyzed enriches the knowledge base, creating a self-improving system that evolves with your research.
 
-### 3. Code Organization Workflow
+#### Skill Evolution System
 
-Maintainable ML project structure:
-
-```
-Project Structure → Code Style → Debug → Git Workflow
-```
-
-- **Structure** (`architecture-design`): Factory & Registry patterns for module instantiation → config-driven models accept only `cfg` parameter → enforced by `rules/coding-style.md`
-- **Style** (enforced by `code-reviewer` agent): 200-400 line files maximum → type hints required → `@dataclass(frozen=True)` for configs → functions split before 4-level nesting
-- **Debug** (`bug-detective`): Systematic error detection for Python, Bash/Zsh, JavaScript/TypeScript → error pattern matching → stack trace analysis → common anti-pattern identification
-- **Git** (`git-workflow`): Conventional Commits format (`feat/scope: message`) → branch strategy (master/develop/feature) → merge with `--no-ff` → rebase for syncing upstream changes
-
-### 4. Skill Evolution System
-
-3-step continuous improvement cycle:
+3-step continuous improvement cycle for maintaining and improving skills:
 
 ```
 skill-development → skill-quality-reviewer → skill-improver
@@ -78,19 +174,10 @@ skill-development → skill-quality-reviewer → skill-improver
 2. **Review** (`skill-quality-reviewer`): 4-dimension quality assessment → Description Quality (25%), Content Organization (30%), Writing Style (20%), Structural Integrity (25%) → generates improvement plan with prioritized fixes
 3. **Improve** (`skill-improver`): Merges suggested changes → updates documentation → iterates on feedback → reads improvement plans and applies changes automatically
 
-### 5. Knowledge Extraction Workflow
-
-Two specialized mining agents continuously extract knowledge to improve skills:
-
-- **paper-miner** (agent): Analyze research papers (PDF/DOCX/arXiv links) → extracts writing patterns, structure insights, venue requirements, rebuttal strategies → updates `ml-paper-writing/references/knowledge/` with categorized entries (structure.md, writing-techniques.md, submission-guides.md, review-response.md)
-- **kaggle-miner** (agent): Study winning Kaggle competition solutions → extract competition briefs, front-runner detailed technical analysis, code templates, best practices → update the `kaggle-learner` skill's knowledge base (`references/knowledge/[domain]/` directories, categorized by NLP/CV/Time Series/Tabular/Multimodal)
-
-**Knowledge feedback loop**: Each paper or solution analyzed enriches the knowledge base, creating a self-improving system that evolves with your research.
-
 ## File Structure
 
 ```
-oh-my-claude/
+claude-scholar/
 ├── hooks/               # Cross-platform JavaScript hooks (automated enforcement)
 │   ├── session-start.js         # Session begin - shows Git status, todos, commands
 │   ├── skill-forced-eval.js     # Force skill evaluation before each prompt
@@ -98,7 +185,7 @@ oh-my-claude/
 │   ├── stop-summary.js          # Session stop - quick status check, temp file detection
 │   └── security-guard.js        # Security validation for file operations
 │
-├── skills/              # 22 specialized skills (domain knowledge + workflows)
+├── skills/              # 32 specialized skills (domain knowledge + workflows)
 │   ├── ml-paper-writing/        # Full paper writing: NeurIPS, ICML, ICLR, ACL, AAAI, COLM
 │   │   └── references/
 │   │       └── knowledge/        # Extracted patterns from successful papers
@@ -107,11 +194,42 @@ oh-my-claude/
 │   │       ├── submission-guides.md   # Venue requirements (page limits, etc.)
 │   │       └── review-response.md     # Rebuttal strategies
 │   │
+│   ├── research-ideation/        # Research startup: 5W1H, literature review, gap analysis
+│   │   └── references/
+│   │       ├── 5w1h-framework.md           # Systematic thinking tool
+│   │       ├── gap-analysis-guide.md       # 5 types of research gaps
+│   │       ├── literature-search-strategies.md
+│   │       ├── research-question-formulation.md
+│   │       ├── method-selection-guide.md
+│   │       └── research-planning.md
+│   │
+│   ├── results-analysis/         # Experiment analysis: statistics, visualization, ablation
+│   │   └── references/
+│   │       ├── statistical-methods.md      # t-test, ANOVA, Wilcoxon
+│   │       ├── visualization-best-practices.md  # matplotlib/seaborn
+│   │       ├── results-writing-guide.md    # Writing results sections
+│   │       └── common-pitfalls.md          # Common analysis mistakes
+│   │
+│   ├── review-response/          # Systematic rebuttal writing
+│   │   └── references/
+│   │       ├── review-classification.md    # Major/Minor/Typo/Misunderstanding
+│   │       ├── response-strategies.md      # Accept/Defend/Clarify/Experiment
+│   │       ├── rebuttal-templates.md       # Structured response templates
+│   │       └── tone-guidelines.md          # Professional language
+│   │
+│   ├── paper-self-review/        # 6-item quality checklist
+│   ├── post-acceptance/          # Conference preparation
+│   │   └── references/
+│   │       ├── presentation-templates/     # Slide creation (15/20/30 min)
+│   │       ├── poster-templates/           # Academic poster design
+│   │       ├── promotion-examples/         # Social media content
+│   │       └── design-guidelines.md        # Visual design principles
+│   │
+│   ├── citation-verification/    # Multi-layer citation validation
 │   ├── writing-anti-ai/         # Remove AI patterns: symbolism, promotional language
 │   │   └── references/
 │   │       ├── patterns-english.md    # English AI patterns to remove
-│   │       ├── patterns-chinese.md     # Chinese AI patterns to remove
-│   │       └── phrases-to-cut.md        # Filler phrases to delete
+│   │       └── patterns-chinese.md     # Chinese AI patterns to remove
 │   │
 │   ├── architecture-design/     # ML project patterns: Factory, Registry, Config-driven
 │   ├── git-workflow/            # Git discipline: Conventional Commits, branching
@@ -125,7 +243,13 @@ oh-my-claude/
 │   ├── latex-conference-template-organizer  # Template cleanup for Overleaf
 │   └── ... (10+ more skills)
 │
-├── commands/            # 30+ slash commands (quick workflow execution)
+├── commands/            # 50+ slash commands (quick workflow execution)
+│   ├── research-init.md         # Launch research startup workflow
+│   ├── analyze-results.md       # Analyze experiment results
+│   ├── rebuttal.md              # Generate systematic rebuttal document
+│   ├── presentation.md          # Create conference presentation outline
+│   ├── poster.md                # Generate academic poster design plan
+│   ├── promote.md               # Generate promotion content
 │   ├── plan.md                  # Implementation planning with agent delegation
 │   ├── commit.md                # Conventional Commits: feat/fix/docs/refactor
 │   ├── code-review.md           # Quality and security review workflow
@@ -141,18 +265,27 @@ oh-my-claude/
 │       ├── sc-improve.md         # Code improvement
 │       └── ...
 │
-├── agents/              # 7 specialized agents (focused task delegation)
+├── agents/              # 14 specialized agents (focused task delegation)
+│   ├── literature-reviewer.md   # Literature search and trend analysis
+│   ├── data-analyst.md          # Automated data analysis and visualization
+│   ├── rebuttal-writer.md       # Systematic rebuttal writing
+│   ├── paper-miner.md           # Extract paper knowledge: structure, techniques
 │   ├── architect.md             # System design: architecture decisions
 │   ├── code-reviewer.md         # Review code: quality, security, best practices
 │   ├── tdd-guide.md             # Guide TDD: test-first development
-│   ├── paper-miner.md           # Extract paper knowledge: structure, techniques
 │   ├── kaggle-miner.md          # Extract engineering practices from Kaggle
 │   ├── build-error-resolver.md  # Fix build errors: analyze and resolve
-│   └── refactor-cleaner.md      # Remove dead code: detect and cleanup
+│   ├── refactor-cleaner.md      # Remove dead code: detect and cleanup
+│   ├── bug-analyzer.md          # Deep code execution flow analysis and root cause investigation
+│   ├── dev-planner.md           # Implementation planning and task breakdown
+│   ├── ui-sketcher.md           # UI blueprint design and interaction specs
+│   └── story-generator.md       # User story and requirement generation
 │
 ├── rules/               # Global guidelines (always-follow constraints)
 │   ├── coding-style.md          # ML project standards: file size, immutability, types
-│   └── agents.md                # Agent orchestration: when to delegate, parallel execution
+│   ├── agents.md                # Agent orchestration: when to delegate, parallel execution
+│   ├── security.md              # Secrets management, sensitive file protection
+│   └── experiment-reproducibility.md  # Random seeds, config recording, checkpoints
 │
 ├── CLAUDE.md            # Global configuration: project overview, preferences, rules
 │
@@ -161,15 +294,30 @@ oh-my-claude/
 
 ## Feature Highlights
 
-### Skills (21 total)
+### Skills (32 total)
+
+**Web Design:**
+- `frontend-design` - Create distinctive, production-grade frontend interfaces
+- `ui-ux-pro-max` - UI/UX design intelligence (50+ styles, 97 palettes, 9 stacks)
+- `web-design-reviewer` - Visual inspection and design issue fixing
 
 **Writing & Academic:**
 - `ml-paper-writing` - Full paper writing guidance for top conferences/journals
 - `writing-anti-ai` - Remove AI writing patterns (bilingual support)
 - `doc-coauthoring` - Structured document collaboration workflow
 - `latex-conference-template-organizer` - LaTeX template management
+- `daily-paper-generator` - Automated daily paper generation for research tracking
+
+**Research Workflow:**
+- `research-ideation` - Research startup: 5W1H brainstorming, literature review, gap analysis
+- `results-analysis` - Experiment analysis: statistical testing, visualization, ablation studies
+- `review-response` - Systematic rebuttal writing with tone management
+- `paper-self-review` - 6-item quality checklist for paper self-assessment
+- `post-acceptance` - Conference preparation: presentations, posters, promotion
+- `citation-verification` - Multi-layer citation validation to prevent hallucinations
 
 **Development:**
+- `daily-coding` - Daily coding checklist (minimal, auto-triggered)
 - `git-workflow` - Git best practices (Conventional Commits, branching)
 - `code-review-excellence` - Code review guidelines
 - `bug-detective` - Debugging for Python, Bash, JS/TS
@@ -191,8 +339,19 @@ oh-my-claude/
 - `webapp-testing` - Local web application testing
 - `kaggle-learner` - Learn from Kaggle solutions
 
-### Commands (30+)
+### Commands (50+)
 
+**Research Commands:**
+| Command | Purpose |
+|---------|---------|
+| `/research-init` | Launch research startup workflow (5W1H, literature review, gap analysis) |
+| `/analyze-results` | Analyze experiment results (statistics, visualization, ablation) |
+| `/rebuttal` | Generate systematic rebuttal document from review comments |
+| `/presentation` | Create conference presentation outline |
+| `/poster` | Generate academic poster design plan |
+| `/promote` | Generate promotion content (Twitter, LinkedIn, blog) |
+
+**Development Commands:**
 | Command | Purpose |
 |---------|---------|
 | `/plan` | Create implementation plans |
@@ -206,15 +365,27 @@ oh-my-claude/
 | `/learn` | Extract reusable patterns |
 | `/sc` | SuperClaude command suite (20+ commands) |
 
-### Agents (7 specialized)
+### Agents (14 specialized)
 
+**Research Agents:**
+- **literature-reviewer** - Literature search, classification, and trend analysis
+- **data-analyst** - Automated data analysis and visualization
+- **rebuttal-writer** - Systematic rebuttal writing with tone optimization
+- **paper-miner** - Extract paper writing knowledge from successful publications
+
+**Development Agents:**
 - **architect** - System architecture design
 - **build-error-resolver** - Fix build errors
 - **code-reviewer** - Review code quality
 - **refactor-cleaner** - Remove dead code
 - **tdd-guide** - Guide TDD workflow
-- **paper-miner** - Extract paper writing knowledge
 - **kaggle-miner** - Extract Kaggle engineering practices
+- **bug-analyzer** - Deep code execution flow analysis and root cause investigation
+- **dev-planner** - Implementation planning and task breakdown
+
+**Design & Content Agents:**
+- **ui-sketcher** - UI blueprint design and interaction specs
+- **story-generator** - User story and requirement generation
 
 ## Quick Start
 
@@ -228,12 +399,12 @@ Complete setup for data science, AI research, and academic writing:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Galaxy-Dawn/oh-my-claude.git ~/.claude
+git clone https://github.com/Galaxy-Dawn/claude-scholar.git ~/.claude
 
 # Restart Claude Code CLI
 ```
 
-**Includes**: All 22 skills, 30+ commands, 7 agents, 5 hooks, and project rules.
+**Includes**: All 32 skills, 50+ commands, 14 agents, 5 hooks, and project rules.
 
 #### Option 2: Minimal Installation
 
@@ -241,21 +412,24 @@ Core hooks and essential skills only (faster load, less complexity):
 
 ```bash
 # Clone repository
-git clone https://github.com/Galaxy-Dawn/oh-my-claude.git /tmp/oh-my-claude
+git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 
 # Copy only hooks and core skills
 mkdir -p ~/.claude/hooks ~/.claude/skills
-cp /tmp/oh-my-claude/hooks/*.js ~/.claude/hooks/
-cp -r /tmp/oh-my-claude/skills/ml-paper-writing ~/.claude/skills/
-cp -r /tmp/oh-my-claude/skills/writing-anti-ai ~/.claude/skills/
-cp -r /tmp/oh-my-claude/skills/git-workflow ~/.claude/skills/
-cp -r /tmp/oh-my-claude/skills/bug-detective ~/.claude/skills/
+cp /tmp/claude-scholar/hooks/*.js ~/.claude/hooks/
+cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.claude/skills/
+cp -r /tmp/claude-scholar/skills/research-ideation ~/.claude/skills/
+cp -r /tmp/claude-scholar/skills/results-analysis ~/.claude/skills/
+cp -r /tmp/claude-scholar/skills/review-response ~/.claude/skills/
+cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.claude/skills/
+cp -r /tmp/claude-scholar/skills/git-workflow ~/.claude/skills/
+cp -r /tmp/claude-scholar/skills/bug-detective ~/.claude/skills/
 
 # Cleanup
-rm -rf /tmp/oh-my-claude
+rm -rf /tmp/claude-scholar
 ```
 
-**Includes**: 5 hooks, 4 core skills.
+**Includes**: 5 hooks, 7 core skills (complete research workflow + essential development).
 
 #### Option 3: Selective Installation
 
@@ -263,8 +437,8 @@ Pick and choose specific components:
 
 ```bash
 # Clone repository
-git clone https://github.com/Galaxy-Dawn/oh-my-claude.git /tmp/oh-my-claude
-cd /tmp/oh-my-claude
+git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+cd /tmp/claude-scholar
 
 # Copy what you need, for example:
 # - Hooks only
@@ -318,6 +492,20 @@ Defined in `rules/agents.md`:
 - Parallel task execution
 - Multi-perspective analysis
 
+### Security
+
+Defined in `rules/security.md`:
+- Secrets management (environment variables, `.env` files)
+- Sensitive file protection (never commit tokens, keys, credentials)
+- Pre-commit security checks via hooks
+
+### Experiment Reproducibility
+
+Defined in `rules/experiment-reproducibility.md`:
+- Random seed management for reproducibility
+- Configuration recording (Hydra auto-save)
+- Environment recording and checkpoint management
+
 ## Contributing
 
 This is a personal configuration, but you're welcome to:
@@ -340,10 +528,10 @@ This project is inspired by and builds upon excellent work from the community:
 - **[everything-claude-code](https://github.com/anthropics/everything-claude-code)** - Comprehensive resource for Claude Code CLI
 - **[AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs)** - Research-focused skills and configurations
 
-These projects provided valuable insights and foundations for the research-oriented features in Oh My Claude.
+These projects provided valuable insights and foundations for the research-oriented features in Claude Scholar.
 
 ---
 
 **For data science, AI research, and academic writing.**
 
-Repository: [https://github.com/Galaxy-Dawn/oh-my-claude](https://github.com/Galaxy-Dawn/oh-my-claude)
+Repository: [https://github.com/Galaxy-Dawn/claude-scholar](https://github.com/Galaxy-Dawn/claude-scholar)

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * SessionEnd Hook: 工作日志 + 智能建议（跨平台版本）
+ * SessionEnd Hook: Work Log + Smart Suggestions (Cross-platform)
  *
- * 事件: SessionEnd
- * 功能: 创建工作日志，记录变更并生成智能建议
+ * Event: SessionEnd
+ * Purpose: Create work log, record changes and generate smart suggestions
  */
 
 const path = require('path');
@@ -11,7 +11,7 @@ const fs = require('fs');
 const os = require('os');
 const common = require('./hook-common');
 
-// 读取 stdin 输入
+// Read stdin input
 let input = {};
 try {
   const stdinData = require('fs').readFileSync(0, 'utf8');
@@ -19,42 +19,42 @@ try {
     input = JSON.parse(stdinData);
   }
 } catch {
-  // 使用默认空对象
+  // Use default empty object
 }
 
 const cwd = input.cwd || process.cwd();
 const sessionId = input.session_id || 'unknown';
 const transcriptPath = input.transcript_path || '';
 
-// 创建工作日志目录
+// Create work log directory
 const logDir = path.join(cwd, '.claude', 'logs');
 fs.mkdirSync(logDir, { recursive: true });
 
-// 生成日志文件名
+// Generate log filename
 const now = new Date();
 const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
 const logFile = path.join(logDir, `session-${dateStr}-${sessionId.substring(0, 8)}.md`);
 
-// 获取项目信息
+// Get project info
 const projectName = path.basename(cwd);
 
-// 构建日志内容
+// Build log content
 let logContent = '';
 
-logContent += `# 📝 工作日志 - ${projectName}\n`;
+logContent += `# 📝 Work Log - ${projectName}\n`;
 logContent += `\n`;
-logContent += `**会话 ID**: ${sessionId}\n`;
-logContent += `**时间**: ${common.formatDateTime(now)}\n`;
-logContent += `**目录**: ${cwd}\n`;
+logContent += `**Session ID**: ${sessionId}\n`;
+logContent += `**Time**: ${common.formatDateTime(now)}\n`;
+logContent += `**Directory**: ${cwd}\n`;
 logContent += `\n`;
 
-// Git 变更统计
-logContent += `## 📊 本次会话变更\n`;
+// Git change statistics
+logContent += `## 📊 Session Changes\n`;
 const gitInfo = common.getGitInfo(cwd);
 const changesDetails = gitInfo.is_repo ? common.getChangesDetails(cwd) : { added: 0, modified: 0, deleted: 0 };
 
 if (gitInfo.is_repo) {
-  logContent += `**分支**: ${gitInfo.branch}\n`;
+  logContent += `**Branch**: ${gitInfo.branch}\n`;
   logContent += `\n`;
   logContent += '```\n';
 
@@ -63,161 +63,161 @@ if (gitInfo.is_repo) {
       logContent += `${change}\n`;
     }
   } else {
-    logContent += '无变更\n';
+    logContent += 'No changes\n';
   }
 
   logContent += '```\n';
 
-  // 变更统计
+  // Change statistics
   logContent += `\n`;
-  logContent += '| 类型 | 数量 |\n';
+  logContent += '| Type | Count |\n';
   logContent += '|------|------|\n';
-  logContent += `| 新增 | ${changesDetails.added} |\n`;
-  logContent += `| 修改 | ${changesDetails.modified} |\n`;
-  logContent += `| 删除 | ${changesDetails.deleted} |\n`;
+  logContent += `| Added | ${changesDetails.added} |\n`;
+  logContent += `| Modified | ${changesDetails.modified} |\n`;
+  logContent += `| Deleted | ${changesDetails.deleted} |\n`;
 } else {
-  logContent += '非 Git 仓库\n';
+  logContent += 'Not a Git repository\n';
 }
 
 logContent += `\n`;
 
-// 智能建议
+// Smart suggestions
 if (gitInfo.has_changes) {
-  logContent += `## 💡 建议操作\n`;
+  logContent += `## 💡 Suggested Actions\n`;
   logContent += `\n`;
 
   const typeAnalysis = common.analyzeChangesByType(cwd);
 
   if (changesDetails.modified > 0 || changesDetails.added > 0) {
-    logContent += '- 使用代码审查工具检查修改\n';
+    logContent += '- Review changes with code review tools\n';
   }
   if (typeAnalysis.test_files > 0) {
-    logContent += '- 有测试文件变更，记得运行测试套件\n';
+    logContent += '- Test files changed, remember to run test suite\n';
   }
   if (typeAnalysis.docs_files > 0) {
-    logContent += '- 文档已更新，确保与代码同步\n';
+    logContent += '- Documentation updated, ensure sync with code\n';
   }
   if (typeAnalysis.sql_files > 0) {
-    logContent += '- SQL 文件有变更，确保更新所有数据库脚本\n';
+    logContent += '- SQL files changed, ensure all database scripts are updated\n';
   }
   if (typeAnalysis.service_files > 0) {
-    logContent += '- 新增了 Service/Controller，记得更新 API 文档\n';
+    logContent += '- New Service/Controller added, remember to update API docs\n';
   }
   if (typeAnalysis.config_files > 0) {
-    logContent += '- 配置文件已修改，检查是否需要更新环境变量\n';
+    logContent += '- Config files modified, check if environment variables need updating\n';
   }
 
   logContent += `\n`;
 }
 
-// 读取 transcript 提取关键操作（如果可用）
+// Read transcript to extract key operations (if available)
 if (transcriptPath && fs.existsSync(transcriptPath)) {
   try {
     const transcript = fs.readFileSync(transcriptPath, 'utf8');
     const toolMatches = transcript.match(/Tool used: [A-Z][a-z]*/g) || [];
 
     if (toolMatches.length > 0) {
-      // 统计工具使用次数
+      // Count tool usage
       const toolCounts = {};
       for (const match of toolMatches) {
         const tool = match.replace('Tool used: ', '');
         toolCounts[tool] = (toolCounts[tool] || 0) + 1;
       }
 
-      // 排序并取前 10
+      // Sort and take top 10
       const sortedTools = Object.entries(toolCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
 
       if (sortedTools.length > 0) {
-        logContent += `## 🔧 主要操作\n`;
+        logContent += `## 🔧 Key Operations\n`;
         logContent += `\n`;
 
         for (const [tool, count] of sortedTools) {
-          logContent += `| ${tool} | ${count} 次 |\n`;
+          logContent += `| ${tool} | ${count} times |\n`;
         }
 
         logContent += `\n`;
       }
     }
   } catch {
-    // 忽略错误
+    // Ignore errors
   }
 }
 
-// 下次继续建议
-logContent += `## 🎯 下次继续\n`;
+// Next steps
+logContent += `## 🎯 Next Steps\n`;
 logContent += `\n`;
 
-// Git 提交建议
+// Git commit suggestions
 if (gitInfo.has_changes) {
-  logContent += '- ⚠️ 有未提交变更，建议先提交代码：\n';
+  logContent += '- ⚠️ Uncommitted changes detected, consider committing first:\n';
   logContent += '  ```bash\n';
   logContent += '  git add . && git commit -m "feat: xxx"\n';
   logContent += '  ```\n';
 } else {
-  logContent += '- ✅ 工作区干净，可以开始新任务\n';
+  logContent += '- ✅ Working directory clean, ready for new tasks\n';
 }
 
-// 待办事项提醒
+// Todo reminders
 const todoInfo = common.getTodoInfo(cwd);
 if (todoInfo.found) {
-  logContent += `- 更新待办事项: ${todoInfo.file} (${todoInfo.pending} 个未完成)\n`;
+  logContent += `- Update todos: ${todoInfo.file} (${todoInfo.pending} pending)\n`;
 }
 
-// CLAUDE.md 记忆更新检查
+// CLAUDE.md memory update check
 const homeDir = os.homedir();
 const claudeMdCheck = common.checkClaudeMdUpdate(homeDir);
 
 if (claudeMdCheck.needsUpdate) {
-  logContent += `- ⚠️ **CLAUDE.md 记忆需要更新** (${claudeMdCheck.changedFiles.length} 个源文件变更)\n`;
-  logContent += `  运行 "/update-memory" 命令同步最新记忆\n`;
+  logContent += `- ⚠️ **CLAUDE.md memory needs updating** (${claudeMdCheck.changedFiles.length} source files changed)\n`;
+  logContent += `  Run "/update-memory" to sync latest memory\n`;
 
-  // 记录变更详情到日志
+  // Record change details to log
   logContent += `\n`;
-  logContent += `### CLAUDE.md 变更详情\n`;
+  logContent += `### CLAUDE.md Change Details\n`;
   logContent += `\n`;
-  logContent += `| 类型 | 文件 | 修改时间 |\n`;
+  logContent += `| Type | File | Modified |\n`;
   logContent += `|------|------|----------|\n`;
   for (const file of claudeMdCheck.changedFiles.slice(0, 10)) {
     logContent += `| ${file.type} | ${file.relativePath} | ${file.mtime} |\n`;
   }
   if (claudeMdCheck.changedFiles.length > 10) {
-    logContent += `| ... | 还有 ${claudeMdCheck.changedFiles.length - 10} 个文件 | ... |\n`;
+    logContent += `| ... | ${claudeMdCheck.changedFiles.length - 10} more files | ... |\n`;
   }
 } else {
-  logContent += `- ✅ CLAUDE.md 记忆已是最新\n`;
+  logContent += `- ✅ CLAUDE.md memory is up to date\n`;
 }
 
-logContent += '- 查看上下文快照: `cat .claude/session-context-*.md`\n';
+logContent += '- View context snapshot: `cat .claude/session-context-*.md`\n';
 logContent += `\n`;
 
-// 写入日志文件
+// Write log file
 fs.writeFileSync(logFile, logContent, 'utf8');
 
-// 构建显示给用户的消息
+// Build message to display to user
 let displayMsg = '\n---\n';
-displayMsg += '✅ **会话结束** | 工作日志已保存\n\n';
-displayMsg += '**本次变更**: ';
+displayMsg += '✅ **Session ended** | Work log saved\n\n';
+displayMsg += '**Changes**: ';
 
 if (gitInfo.is_repo) {
   if (gitInfo.has_changes) {
-    displayMsg += `${gitInfo.changes_count} 个文件\n\n`;
-    displayMsg += '**建议操作**:\n';
-    displayMsg += `- 查看日志: cat .claude/logs/${path.basename(logFile)}\n`;
-    displayMsg += '- 提交代码: git add . && git commit -m "feat: xxx"\n';
+    displayMsg += `${gitInfo.changes_count} files\n\n`;
+    displayMsg += '**Suggested actions**:\n';
+    displayMsg += `- View log: cat .claude/logs/${path.basename(logFile)}\n`;
+    displayMsg += '- Commit code: git add . && git commit -m "feat: xxx"\n';
   } else {
-    displayMsg += '无\n\n工作区干净 ✅\n';
+    displayMsg += 'None\n\nWorking directory clean ✅\n';
   }
 } else {
-  displayMsg += '非 Git 仓库\n';
+  displayMsg += 'Not a Git repository\n';
 }
 
-// 添加 CLAUDE.md 更新提醒到显示消息
+// Add CLAUDE.md update reminder to display message
 if (claudeMdCheck.needsUpdate) {
-  displayMsg += '\n**⚠️ CLAUDE.md 记忆需要更新**\n';
-  displayMsg += `- ${claudeMdCheck.changedFiles.length} 个源文件已变更\n`;
-  displayMsg += '- 运行 `/update-memory` 同步最新记忆\n';
+  displayMsg += '\n**⚠️ CLAUDE.md memory needs updating**\n';
+  displayMsg += `- ${claudeMdCheck.changedFiles.length} source files changed\n`;
+  displayMsg += '- Run `/update-memory` to sync latest memory\n';
 }
 
 displayMsg += '\n---';

@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 /**
- * SessionStart Hook: 显示项目状态（跨平台版本）
+ * SessionStart Hook: Display project status (cross-platform version)
  *
- * 事件: SessionStart
- * 功能: 在会话开始时显示项目状态、Git信息、待办事项、插件和命令
+ * Event: SessionStart
+ * Function: Display project status, Git info, todos, plugins, and commands at session start
  */
 
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
 
-// 导入共享函数库
+// Import shared utility library
 const common = require('./hook-common');
 
-// 导入包管理器检测
+// Import package manager detection
 const { getPackageManager, getSelectionPrompt } = require('../scripts/lib/package-manager');
 
-// 读取 stdin 输入
+// Read stdin input
 let input = {};
 try {
   const stdinData = require('fs').readFileSync(0, 'utf8');
@@ -24,31 +24,31 @@ try {
     input = JSON.parse(stdinData);
   }
 } catch {
-  // 使用默认空对象
+  // Use default empty object
 }
 
 const cwd = input.cwd || process.cwd();
 const projectName = path.basename(cwd);
 const homeDir = os.homedir();
 
-// 构建输出
+// Build output
 let output = '';
 
-// 会话启动信息
-output += `🚀 ${projectName} 会话已启动\n`;
-output += `▸ 时间: ${common.formatDateTime()}\n`;
-output += `▸ 目录: ${cwd}\n\n`;
+// Session start info
+output += `🚀 ${projectName} Session started\n`;
+output += `▸ Time: ${common.formatDateTime()}\n`;
+output += `▸ Directory: ${cwd}\n\n`;
 
-// Git 状态
+// Git status
 const gitInfo = common.getGitInfo(cwd);
 
 if (gitInfo.is_repo) {
-  output += `▸ Git 分支: ${gitInfo.branch}\n\n`;
+  output += `▸ Git branch: ${gitInfo.branch}\n\n`;
 
   if (gitInfo.has_changes) {
-    output += `⚠️  未提交变更 (${gitInfo.changes_count} 个文件):\n`;
+    output += `⚠️  Uncommitted changes (${gitInfo.changes_count} files):\n`;
 
-    // 显示变更列表（最多 10 个）
+    // Show change list (up to 10)
     const statusIcons = {
       'M': '📝',  // Modified
       'A': '➕',  // Added
@@ -67,63 +67,63 @@ if (gitInfo.is_repo) {
     }
 
     if (gitInfo.changes_count > 10) {
-      output += `  ... (还有 ${gitInfo.changes_count - 10} 个文件)\n`;
+      output += `  ... (${gitInfo.changes_count - 10} more files)\n`;
     }
   } else {
-    output += `✅ 工作区干净\n`;
+    output += `✅ Working directory clean\n`;
   }
   output += '\n';
 } else {
-  output += `▸ Git: 非仓库\n\n`;
+  output += `▸ Git: Not a repository\n\n`;
 }
 
-// 包管理器检测
+// Package manager detection
 try {
   const pm = getPackageManager();
-  output += `📦 包管理器: ${pm.name} (${pm.source})\n`;
+  output += `📦 Package manager: ${pm.name} (${pm.source})\n`;
 
-  // 如果是通过 fallback 检测的，提示设置
+  // If detected via fallback, suggest setup
   if (pm.source === 'fallback' || pm.source === 'default') {
-    output += `💡 运行 /setup-pm 配置首选包管理器\n`;
+    output += `💡 Run /setup-pm to configure preferred package manager\n`;
   }
 } catch (err) {
-  // 包管理器检测失败，静默忽略
+  // Package manager detection failed, silently ignore
 }
 
 output += '\n';
 
-// 待办事项
-output += `📋 待办事项:\n`;
+// Todos
+output += `📋 Todos:\n`;
 const todoInfo = common.getTodoInfo(cwd);
 
 if (todoInfo.found) {
-  output += `  - ${todoInfo.pending} 未完成 / ${todoInfo.done} 已完成\n`;
+  output += `  - ${todoInfo.pending} pending / ${todoInfo.done} completed\n`;
 
-  // 显示前 5 个未完成事项
+  // Show top 5 pending items
   if (fs.existsSync(todoInfo.path)) {
     try {
       const content = fs.readFileSync(todoInfo.path, 'utf8');
       const pendingItems = content.match(/^[\-\*] \[ \].+$/gm) || [];
 
       if (pendingItems.length > 0) {
-        output += `\n  最近待办:\n`;
+        output += `\n  Recent todos:\n`;
         for (let i = 0; i < Math.min(5, pendingItems.length); i++) {
           const item = pendingItems[i].replace(/^[\-\*] \[ \]\s*/, '').substring(0, 60);
           output += `  - ${item}\n`;
         }
       }
     } catch {
-      // 忽略错误
+      // Ignore errors
     }
   }
 } else {
-  output += `  未找到待办事项文件 (TODO.md, docs/todo.md 等)\n`;
+  output += `  No todo file found (TODO.md, docs/todo.md etc)\n`;
 }
 
 output += '\n';
 
-// 已启用的插件
-output += `🔌 已启用插件:\n`;
+// Enabled plugins
+output += `🔌 Enabled plugins:\n`;
 const enabledPlugins = common.getEnabledPlugins(homeDir);
 
 if (enabledPlugins.length > 0) {
@@ -131,30 +131,30 @@ if (enabledPlugins.length > 0) {
     output += `  - ${plugin.name}\n`;
   }
 } else {
-  output += `  无\n`;
+  output += `  None\n`;
 }
 
 output += '\n';
 
-// 可用命令
-output += `💡 可用命令:\n`;
+// Available commands
+output += `💡 Available commands:\n`;
 const availableCommands = common.getAvailableCommands(homeDir);
 
 if (availableCommands.length > 0) {
   for (const cmd of availableCommands.slice(0, 20)) {
-    const description = common.getCommandDescription(cmd.path) || `${cmd.plugin} 命令`;
+    const description = common.getCommandDescription(cmd.path) || `${cmd.plugin} command`;
     const truncatedDesc = description.length > 40 ? description.substring(0, 40) + '...' : description;
     output += `  /${cmd.name.padEnd(20)} ${truncatedDesc}\n`;
   }
 
   if (availableCommands.length > 20) {
-    output += `  ... (还有 ${availableCommands.length - 20} 个命令)\n`;
+    output += `  ... (${availableCommands.length - 20} more commands)\n`;
   }
 } else {
-  output += `  未找到可用命令\n`;
+  output += `  No commands found\n`;
 }
 
-// 输出 JSON
+// Output JSON
 const result = {
   continue: true,
   systemMessage: output

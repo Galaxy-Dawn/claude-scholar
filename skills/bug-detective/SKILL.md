@@ -6,290 +6,290 @@ version: 0.1.0
 
 # Bug Detective
 
-系统化的调试流程，用于排查和解决代码错误、异常和故障。提供结构化的调试方法和常见错误模式识别。
+A systematic debugging workflow for investigating and resolving code errors, exceptions, and failures. Provides structured debugging methods and common error pattern recognition.
 
-## 核心理念
+## Core Philosophy
 
-调试是科学问题的解决过程，需要：
-1. **理解问题** - 清晰定义症状和预期行为
-2. **收集证据** - 获取错误信息、日志、堆栈跟踪
-3. **形成假设** - 基于证据推断可能原因
-4. **验证假设** - 通过实验确认或排除原因
-5. **解决问题** - 应用修复并验证
+Debugging is a scientific problem-solving process that requires:
+1. **Understand the problem** - Clearly define symptoms and expected behavior
+2. **Gather evidence** - Collect error messages, logs, stack traces
+3. **Form hypotheses** - Infer possible causes based on evidence
+4. **Verify hypotheses** - Confirm or eliminate causes through experiments
+5. **Resolve the issue** - Apply fixes and verify
 
-## 调试流程
+## Debugging Workflow
 
-### 第一步：理解问题
+### Step 1: Understand the Problem
 
-在开始调试前，明确以下信息：
+Before starting to debug, clarify the following information:
 
-**必须收集的信息：**
-- 错误消息的完整内容
-- 错误发生的具体位置（文件名和行号）
-- 复现步骤（如何触发错误）
-- 预期行为 vs 实际行为
-- 环境信息（操作系统、版本、依赖）
+**Required information to collect:**
+- Complete error message content
+- Exact location of the error (filename and line number)
+- Reproduction steps (how to trigger the error)
+- Expected behavior vs actual behavior
+- Environment info (OS, versions, dependencies)
 
-**提问模板：**
+**Question template:**
 ```
-1. 具体的错误消息是什么？
-2. 错误发生在哪个文件的哪一行？
-3. 如何复现这个问题？请提供详细步骤
-4. 期望的结果是什么？实际发生了什么？
-5. 最近有什么改动可能引入这个问题？
-```
-
-### 第二步：分析错误类型
-
-根据错误类型选择调试策略：
-
-| 错误类型 | 特征 | 调试方法 |
-|---------|------|---------|
-| **语法错误** | 代码无法解析 | 检查语法、括号匹配、引号 |
-| **导入错误** | ModuleNotFoundError | 检查模块安装、路径配置 |
-| **类型错误** | TypeError | 检查数据类型、类型转换 |
-| **属性错误** | AttributeError | 检查对象属性是否存在 |
-| **键错误** | KeyError | 检查字典键是否存在 |
-| **索引错误** | IndexError | 检查列表/数组索引范围 |
-| **空指针** | NoneType/NullPointerException | 检查变量是否为 None |
-| **网络错误** | ConnectionError/Timeout | 检查网络连接、URL、超时设置 |
-| **权限错误** | PermissionError | 检查文件权限、用户权限 |
-| **资源错误** | FileNotFoundError | 检查文件路径是否存在 |
-
-### 第三步：定位问题源头
-
-使用以下方法定位问题：
-
-**1. 二分法定位**
-- 注释掉一半代码，检查问题是否仍然存在
-- 逐步缩小范围直到找到问题代码
-
-**2. 日志追踪**
-- 在关键位置添加 print/logging 语句
-- 追踪变量值的变化
-- 确认代码执行路径
-
-**3. 断点调试**
-- 使用调试器的断点功能
-- 单步执行代码
-- 检查变量状态
-
-**4. 堆栈跟踪分析**
-- 从错误消息中的堆栈跟踪找到调用链
-- 确定错误发生的直接原因
-- 追溯到根本原因
-
-### 第四步：形成假设并验证
-
-**假设框架：**
-```
-假设：[问题描述]导致[错误现象]
-
-验证步骤：
-1. [验证方法1]
-2. [验证方法2]
-
-预期结果：
-- 如果假设正确：[预期现象]
-- 如果假设错误：[预期现象]
+1. What is the exact error message?
+2. Which file and line does the error occur at?
+3. How can this issue be reproduced? Provide detailed steps.
+4. What was the expected result? What actually happened?
+5. What recent changes might have introduced this issue?
 ```
 
-### 第五步：应用修复
+### Step 2: Analyze Error Type
 
-修复后必须验证：
-1. 原始错误已解决
-2. 没有引入新的错误
-3. 相关功能仍正常工作
-4. 添加测试防止回归
+Choose a debugging strategy based on error type:
 
-## Python 常见错误模式
+| Error Type | Characteristics | Debugging Method |
+|-----------|----------------|-----------------|
+| **Syntax Error** | Code cannot be parsed | Check syntax, bracket matching, quotes |
+| **Import Error** | ModuleNotFoundError | Check module installation, path config |
+| **Type Error** | TypeError | Check data types, type conversions |
+| **Attribute Error** | AttributeError | Check if object attribute exists |
+| **Key Error** | KeyError | Check if dictionary key exists |
+| **Index Error** | IndexError | Check list/array index range |
+| **Null Reference** | NoneType/NullPointerException | Check if variable is None |
+| **Network Error** | ConnectionError/Timeout | Check network connection, URL, timeout settings |
+| **Permission Error** | PermissionError | Check file permissions, user permissions |
+| **Resource Error** | FileNotFoundError | Check if file path exists |
 
-### 1. 缩进错误
-### 2. 可变默认参数
-### 3. 循环中的闭包问题
-### 4. 修改正在迭代的列表
-### 5. 字符串比较使用 is
-### 6. 忘记调用 super().__init__()
+### Step 3: Locate the Problem Source
 
-## JavaScript/TypeScript 常见错误模式
+Use the following methods to locate the issue:
 
-### 1. this 绑定问题
-### 2. 异步错误处理
-### 3. 对象引用比较
+**1. Binary Search Method**
+- Comment out half the code, check if the problem persists
+- Progressively narrow the scope until the problematic code is found
 
-## Bash/Zsh 常见错误模式
+**2. Log Tracing**
+- Add print/logging statements at key locations
+- Track variable value changes
+- Confirm code execution path
 
-### 1. 空格问题
+**3. Breakpoint Debugging**
+- Use debugger breakpoint functionality
+- Step through code execution
+- Inspect variable state
+
+**4. Stack Trace Analysis**
+- Find the call chain from the stack trace in the error message
+- Determine the direct cause of the error
+- Trace back to the root cause
+
+### Step 4: Form and Verify Hypotheses
+
+**Hypothesis framework:**
+```
+Hypothesis: [problem description] causes [error phenomenon]
+
+Verification steps:
+1. [verification method 1]
+2. [verification method 2]
+
+Expected results:
+- If hypothesis is correct: [expected phenomenon]
+- If hypothesis is wrong: [expected phenomenon]
+```
+
+### Step 5: Apply Fix
+
+After fixing, verify:
+1. The original error is resolved
+2. No new errors have been introduced
+3. Related functionality still works correctly
+4. Tests added to prevent regression
+
+## Python Common Error Patterns
+
+### 1. Indentation Errors
+### 2. Mutable Default Arguments
+### 3. Closure Issues in Loops
+### 4. Modifying a List While Iterating
+### 5. Using `is` for String Comparison
+### 6. Forgetting to Call `super().__init__()`
+
+## JavaScript/TypeScript Common Error Patterns
+
+### 1. `this` Binding Issues
+### 2. Async Error Handling
+### 3. Object Reference Comparison
+
+## Bash/Zsh Common Error Patterns
+
+### 1. Spacing Issues
 
 ```bash
-# ❌ 赋值不能有空格
-name = "John"  # 错误：尝试运行 name 命令
+# ❌ No spaces allowed in assignment
+name = "John"  # Error: tries to run 'name' command
 
-# ✅ 正确的赋值
+# ✅ Correct assignment
 name="John"
 
-# ❌ 条件测试缺少空格
-if[$name -eq 1]; then  # 错误
+# ❌ Missing spaces in conditional test
+if[$name -eq 1]; then  # Error
 
-# ✅ 正确
+# ✅ Correct
 if [ $name -eq 1 ]; then
 ```
 
-### 2. 引号问题
+### 2. Quoting Issues
 
 ```bash
-# ❌ 单引号内变量不展开
-echo 'The value is $var'  # 输出: The value is $var
+# ❌ Variables not expanded inside single quotes
+echo 'The value is $var'  # Output: The value is $var
 
-# ✅ 使用双引号
-echo "The value is $var"  # 输出: The value is actual_value
+# ✅ Use double quotes
+echo "The value is $var"  # Output: The value is actual_value
 
-# ❌ 命令替换使用反引号（易混淆）
+# ❌ Using backticks for command substitution (confusing)
 result=`command`
 
-# ✅ 使用 $()
+# ✅ Use $()
 result=$(command)
 ```
 
-### 3. 未引用的变量
+### 3. Unquoted Variables
 
 ```bash
-# ❌ 变量未引用，空值会导致错误
-rm -rf $dir/*  # 如果 dir 为空，会删除当前目录所有文件
+# ❌ Unquoted variable, empty value causes errors
+rm -rf $dir/*  # If dir is empty, deletes all files in current directory
 
-# ✅ 始终引用变量
+# ✅ Always quote variables
 [ -n "$dir" ] && rm -rf "$dir"/*
 
-# 或使用 set -u 防止未定义变量
-set -u  # 或 set -o nounset
+# Or use set -u to prevent undefined variables
+set -u  # or set -o nounset
 ```
 
-### 4. 循环中的变量作用域
+### 4. Variable Scope in Loops
 
 ```bash
-# ❌ 管道创建子 shell，外部变量不改变
+# ❌ Pipe creates subshell, outer variable unchanged
 cat file.txt | while read line; do
-    count=$((count + 1))  # 外部 count 不会改变
+    count=$((count + 1))  # Outer count won't change
 done
-echo "Total: $count"  # 输出 0
+echo "Total: $count"  # Outputs 0
 
-# ✅ 使用进程替换或重定向
+# ✅ Use process substitution or redirection
 while read line; do
     count=$((count + 1))
 done < file.txt
-echo "Total: $count"  # 正确输出
+echo "Total: $count"  # Correct output
 ```
 
-### 5. 数组操作
+### 5. Array Operations
 
 ```bash
-# ❌ 错误的数组访问
+# ❌ Incorrect array access
 arr=(1 2 3)
-echo $arr[1]  # 输出 1[1]
+echo $arr[1]  # Outputs 1[1]
 
-# ✅ 正确的数组访问
-echo ${arr[1]}  # 输出 2
-echo ${arr[@]}  # 输出所有元素
-echo ${#arr[@]} # 输出数组长度
+# ✅ Correct array access
+echo ${arr[1]}  # Outputs 2
+echo ${arr[@]}  # Outputs all elements
+echo ${#arr[@]} # Outputs array length
 ```
 
-### 6. 字符串比较
+### 6. String Comparison
 
 ```bash
-# ❌ 使用 = 比较字符串
-if [ $name = "John" ]; then  # 在某些 shell 中不是标准
+# ❌ Using = for string comparison
+if [ $name = "John" ]; then  # Not standard in some shells
 
-# ✅ 使用 = 或 ==
+# ✅ Use = or ==
 if [ "$name" = "John" ]; then
 if [[ "$name" == "John" ]]; then
 
-# ❌ 数字比较使用 -eq 不是 =
-if [ $age = 18 ]; then  # 错误
+# ❌ Using -eq for numeric comparison instead of =
+if [ $age = 18 ]; then  # Wrong
 
-# ✅ 数字比较使用算术运算符
+# ✅ Use arithmetic operators for numeric comparison
 if [ $age -eq 18 ]; then
 if (( age == 18 )); then
 ```
 
-### 7. 命令失败继续执行
+### 7. Command Failure Continues Execution
 
 ```bash
-# ❌ 命令失败后继续执行
+# ❌ Execution continues after command failure
 cd /nonexistent
-rm file.txt  # 会删除当前目录的 file.txt
+rm file.txt  # Deletes file.txt in current directory
 
-# ✅ 使用 set -e 在错误时退出
-set -e  # 或 set -o errexit
-cd /nonexistent  # 脚本在此处退出
+# ✅ Use set -e to exit on error
+set -e  # or set -o errexit
+cd /nonexistent  # Script exits here
 rm file.txt
 
-# 或检查命令是否成功
+# Or check if command succeeded
 cd /nonexistent || exit 1
 ```
 
-## 常见调试命令
+## Common Debugging Commands
 
-### Python pdb 调试器
-### Node.js inspector
+### Python pdb Debugger
+### Node.js Inspector
 ### Git Bisect
 
-### Bash 调试
+### Bash Debugging
 
 ```bash
-# 调试模式运行脚本
-bash -x script.sh  # 打印每个命令
-bash -v script.sh  # 打印命令原文
-bash -n script.sh  # 语法检查，不执行
+# Run script in debug mode
+bash -x script.sh  # Print each command
+bash -v script.sh  # Print command source
+bash -n script.sh  # Syntax check, no execution
 
-# 在脚本中启用调试
-set -x  # 启用命令追踪
-set -v  # 启用 verbose 模式
-set -e  # 错误时退出
-set -u  # 未定义变量报错
-set -o pipefail  # 管道中任一命令失败则失败
+# Enable debugging within a script
+set -x  # Enable command tracing
+set -v  # Enable verbose mode
+set -e  # Exit on error
+set -u  # Error on undefined variables
+set -o pipefail  # Fail if any command in pipe fails
 ```
 
-## 预防性调试
+## Preventive Debugging
 
-### 1. 使用类型检查
-### 2. 输入验证
-### 3. 防御性编程
-### 4. 日志记录
+### 1. Use Type Checking
+### 2. Input Validation
+### 3. Defensive Programming
+### 4. Logging
 
-## 调试检查清单
+## Debugging Checklist
 
-### 开始调试前
-- [ ] 获取完整的错误消息
-- [ ] 记录错误发生的堆栈跟踪
-- [ ] 确认复现步骤
-- [ ] 了解预期行为
+### Before Starting
+- [ ] Obtain the complete error message
+- [ ] Record the stack trace of the error
+- [ ] Confirm reproduction steps
+- [ ] Understand expected behavior
 
-### 调试过程中
-- [ ] 检查最近的代码改动
-- [ ] 使用二分法定位问题
-- [ ] 添加日志追踪变量
-- [ ] 验证假设
+### During Debugging
+- [ ] Check recent code changes
+- [ ] Use binary search to locate the issue
+- [ ] Add logs to trace variables
+- [ ] Verify hypotheses
 
-### 解决问题后
-- [ ] 确认原始错误已修复
-- [ ] 测试相关功能
-- [ ] 添加测试防止回归
-- [ ] 记录问题和解决方案
+### After Resolution
+- [ ] Confirm the original error is fixed
+- [ ] Test related functionality
+- [ ] Add tests to prevent regression
+- [ ] Document the problem and solution
 
 ## Additional Resources
 
 ### Reference Files
 
 For detailed debugging techniques and patterns:
-- **`references/python-errors.md`** - Python 错误详解
-- **`references/javascript-errors.md`** - JavaScript/TypeScript 错误详解
-- **`references/shell-errors.md`** - Bash/Zsh 脚本错误详解
-- **`references/debugging-tools.md`** - 调试工具使用指南
-- **`references/common-patterns.md`** - 常见错误模式
+- **`references/python-errors.md`** - Python error details
+- **`references/javascript-errors.md`** - JavaScript/TypeScript error details
+- **`references/shell-errors.md`** - Bash/Zsh script error details
+- **`references/debugging-tools.md`** - Debugging tools usage guide
+- **`references/common-patterns.md`** - Common error patterns
 
 ### Example Files
 
 Working debugging examples:
-- **`examples/debugging-workflow.py`** - 完整调试流程示例
-- **`examples/error-handling-patterns.py`** - 错误处理模式
-- **`examples/debugging-workflow.sh`** - Shell 脚本调试示例
+- **`examples/debugging-workflow.py`** - Complete debugging workflow example
+- **`examples/error-handling-patterns.py`** - Error handling patterns
+- **`examples/debugging-workflow.sh`** - Shell script debugging example

@@ -1,30 +1,30 @@
 # Code Style Rule
 
-强制执行 ML 项目的代码风格规范，确保代码可维护性和一致性。
+Enforce code style standards for ML projects to ensure maintainability and consistency.
 
-## 核心原则
+## Core Principles
 
-### 小文件原则 (200-400 行)
+### Small File Principle (200-400 lines)
 
-- 每个文件保持在 200-400 行
-- 超过 400 行时拆分为多个模块
-- 相关功能组织在同一目录下
+- Keep each file within 200-400 lines
+- Split into multiple modules when exceeding 400 lines
+- Organize related functionality under the same directory
 
-**示例结构：**
+**Example structure:**
 ```
 src/model_module/
 ├── brain_decoder/
-│   ├── __init__.py          # Factory & Registry (50 行)
-│   ├── base_model.py        # 基类 (200 行)
-│   ├── transformer.py       # Transformer 实现 (300 行)
-│   └── cnn.py               # CNN 实现 (250 行)
+│   ├── __init__.py          # Factory & Registry (50 lines)
+│   ├── base_model.py        # Base class (200 lines)
+│   ├── transformer.py       # Transformer impl (300 lines)
+│   └── cnn.py               # CNN impl (250 lines)
 ```
 
-### 不可变性优先
+### Immutability First
 
-- 配置使用 dataclass（不可变）
-- 避免在函数内部修改输入参数
-- 使用 `@dataclass(frozen=True)` 确保配置不可变
+- Use dataclass for configuration (immutable)
+- Avoid mutating input parameters inside functions
+- Use `@dataclass(frozen=True)` to ensure config immutability
 
 ```python
 from dataclasses import dataclass
@@ -36,11 +36,11 @@ class ModelConfig:
     dropout: float = 0.1
 ```
 
-### 错误处理
+### Error Handling
 
-- 使用 try/except 处理异常
-- 捕获具体异常类型，避免裸 except
-- 记录错误信息用于调试
+- Use try/except for exception handling
+- Catch specific exception types, avoid bare except
+- Log error information for debugging
 
 ```python
 try:
@@ -50,11 +50,11 @@ except FileNotFoundError as e:
     raise
 ```
 
-### 类型提示
+### Type Hints
 
-- 所有函数必须有类型提示
-- 使用 typing 模块的类型
-- 复杂类型使用 TypeVar
+- All functions must have type hints
+- Use types from the typing module
+- Use TypeVar for complex types
 
 ```python
 from typing import Dict, List, Optional, TypeVar
@@ -65,68 +65,68 @@ def process_data(data: List[Dict], config: Config) -> Optional[DataFrame]:
     ...
 ```
 
-## Python 特定规范
+## Python Specific Standards
 
-### 导入顺序
+### Import Order
 
 ```python
-# 1. 标准库
+# 1. Standard library
 import os
 from pathlib import Path
 
-# 2. 第三方库
+# 2. Third-party libraries
 import torch
 import numpy as np
 from hydra import compose, initialize
 
-# 3. 本地模块
+# 3. Local modules
 from src.data_module import DataLoader
 from src.model_module import Model
 ```
 
-### 命名规范
+### Naming Conventions
 
 ```python
-# 类名：PascalCase
+# Class names: PascalCase
 class DataLoader:
     pass
 
-# 函数/变量：snake_case
+# Functions/variables: snake_case
 def load_config():
     batch_size = 32
 
-# 常量：UPPER_SNAKE_CASE
+# Constants: UPPER_SNAKE_CASE
 MAX_EPOCHS = 100
 DEFAULT_LR = 0.001
 
-# 私有：前缀下划线
+# Private: underscore prefix
 def _internal_function():
     pass
 ```
 
-### 文档字符串
+### Docstrings
 
 ```python
 def train_model(cfg: Config) -> Model:
-    """训练模型
+    """Train the model.
 
     Args:
-        cfg: 训练配置对象
+        cfg: Training configuration object.
 
     Returns:
-        训练好的模型实例
+        Trained model instance.
 
     Raises:
-        ValueError: 配置无效时
+        ValueError: When configuration is invalid.
     """
     ...
 ```
 
-## ML 项目特定规范
+## ML Project Specific Standards
 
-### Factory & Registry 模式
+### Factory & Registry Pattern
 
-所有模块必须使用工厂和注册模式：
+All modules must use factory and registry patterns:
 
 ```python
 # dataset/__init__.py
@@ -142,72 +142,109 @@ def DatasetFactory(name: str) -> Type[Dataset]:
     return DATASET_FACTORY.get(name, SimpleDataset)
 ```
 
-### Config-Driven 模型
+### Config-Driven Models
 
-模型 `__init__` 只接受 `cfg` 参数：
+Model `__init__` should only accept a `cfg` parameter:
 
 ```python
 @register_model('MyModel')
 class MyModel(nn.Module):
     def __init__(self, cfg: Config):
         super().__init__()
-        # 所有超参数从 cfg 获取
+        # All hyperparameters from cfg
         self.hidden_dim = cfg.model.hidden_dim
 ```
 
-### 目录结构规范
+### Directory Structure
 
 ```
 run/
-├── conf/                    # Hydra 配置
-├── pipeline/                # 工作流脚本
-└── outputs/                 # 输出目录
+├── conf/                    # Hydra configs
+├── pipeline/                # Workflow scripts
+└── outputs/                 # Output directory
 
 src/
-├── data_module/             # 数据模块
+├── data_module/             # Data module
 │   ├── dataset/
 │   ├── augmentation/
 │   └── utils.py
-├── model_module/            # 模型模块
-├── trainer_module/          # 训练模块
-└── utils/                   # 共享工具
+├── model_module/            # Model module
+├── trainer_module/          # Trainer module
+└── utils/                   # Shared utilities
 ```
 
-## 禁止模式
+## Prohibited Patterns
 
-❌ **禁止：**
-- 超过 800 行的文件
-- 4 层以上的嵌套
-- 可变默认参数：`def foo(a=[]):`
-- 全局变量（使用配置代替）
-- 裸 except：`except:`
-- 硬编码的超参数（使用 cfg）
-- 未使用的导入
-- print() 调试语句（使用 logger）
+❌ **Prohibited:**
+- Files exceeding 800 lines
+- Nesting deeper than 4 levels
+- Mutable default arguments: `def foo(a=[]):`
+- Global variables (use config instead)
+- Bare except: `except:`
+- Hardcoded hyperparameters (use cfg)
+- Unused imports
+- print() debug statements (use logger)
 
-✅ **推荐：**
-- 拆分大文件
-- 使用早期返回减少嵌套
+✅ **Recommended:**
+- Split large files
+- Use early returns to reduce nesting
 - `def foo(a=None):`
-- 配置驱动的参数
-- 具体异常捕获
-- 类型提示
-- 文档字符串
-- logger 记录
+- Config-driven parameters
+- Specific exception catching
+- Type hints
+- Docstrings
+- Logger for logging
 
-## 验证检查
+## Verification Checklist
 
-在提交代码前确保：
+Before committing code, ensure:
 
 ```bash
-# 类型检查
+# Type checking
 mypy src/
 
-# 代码风格
+# Code style
 ruff check .
 
-# 测试
+# Tests
 pytest
 ```
 
-违反这些规则将被 code-reviewer agent 标记。
+Violations of these rules will be flagged by the code-reviewer agent.
+
+## Logging Standards
+
+### Logger Naming
+
+```python
+import logging
+
+# Use module-level logger with __name__
+logger = logging.getLogger(__name__)
+```
+
+### Log Levels
+
+| Level | Usage |
+|-------|-------|
+| `DEBUG` | Detailed diagnostic info (tensor shapes, config values) |
+| `INFO` | Training progress, epoch results, key milestones |
+| `WARNING` | Recoverable issues (fallback behavior, deprecation) |
+| `ERROR` | Failures that need attention but don't crash |
+| `CRITICAL` | Unrecoverable errors |
+
+## Module `__init__.py` Standards
+
+Every package `__init__.py` must define `__all__` for explicit public API:
+
+```python
+# src/data_module/__init__.py
+from .dataset import DatasetFactory, register_dataset
+from .augmentation import AugmentationFactory
+
+__all__ = [
+    "DatasetFactory",
+    "register_dataset",
+    "AugmentationFactory",
+]
+```

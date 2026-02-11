@@ -1,6 +1,6 @@
 ---
 name: create_project
-description: 创建新项目，基于模板初始化、配置 uv 和 Git
+description: Create a new project from template with uv and Git initialization
 arguments:
   - name: project_name
     description: 项目名称
