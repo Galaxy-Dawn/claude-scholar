@@ -70,7 +70,7 @@
 
 | 阶段 | 核心工具 | 命令 |
 |------|---------|------|
-| 1. 研究构思 | `research-ideation` skill + `literature-reviewer` agent | `/research-init` |
+| 1. 研究构思 | `research-ideation` skill + `literature-reviewer` agent + Zotero MCP | `/research-init`, `/zotero-review`, `/zotero-notes` |
 | 2. ML 项目开发 | `architecture-design` skill + `code-reviewer` agent | `/plan`, `/commit`, `/tdd` |
 | 3. 实验分析 | `results-analysis` skill + `data-analyst` agent | `/analyze-results` |
 | 4. 论文写作 | `ml-paper-writing` skill + `paper-miner` agent | - |
@@ -81,6 +81,7 @@
 ### 支撑工作流
 
 - **自动化执行**: 5 个 Hook 在会话各阶段自动触发（技能评估、环境初始化、工作总结、安全检查）
+- **Zotero 集成**: 通过 Zotero MCP 服务器实现论文自动导入、集合管理、全文阅读和准确引用导出
 - **知识提取**: `paper-miner` 和 `kaggle-miner` agent 持续从论文和竞赛中提取知识
 - **技能进化**: `skill-development` → `skill-quality-reviewer` → `skill-improver` 三步改进循环
 
@@ -90,7 +91,7 @@
 
 ### 🔬 研究与分析 (4 skills)
 
-- **research-ideation**: 研究构思启动（5W1H、文献综述、Gap 分析、研究问题制定）
+- **research-ideation**: 研究构思启动（5W1H、文献综述、Gap 分析、研究问题制定、Zotero 自动集成）
 - **results-analysis**: 实验结果分析（统计检验、可视化、消融实验）
 - **citation-verification**: 引文验证（多层验证：格式→API→信息→内容）
 - **daily-paper-generator**: 每日论文生成器，用于研究追踪
@@ -148,7 +149,9 @@
 
 | 命令 | 功能 |
 |------|------|
-| `/research-init` | 启动研究构思工作流（5W1H、文献综述、Gap 分析） |
+| `/research-init` | 启动 Zotero 集成研究构思工作流（自动建集合、导入论文、全文分析） |
+| `/zotero-review` | 从 Zotero 集合读取论文，生成结构化文献综述 |
+| `/zotero-notes` | 批量阅读 Zotero 论文，生成结构化阅读笔记 |
 | `/analyze-results` | 分析实验结果（统计检验、可视化、消融实验） |
 | `/rebuttal` | 生成系统化 rebuttal 文档 |
 | `/presentation` | 创建会议演讲大纲 |
@@ -212,7 +215,7 @@
 
 ### 研究工作流代理
 
-- **literature-reviewer** - 文献搜索、分类和趋势分析
+- **literature-reviewer** - 文献搜索、分类和趋势分析（Zotero MCP 集成，支持自动导入、全文阅读）
 - **data-analyst** - 自动化数据分析和可视化
 - **rebuttal-writer** - 系统化 rebuttal 写作，语气优化
 - **paper-miner** - 从成功论文中提取写作知识

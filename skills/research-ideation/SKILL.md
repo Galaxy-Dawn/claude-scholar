@@ -26,10 +26,11 @@ Systematically brainstorm research ideas using the 5W1H framework:
 
 Systematically search, analyze, and synthesize related literature:
 - Build effective search keywords
-- Select appropriate academic databases (arXiv, Semantic Scholar, Google Scholar)
+- Search via WebSearch across academic databases (arXiv, Google Scholar, etc.)
 - Screen and evaluate paper quality
 - Identify research trends and gaps
 - Generate structured literature reviews
+- **Zotero Integration**: Papers are automatically added to Zotero via DOI, organized into topic-based collections, and open-access PDFs are auto-attached for full-text reading
 
 ### 3. Gap Analysis
 
@@ -93,6 +94,7 @@ Research interest → Idea brainstorming (5W1H) → Literature review → Gap an
 - `literature-review.md` - Structured literature review
 - `research-proposal.md` - Research proposal (including question, method, plan)
 - `references.bib` - References in BibTeX format
+- Zotero collection with organized papers and PDFs
 
 ## Integration with Other Systems
 
@@ -114,11 +116,24 @@ ml-paper-writing (Paper writing)
 - **Experimental results** → results-analysis for statistical analysis
 - **Analysis results** → Related Work and Methods sections of ml-paper-writing
 
+### Zotero Integration
+
+Through the Zotero MCP server, the research-ideation workflow automates literature management:
+
+- **Paper Discovery**: WebSearch finds relevant papers across academic databases
+- **Auto-Import**: Extract DOIs from search results, use `add_items_by_doi` to add papers with full metadata
+- **Collection Organization**: `create_collection` creates topic-based collections with standard sub-collections (Core Papers, Methods, Applications, Baselines, To-Read)
+- **PDF Attachment**: `find_and_attach_pdfs` automatically finds and attaches open-access PDFs via Unpaywall
+- **Full-Text Reading**: `get_item_fulltext` reads indexed PDF content for analysis and note-taking
+- **Library Search**: `search_library` and `get_collection_items` browse existing papers to avoid duplicates
+
 ### Key Configuration
 
 - **Literature search scope**: Papers from the last 3 years by default, configurable
 - **Output format**: Markdown format for easy editing and version control
 - **Citation management**: Generates references in BibTeX format
+- **Zotero collection naming**: `Research-{topic}-{YYYY}` format
+- **PDF auto-attach**: Enabled by default for open-access papers via Unpaywall
 
 ## Additional Resources
 
@@ -134,9 +149,17 @@ Detailed methodology guides, loaded on demand:
 
 - **`references/literature-search-strategies.md`** - Literature Search Strategies
   - Keyword construction techniques
-  - Academic database selection (arXiv, Semantic Scholar, Google Scholar)
+  - Academic database selection (arXiv, Google Scholar)
   - Search tips and screening criteria
   - Paper quality evaluation methods
+  - DOI extraction and Zotero auto-import workflow
+
+- **`references/zotero-integration-guide.md`** - Zotero MCP Integration Guide
+  - Available Zotero MCP tools (browse, add, cite)
+  - Collection organization strategy and naming conventions
+  - Automated workflow: WebSearch → DOI → Zotero import → PDF attach
+  - Full-text reading and structured note-taking
+  - Common issues and troubleshooting
 
 - **`references/gap-analysis-guide.md`** - Gap Analysis Guide
   - 5 types of Gap Analysis (literature, methodological, application, interdisciplinary, temporal)

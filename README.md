@@ -10,6 +10,8 @@ Personal Claude Code configuration repository, optimized for academic research a
 
 ## News
 
+- **2026-02-15**: Zotero MCP integration — added `/zotero-review` and `/zotero-notes` commands, updated `research-ideation` skill with Zotero integration guide, enhanced `literature-reviewer` agent with Zotero MCP support for automated paper import, collection management, full-text reading, and citation export
+- **2026-02-14**: Hooks optimization — restructured `security-guard` to two-tier system (Block + Confirm), `skill-forced-eval` now groups skills into 6 categories with silent scan mode, `session-start` limits display to top 5, `session-summary` adds 30-day log auto-cleanup, `stop-summary` shows separate added/modified/deleted counts; removed deprecated shell scripts (lib/common.sh, lib/platform.sh)
 - **2026-02-11**: Major update — added 10 new skills (research-ideation, results-analysis, citation-verification, review-response, paper-self-review, post-acceptance, daily-coding, frontend-design, ui-ux-pro-max, web-design-reviewer), 7 new agents, 8 research workflow commands, 2 new rules (security, experiment-reproducibility); restructured CLAUDE.md; 89 files changed
 - **2026-01-26**: Rewrote all Hooks to cross-platform Node.js; completely rewrote README; expanded ML paper writing knowledge base; merged PR #1 (cross-platform support)
 - **2026-01-25**: Project open-sourced, v1.0.0 released with 25 skills (architecture-design, bug-detective, git-workflow, kaggle-learner, scientific-writing, etc.), 2 agents (paper-miner, kaggle-miner), 30+ commands (including SuperClaude suite), 5 Shell Hooks, and 2 rules (coding-style, agents)
@@ -38,19 +40,36 @@ Claude Scholar is a personal configuration system for Claude Code CLI, providing
 
 Complete academic research lifecycle - 7 stages from idea to publication.
 
-#### 1. Research Ideation
+#### 1. Research Ideation (Zotero-Integrated)
 
-Systematic research startup with idea generation and literature review:
+End-to-end research startup from idea generation to literature management:
 
-**Tools**: `research-ideation` skill + `literature-reviewer` agent
+**Tools**: `research-ideation` skill + `literature-reviewer` agent + Zotero MCP
 
 **Process**:
 - **5W1H Brainstorming**: What, Why, Who, When, Where, How → structured thinking framework
-- **Literature Review**: arXiv + Semantic Scholar integration → automated paper search and classification
-- **Gap Analysis**: 5 types (Literature, Methodological, Application, Interdisciplinary, Temporal) → identify research opportunities
+- **Literature Search & Import**: WebSearch finds papers → extract DOIs → auto-import to Zotero via `add_items_by_doi` → classify into themed sub-collections (Core Papers, Methods, Applications, Baselines, To-Read)
+- **PDF & Full-Text**: `find_and_attach_pdfs` batch-attaches open-access PDFs → `get_item_fulltext` reads full paper content for deep analysis (fallback: abstract + domain knowledge)
+- **Gap Analysis**: 5 types (Literature, Methodological, Application, Interdisciplinary, Temporal) → identify 2-3 concrete research opportunities
 - **Research Question**: SMART principles → formulate specific, measurable questions
+- **Method Selection & Planning**: Evaluate method applicability → timeline, milestones, risk assessment
 
-**Command**: `/research-init "topic"` → launches complete research startup workflow
+**Zotero Collection Structure**:
+```
+📁 Research-{Topic}-{YYYY-MM}
+  ├── 📁 Core Papers
+  ├── 📁 Methods
+  ├── 📁 Applications
+  ├── 📁 Baselines
+  └── 📁 To-Read
+```
+
+**Output**: `literature-review.md` + `research-proposal.md` + `references.bib` (exported from Zotero) + organized Zotero collection with PDFs
+
+**Commands**:
+- `/research-init "topic"` → full workflow: create Zotero collection → search & import papers → full-text analysis → gap analysis → generate review & proposal
+- `/zotero-review "collection"` → analyze an existing Zotero collection → generate literature review with comparison matrix
+- `/zotero-notes "collection"` → batch read papers → generate structured reading notes (summary/detailed/comparison formats)
 
 #### 2. ML Project Development
 
@@ -156,10 +175,11 @@ Cross-platform hooks (Node.js) automate workflow enforcement:
 Session Start → Skill Evaluation → Session End → Session Stop
 ```
 
-- **skill-forced-eval** (`skill-forced-eval.js`): Before EVERY user prompt → dynamically scans all available skills (local + plugins) → forces evaluation of each skill → requires activation before implementation → ensures no relevant skill is missed
-- **session-start** (`session-start.js`): Session begins → displays Git status, pending todos, available commands, package manager → shows project context at a glance
-- **session-summary** (`session-summary.js`): Session ends → generates comprehensive work log → summarizes all changes made → provides smart recommendations for next steps
-- **stop-summary** (`stop-summary.js`): Session stops → quick status check → detects temporary files → shows actionable cleanup suggestions
+- **skill-forced-eval** (`skill-forced-eval.js`): Before EVERY user prompt → groups all available skills (local + plugins) into 6 categories → silent scan mode, only outputs matched skills → requires activation before implementation → ensures no relevant skill is missed
+- **session-start** (`session-start.js`): Session begins → displays Git status, pending todos, available commands (top 5 with fold count), package manager → shows project context at a glance
+- **session-summary** (`session-summary.js`): Session ends → generates comprehensive work log → summarizes all changes made → provides smart recommendations for next steps → auto-cleans logs older than 30 days
+- **stop-summary** (`stop-summary.js`): Session stops → quick status check with separate added/modified/deleted counts → groups temp files by folder (top 3 per folder) → shows actionable cleanup suggestions
+- **security-guard** (`security-guard.js`): Two-tier security system — **Block tier**: immediately rejects catastrophic commands (rm -rf /, dd, mkfs, system dirs); **Confirm tier**: injects systemMessage forcing model to ask user before executing dangerous-but-legitimate operations (git push --force, git reset --hard, chmod 777, SQL DROP/DELETE/TRUNCATE, sensitive file writes)
 
 **Cross-platform**: All hooks use Node.js (not shell scripts) ensuring Windows/macOS/Linux compatibility.
 
@@ -189,11 +209,12 @@ skill-development → skill-quality-reviewer → skill-improver
 ```
 claude-scholar/
 ├── hooks/               # Cross-platform JavaScript hooks (automated enforcement)
-│   ├── session-start.js         # Session begin - shows Git status, todos, commands
-│   ├── skill-forced-eval.js     # Force skill evaluation before each prompt
-│   ├── session-summary.js       # Session end - generates work log with recommendations
-│   ├── stop-summary.js          # Session stop - quick status check, temp file detection
-│   └── security-guard.js        # Security validation for file operations
+│   ├── hook-common.js           # Shared utilities (git diff, change analysis)
+│   ├── session-start.js         # Session begin - Git status, todos, top 5 commands
+│   ├── skill-forced-eval.js     # Silent scan, 6-category skill grouping
+│   ├── session-summary.js       # Session end - work log, 30-day log auto-cleanup
+│   ├── stop-summary.js          # Session stop - added/modified/deleted counts, grouped temp files
+│   └── security-guard.js        # Two-tier security: Block (catastrophic) + Confirm (dangerous)
 │
 ├── skills/              # 32 specialized skills (domain knowledge + workflows)
 │   ├── ml-paper-writing/        # Full paper writing: NeurIPS, ICML, ICLR, ACL, AAAI, COLM
@@ -255,6 +276,8 @@ claude-scholar/
 │
 ├── commands/            # 50+ slash commands (quick workflow execution)
 │   ├── research-init.md         # Launch research startup workflow
+│   ├── zotero-review.md         # Read Zotero papers, generate literature review
+│   ├── zotero-notes.md          # Batch read Zotero papers, generate reading notes
 │   ├── analyze-results.md       # Analyze experiment results
 │   ├── rebuttal.md              # Generate systematic rebuttal document
 │   ├── presentation.md          # Create conference presentation outline
@@ -269,7 +292,12 @@ claude-scholar/
 │   ├── checkpoint.md            # Save verification state
 │   ├── refactor-clean.md        # Remove dead code
 │   ├── learn.md                 # Extract patterns from code
-│   └── sc/                      # SuperClaude command suite (20+ commands)
+│   ├── update-github.md         # Commit and push to GitHub
+│   ├── update-readme.md         # Update README documentation
+│   ├── update-memory.md         # Check and update CLAUDE.md memory
+│   ├── create_project.md        # Create new project from template
+│   ├── setup-pm.md              # Configure package manager (uv/pnpm)
+│   └── sc/                      # SuperClaude command suite (30 commands)
 │       ├── sc-agent.md           # Agent management
 │       ├── sc-estimate.md       # Development time estimation
 │       ├── sc-improve.md         # Code improvement
@@ -355,6 +383,8 @@ claude-scholar/
 | Command | Purpose |
 |---------|---------|
 | `/research-init` | Launch research startup workflow (5W1H, literature review, gap analysis) |
+| `/zotero-review` | Read papers from Zotero collection, generate structured literature review |
+| `/zotero-notes` | Batch read Zotero papers, generate structured reading notes |
 | `/analyze-results` | Analyze experiment results (statistics, visualization, ablation) |
 | `/rebuttal` | Generate systematic rebuttal document from review comments |
 | `/presentation` | Create conference presentation outline |
@@ -366,6 +396,9 @@ claude-scholar/
 |---------|---------|
 | `/plan` | Create implementation plans |
 | `/commit` | Commit with Conventional Commits |
+| `/update-github` | Commit and push to GitHub |
+| `/update-readme` | Update README documentation |
+| `/update-memory` | Check and update CLAUDE.md memory |
 | `/code-review` | Perform code review |
 | `/tdd` | Test-driven development workflow |
 | `/build-fix` | Fix build errors |
@@ -373,7 +406,9 @@ claude-scholar/
 | `/checkpoint` | Create checkpoints |
 | `/refactor-clean` | Refactor and cleanup |
 | `/learn` | Extract reusable patterns |
-| `/sc` | SuperClaude command suite (20+ commands) |
+| `/create_project` | Create new project from template |
+| `/setup-pm` | Configure package manager (uv/pnpm) |
+| `/sc` | SuperClaude command suite (30 commands) |
 
 ### Agents (14 specialized)
 

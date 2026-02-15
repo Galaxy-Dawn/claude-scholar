@@ -123,13 +123,79 @@ cat:cs.LG AND (transformer OR attention) AND (interpretability OR explainability
 
 ### 4.3 文献管理
 
-**推荐工具**：
-- Zotero - 开源，支持浏览器插件
-- Mendeley - 社交功能，PDF 标注
-- Papers - Mac 专用，界面优雅
+**集成工具**：
+- **Zotero**（主要工具，已通过 MCP 集成）
+  - 通过 `add_items_by_doi` 自动添加论文，获取完整元数据
+  - 通过 `create_collection` 自动创建和组织集合
+  - 通过 `find_and_attach_pdfs` 自动附加 OA PDF
+  - 通过 `get_item_fulltext` 读取 PDF 全文进行分析
+  - 通过 `search_library` 搜索已有论文避免重复导入
+- Mendeley - 社交功能，PDF 标注（备选）
+- Papers - Mac 专用，界面优雅（备选）
 
 **组织策略**：
-- 按主题分类（方法、应用、评估）
-- 按重要性标记（必读、重要、参考）
-- 添加标签和笔记
+
+使用 Zotero 集合结构组织文献：
+
+```
+📁 Research-{topic}-{date}
+  ├── 📁 Core Papers（核心论文）
+  ├── 📁 Methods（方法论文）
+  ├── 📁 Applications（应用论文）
+  ├── 📁 Baselines（基线论文）
+  └── 📁 To-Read（待读论文）
+```
+
+- 核心论文：直接相关、高引用的关键论文
+- 方法论文：技术方法参考，可借鉴的方法论
+- 应用论文：应用场景参考，领域实践
+- 基线论文：实验对比基准，需要复现的工作
+- 待读论文：初步筛选，待深入阅读
+
+## 5. DOI 提取与自动导入
+
+### 5.1 DOI 提取方法
+
+从 WebSearch 搜索结果中提取 DOI 的常见方式：
+
+**URL 中的 DOI**：
+- `https://doi.org/10.xxxx/xxxxx` - 直接 DOI 链接
+- `https://dl.acm.org/doi/10.xxxx/xxxxx` - ACM Digital Library
+- `https://ieeexplore.ieee.org/document/xxxxx` - IEEE（需从页面提取）
+- `https://arxiv.org/abs/xxxx.xxxxx` - arXiv（DOI 格式：`10.48550/arXiv.xxxx.xxxxx`）
+
+**常见 DOI 格式**：
+- `10.xxxx/xxxxx` - 标准 DOI 前缀
+- 以 `10.` 开头，包含 `/` 分隔符
+- 例：`10.1038/s41586-023-06747-5`（Nature）
+- 例：`10.48550/arXiv.2301.00234`（arXiv）
+
+### 5.2 自动导入流程
+
+```
+WebSearch 搜索论文
+    ↓
+从搜索结果中提取 DOI
+    ↓
+add_items_by_doi 批量添加到 Zotero
+    ↓
+find_and_attach_pdfs 自动附加 OA PDF
+    ↓
+get_item_fulltext 读取全文进行分析
+```
+
+**操作示例**：
+
+1. 使用 WebSearch 搜索 `"transformer interpretability" site:arxiv.org OR site:doi.org`
+2. 从结果中收集 DOI 列表
+3. 调用 `add_items_by_doi` 批量导入（建议每批不超过 10 篇，避免 API 速率限制）
+4. 调用 `find_and_attach_pdfs` 为导入的论文附加 PDF
+5. 使用 `get_item_fulltext` 阅读关键论文全文
+
+### 5.3 无 DOI 论文处理
+
+部分论文可能没有标准 DOI：
+- **arXiv 预印本**：使用 `10.48550/arXiv.{id}` 格式
+- **会议论文集**：尝试从出版商页面获取 DOI
+- **无法获取 DOI**：使用 `add_web_item` 保存网页链接，或使用 `import_pdf_to_zotero` 直接导入 PDF
 
