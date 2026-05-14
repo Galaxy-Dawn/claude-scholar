@@ -80,6 +80,12 @@ Codex Scholar 是 Codex 中用于学术研究和软件开发的半自动研究�
 
 ## 计划规则
 
+- 对非简单任务，默认将 `planning-with-files` 作为 planning 和 progress tracking 的持久层，除非任务明显足够小，不需要落盘。
+- 对涉及多步骤、research、iteration、verification 或明显会让上下文增长的任务，执行前先创建持久 planning 文件。
+- 默认文件模式：
+  - `task_plan.md`：记录 phases、status、decisions 和 blockers
+  - `notes.md`：记录 findings、evidence 和中间 research
+  - `[deliverable].md`：仅当任务本身需要长期书面交付物时再创建
 - 对非简单任务，先写一个简短、可执行的计划。
 - 计划必须列出具体动作，而不是模糊阶段。
 - 按计划逐步执行。
@@ -95,6 +101,7 @@ Codex Scholar 是 Codex 中用于学术研究和软件开发的半自动研究�
 
 当任务明确匹配时，优先使用对应的 Codex skill 或 agent：
 
+- 多步骤任务、progress tracking、persistent planning，或明显会超出上下文窗口的任务 -> `planning-with-files`
 - 研究启动、gap analysis、文献规划 -> `research-ideation`
 - 严格实验分析、统计、科研图表 -> `results-analysis`
 - 实验后报告、复盘总结 -> `results-report`
@@ -133,6 +140,8 @@ Codex Scholar 是 Codex 中用于学术研究和软件开发的半自动研究�
 
 - 优先使用已有本地 skills、agents 和 workflows，再考虑新路径。
 - 对复杂任务，先列具体步骤，再执行。
+- 对多步骤任务或会跨多个 tool calls 的任务，不要只把计划留在瞬时上下文里；用 `planning-with-files` 将计划持久化到磁盘。
+- 当任务较长、分支较多或可能中断时，在重大决策前回读持久 plan。
 - 实施后运行最小但有意义的验证。
 - 使用 subtraction。能防止 scope creep 时，要明确说明哪些事现在不值得做。
 - 如果被阻塞，说明具体阻塞点，以及下一步怎么解除阻塞。
