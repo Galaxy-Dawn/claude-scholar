@@ -35,7 +35,7 @@
 - **2026-03-31**: **安装器与 runtime guard 行为进一步收口** — 安装器现在会保留已有的本地 `AGENTS.md`，并把仓库版本作为 `AGENTS.scholar.md` sidecar 文件安装；同时默认 OpenCode guard 的摘要输出进一步降噪，减少 temp files / uncommitted files 的噪声，同时保留更安全的写入守卫边界。
 - **2026-03-31**: **日文文档补齐** — 为主 README 以及 `AGENTS`、`MCP_SETUP`、`OBSIDIAN_SETUP` 补充了日文文档，使 OpenCode 分支的多语言文档入口更完整。
 
-- **2026-02-25**: **Codex CLI** 支持 — 新增 `codex` 分支，支持 [OpenAI Codex CLI](https://github.com/openai/codex)，包含 config.toml、40 个 skills、14 个 agents 和 sandbox 安全机制
+- **2026-02-25**: **Codex CLI** 支持 — 新增面向 [OpenAI Codex CLI](https://github.com/openai/codex) 的 `codex` 分支，提供 Codex 原生配置、工作流入口与 sandbox 安全机制。
 - **2026-02-23**: 新增 `setup.sh` 安装脚本 — 面向已有 `~/.opencode` 的带备份增量更新，自动备份 `opencode.jsonc`，以追加方式合并 `agent/mcp/permission/plugin`
 - **2026-02-21**: **OpenCode** 支持 — Claude Scholar 现已支持 [OpenCode](https://github.com/opencode-ai/opencode) 作为替代 CLI；切换到 `opencode` 分支获取兼容配置
 - **2026-02-20**: 双语文档 — 维护英文与中文入口文档，便于不同读者阅读

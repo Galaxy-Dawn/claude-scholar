@@ -6,7 +6,7 @@ version: 1.0.0
 
 # Verification Loop Skill
 
-A comprehensive verification system for Claude Code sessions.
+A comprehensive verification system for OpenCode sessions.
 
 ## When to Use
 

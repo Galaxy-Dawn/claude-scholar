@@ -35,7 +35,7 @@
 - **2026-03-31**: **Installer and runtime guard behavior tightened** — the installer now preserves existing local `AGENTS.md` while installing the repo-managed version as `AGENTS.scholar.md`, and the default OpenCode guard summaries were trimmed to reduce noisy temp-file / uncommitted-file output while keeping safer write-guard behavior.
 - **2026-03-31**: **Japanese documentation added** — added Japanese docs for the main README plus `AGENTS`, `MCP_SETUP`, and `OBSIDIAN_SETUP`, so the OpenCode branch now has a more complete multilingual documentation surface.
 
-- **2026-02-25**: **Codex CLI** support — added `codex` branch supporting [OpenAI Codex CLI](https://github.com/openai/codex) with config.toml, 40 skills, 14 agents, and sandbox security
+- **2026-02-25**: **Codex CLI** support — added the `codex` branch for [OpenAI Codex CLI](https://github.com/openai/codex) with Codex-native configuration, workflow surfaces, and sandbox security.
 - **2026-02-23**: Added `setup.sh` installer — backup-aware incremental updates for existing `~/.opencode`, auto-backup `opencode.jsonc`, additive `agent/mcp/permission/plugin` merge
 - **2026-02-21**: **OpenCode** support — Claude Scholar now supports [OpenCode](https://github.com/opencode-ai/opencode) as an alternative CLI; switch to the `opencode` branch for OpenCode-compatible configuration
 - **2026-02-20**: Bilingual docs — maintained English and Chinese entry documents for broader readability

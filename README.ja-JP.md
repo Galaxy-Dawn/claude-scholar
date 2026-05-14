@@ -35,7 +35,7 @@
 - **2026-03-31**: **インストーラーと runtime guard の挙動を整理** — インストーラーは既存のローカル`AGENTS.md`を保持しつつ、リポジトリ版を`AGENTS.scholar.md`として追加するようになりました。あわせて、デフォルト OpenCode guard の要約出力も整理し、temp filesやuncommitted filesのノイズを抑えつつ、より安全な書き込みガードは維持しています。
 - **2026-03-31**: **日本語ドキュメントを追加** — メインREADMEに加え、`AGENTS`、`MCP_SETUP`、`OBSIDIAN_SETUP`の日本語版も追加し、OpenCodeブランチ全体の多言語ドキュメント導線をより充実させました。
 
-- **2026-02-25**: **Codex CLI** サポート — `codex` 分岐を追加し、[OpenAI Codex CLI](https://github.com/openai/codex) をサポート。config.toml、40 個の skills、14 個の agents、sandbox 安全機構を含む
+- **2026-02-25**: **Codex CLI** サポート — [OpenAI Codex CLI](https://github.com/openai/codex) 向けの `codex` 分岐を追加し、Codex ネイティブの設定、ワークフロー導線、sandbox 安全機構を整備しました。
 - **2026-02-23**: `setup.sh` インストーラー追加 — 既存 `~/.opencode` 向けのバックアップ付き増分更新、`opencode.jsonc` の自動バックアップ、`agent/mcp/permission/plugin` の追加入力マージに対応
 - **2026-02-21**: **OpenCode** サポート — Claude Scholar は [OpenCode](https://github.com/opencode-ai/opencode) を代替 CLI としてサポート。互換設定は `opencode` 分岐で提供
 - **2026-02-20**: バイリンガル文書 — 英文と中文の入口文書を整備し、異なる読者層が読みやすいよう改善
