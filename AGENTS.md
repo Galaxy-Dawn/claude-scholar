@@ -70,9 +70,11 @@ Keep human decisions at the center. Produce artifacts that the user can reuse di
 - Verify after changing files, code, documentation, or configuration.
 - Keep changes small, reversible, and easy to review.
 - Confirm before destructive or high-risk actions.
+- For destructive operations, name the exact files or directories before deleting or overwriting.
 - Prefer targeted edits over broad rewrites.
 - For external, recent, or unstable information, verify the current state before answering.
 - Keep public-facing wording consistent across README, docs, issues, PRs, and release notes.
+- For long-running commands, report the current step, processed amount, output path, and next checkpoint instead of waiting silently.
 
 ---
 
@@ -82,6 +84,10 @@ Keep human decisions at the center. Produce artifacts that the user can reuse di
 - The plan must list concrete actions, not vague phases.
 - Execute the plan step by step.
 - Revise the plan only when new evidence changes the task.
+- Sort work by priority when scope is large:
+  - `P0`: must handle now
+  - `P1`: should handle in this pass
+  - `P2`: can wait
 
 ---
 
@@ -128,15 +134,32 @@ If the current repository is bound to an Obsidian project knowledge base, treat 
 - Prefer existing local skills, agents, and workflows before inventing a new path.
 - For complex tasks, list concrete steps first, then implement them.
 - After implementation, run the smallest meaningful verification.
-- When blocked, state the exact blocker.
-- When recommending a path, make the recommendation explicit.
+- Use subtraction. State what is not worth doing now when it prevents scope creep.
+- When blocked, state the exact blocker and the next unblock action.
+- When recommending a path, make the recommendation explicit and explain the tradeoff in one or two concrete points.
 - Do not expose internal process language when a simpler explanation is enough.
+- For file tasks, report exactly:
+  - input path
+  - output path
+  - changed files
+  - untouched files
+  - verification performed
 
 ---
 
 ## Delivery Style
 
-For substantial tasks, end with a short summary:
+For substantial tasks, use this shape by default:
+
+```text
+Conclusion:
+What I changed:
+What I checked:
+Risks / limits:
+Next step:
+```
+
+If English headings are needed, end with a short summary:
 
 ### What I did
 - Concrete changes made.
