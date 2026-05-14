@@ -272,7 +272,7 @@ def get_platform_info() -> Dict[str, Any]:
 
 
 def log(message: str) -> None:
-    """Log to stderr (visible to user in Claude Code)"""
+    """Log to stderr (visible to the active CLI runtime user)"""
     print(message, file=sys.stderr)
 
 

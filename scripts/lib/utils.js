@@ -1,6 +1,6 @@
 /**
  * 跨平台工具函数库
- * 为 Claude Code 插件提供跨平台兼容性支持
+ * 为 Codex Scholar 安装与辅助脚本提供跨平台兼容性支持
  *
  * @module utils
  */
