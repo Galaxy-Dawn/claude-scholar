@@ -19,7 +19,7 @@
 
 ## 最新动态
 
-- **2026-05-14**: **将 `expression-skill` 提升为核心表达层，并围绕它扩展 Nature 写作栈** — 把 [`expression-skill`](./skills/expression-skill/README.md) 明确为汇报、规划、文件操作和多步骤技术任务的结论先行表达纪律；引入用于章节起草与论证构建的 [`nature-writing`](./skills/nature-writing/README.md)；将 [`nature-polishing`](./skills/nature-polishing/README.md) 刷新到上游最新 article-pattern 版本；并继续保留 [`nature-response`](./skills/nature-response/README.md) 与 [`nature-data`](./skills/nature-data/README.md) 作为 journal-writing 栈的一部分。
+- **2026-05-14**: **将 `expression-skill` 提升为核心表达层，把 `planning-with-files` 恢复为默认持久规划层，并继续扩展 Nature 写作栈** — 把 [`expression-skill`](./skills/expression-skill/README.md) 明确为汇报、规划、文件操作和多步骤技术任务的结论先行表达纪律；将 [`planning-with-files`](./skills/planning-with-files/SKILL.md) 重新接回默认的落盘规划与进度跟踪工作流，用 `task_plan.md` / `notes.md` 管理复杂任务；引入用于章节起草与论证构建的 [`nature-writing`](./skills/nature-writing/README.md)；将 [`nature-polishing`](./skills/nature-polishing/README.md) 刷新到上游最新 article-pattern 版本；并继续保留 [`nature-response`](./skills/nature-response/README.md) 与 [`nature-data`](./skills/nature-data/README.md) 作为 journal-writing 栈的一部分。
 - **2026-05-13**: **证据门槛研究工作流与 `Sources/Papers` 路由完成收紧** — 新增共享的 `research-contract.md`，统一 Evidence Records、claim strength 和 Claim Promotion Gate；将研究构思、Zotero 导入、文献综合、结果报告、论文写作与 rebuttal 工作流接入同一证据契约；并明确项目论文源笔记先放在 `Sources/Papers`，通过证据门槛后再进入 `Knowledge` 或 `Writing`。
 - **2026-04-25**: **Codex Obsidian KB lifecycle 稳定化** — 修复 Codex 项目 KB workflow 中 rename、archive、purge、sync、lint 的边界问题，并让 repo-local binding metadata 与 Codex runtime 保持一致。
 - **2026-04-24**: **Vault-first Obsidian KB workflow 回植到 Codex** — 将新的 project-scoped Obsidian knowledge workflow 带到 Codex 版本，把旧的 memory skills 合并为四个核心 skill，并把项目导航改成人类优先，而不是机器 registry dump。
@@ -497,13 +497,15 @@ Claude Scholar 也包含一套自我改进的 skill 工作流。
 | 类型 | 名字 | 一句话解释 |
 |---|---|---|
 | Skill | [`expression-skill`](./skills/expression-skill/README.md) | 为技术工作、写作、文档、文件操作和多步骤任务提供结论先行、具体、可核查的表达约束。 |
+| Skill | [`planning-with-files`](./skills/planning-with-files/SKILL.md) | 让复杂任务把计划、进度与中间发现落到 `task_plan.md`、`notes.md` 和交付文件里，而不是只依赖瞬时对话上下文。 |
 
 **工作方式**
 - 先给结论，不先叙述过程，
 - 优先使用命令、路径、数量、检查结果和可观察行为，而不是抽象过程词，
 - 只有在歧义会改变结果时才追问，
 - 尽早暴露风险、不确定性和破坏性边界，
-- 对长任务持续给出 step / checkpoint 形式的可见路标。
+- 对长任务持续给出 step / checkpoint 形式的可见路标，
+- 对多步骤任务用 `task_plan.md` 和 `notes.md` 做持久化规划，而不是只依赖瞬时上下文。
 
 ## 文档入口
 
