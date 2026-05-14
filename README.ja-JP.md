@@ -19,7 +19,7 @@
 
 ## 最新ニュース
 
-- **2026-05-14**: **公開コミュニケーション skill と Nature 系執筆 skills を追加** — 再利用可能な結論先行の表現レイヤーとして [`expression-skill`](./skills/expression-skill/README.md) を追加し、[`nature-polishing`](./skills/nature-polishing/README.md)、[`nature-response`](./skills/nature-response/README.md)、[`nature-data`](./skills/nature-data/README.md) を執筆スタックに組み込みました。これにより、論文執筆、結果報告、応答ワークフローがこれらの skills をより明示的に参照するようになりました。
+- **2026-05-14**: **`expression-skill` を中核のコミュニケーション層に据え、その上で Nature 執筆スタックを拡張** — [`expression-skill`](./skills/expression-skill/README.md) を、報告・計画・ファイル操作・多段の技術作業における結論先行の表現規律として明示しました。あわせて、章構成の起草と論証構築向けに [`nature-writing`](./skills/nature-writing/README.md) を導入し、[`nature-polishing`](./skills/nature-polishing/README.md) を上流の最新 article-pattern 版へ更新し、[`nature-response`](./skills/nature-response/README.md) と [`nature-data`](./skills/nature-data/README.md) も journal-writing スタックに維持しています。
 - **2026-05-13**: **根拠ゲート付き研究ワークフローと `Sources/Papers` ルーティングを整理** — Evidence Records、claim strength、Claim Promotion Gate を共有する `research-contract.md` を追加しました。研究アイデア出し、Zotero 取り込み、文献統合、結果レポート、論文執筆、rebuttal ワークフローを同じ根拠契約に接続し、プロジェクトの論文ソースノートはまず `Sources/Papers` に置き、根拠ゲートを通った主張だけを `Knowledge` や `Writing` へ進める方針を明確にしました。
 - **2026-04-25**: **Codex Obsidian KB lifecycle を安定化** — Codex の project KB workflow で rename、archive、purge、sync、lint の edge cases を修正し、repo-local binding metadata を Codex runtime と一貫させました。
 - **2026-04-24**: **Vault-first Obsidian KB workflow を Codex へ移植** — 新しい project-scoped Obsidian knowledge workflow を Codex edition に取り込み、旧 memory skills を 4 つの focused skills に統合し、project navigation を machine registry dump ではなく human-first にしました。
@@ -357,6 +357,7 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 | 種類 | 名前 | 一行説明 |
 |---|---|---|
 | Skill | `ml-paper-writing` | リポジトリコンテキスト、エビデンス、文献からML/AI論文を執筆 |
+| Skill | [`nature-writing`](./skills/nature-writing/README.md) | claims、figures、results、notes、または中国語草稿から Nature スタイルの論文セクションを起草・再構成する |
 | Skill | [`nature-polishing`](./skills/nature-polishing/README.md) | 原稿を推敲・再構成・翻訳し、Nature寄りの簡潔な英語へ整える |
 | Skill | [`nature-response`](./skills/nature-response/README.md) | Nature系修正投稿向けの point-by-point reviewer response を作成・監査・改稿する |
 | Skill | [`nature-data`](./skills/nature-data/README.md) | Nature向け Data Availability、repository plan、FAIR metadata チェックを準備する |
@@ -564,9 +565,7 @@ Codex CLI ワークフローを基盤に構築され、オープンソース研�
 - **[AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs)** - 研究指向の skills と設定パターン
 - **[codex](https://github.com/openai/codex)** - この分岐が依拠する Codex CLI の基盤能力
 - **[expression-skill](https://github.com/Galaxy-Dawn/expression-skill)** - 報告と応答の規律に使う公開の結論先行コミュニケーション skill
-- **[nature-skills / nature-polishing](https://github.com/Yuan1z0825/nature-skills/tree/main/skills/nature-polishing)** - Nature寄りの学術推敲 skill をここで再利用し、出典を明記
-- **[nature-skills / nature-response](https://github.com/Yuan1z0825/nature-skills/tree/main/skills/nature-response)** - Nature系の査読返信 skill をここで再利用し、出典を明記
-- **[nature-skills / nature-data](https://github.com/Yuan1z0825/nature-skills/tree/main/skills/nature-data)** - Nature向けデータ可用性 skill をここで再利用し、出典を明記
+- **[nature-skills](https://github.com/Yuan1z0825/nature-skills)** - Nature スタイルの章起草、学術推敲、査読返信、データ可用性 skills をここで再利用し、出典を明記
 
 これらのプロジェクトは、Claude Scholar の研究・ツールワークフロー設計に共通して影響を与えています。
 

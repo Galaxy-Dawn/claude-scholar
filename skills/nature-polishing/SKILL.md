@@ -1,6 +1,6 @@
 ---
 name: nature-polishing
-description: Polish, restructure, or translate academic prose into Nature-leaning English using the paper-architecture and writing-strategy principles from Scientific English Writing & Communication, with phrase-level support from Academic Phrasebank. Use whenever the user asks to polish a manuscript paragraph, abstract, introduction, results, discussion, conclusion, title, methods section, or Chinese academic draft for publication-quality English.
+description: Polish, restructure, or translate academic prose into Nature-leaning English using writing-strategy principles, curated Nature/Nature Communications article patterns, and phrase-level support from Academic Phrasebank. Use whenever the user asks to polish a manuscript paragraph, abstract, introduction, results, discussion, conclusion, title, methods section, or Chinese academic draft for publication-quality English.
 version: 5.0.2
 author: Yuan1z skill rebuilt from course notes plus Academic Phrasebank
 ---
@@ -9,10 +9,12 @@ author: Yuan1z skill rebuilt from course notes plus Academic Phrasebank
 
 Use this skill to improve scientific writing at two levels:
 
-- `main strategy`: paper architecture, section logic, reader workflow, evidence thresholds, and ethics
+- `main strategy`: paper architecture, published-article patterns, section logic, reader workflow, evidence thresholds, and ethics
 - `reference support`: reusable phrase families, move patterns, transitions, and style checks
 
-The main strategy should come from the course notes in `Chapter1-Week1-7`. The reference wording layer should come from `Academic Phrasebank`.
+The main strategy should come from the course notes in `Chapter1-Week1-7` and
+the curated article-pattern reference. The wording layer should come from
+`Academic Phrasebank`.
 
 ## Default stance
 
@@ -30,6 +32,8 @@ These files are reference support. Use them after the section's rhetorical job i
 
 | File | Open when |
 |---|---|
+| [references/published-article-patterns.md](references/published-article-patterns.md) | You need Nature/Nature Communications article-level writing patterns for abstracts, introductions, Results, Discussion, conclusions, or titles |
+| [references/writing-strategy.md](references/writing-strategy.md) | You need paragraph- or section-level argument repair before sentence polishing |
 | [references/section-moves.md](references/section-moves.md) | You need section-specific move orders or phrase patterns derived from Academic Phrasebank |
 | [references/phrasebank-playbook.md](references/phrasebank-playbook.md) | You need hedging, transition, evidence, limitation, or future-work phrase families |
 | [references/style-guardrails.md](references/style-guardrails.md) | You need academic-style checks, paragraph/sentence checks, article use, register, or mechanics |
@@ -46,6 +50,10 @@ Before editing, determine what kind of paper or section this is.
 - `Algorithmic or device work`: the argument proposes a procedure, tool, or system and must show that it performs reliably and advantageously.
 
 Do not use one narrative logic for all paper types.
+
+For article-level rewrites, especially abstracts, introductions, Results openings,
+Discussion paragraphs, conclusions, and titles, also apply the writing patterns in
+`references/published-article-patterns.md`.
 
 ### 2. Write for the reader, not for the draft chronology
 
