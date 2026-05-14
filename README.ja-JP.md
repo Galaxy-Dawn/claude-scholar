@@ -19,6 +19,7 @@
 
 ## 最新ニュース
 
+- **2026-05-14**: **公開コミュニケーション skill と Nature 系執筆 skills を追加** — 再利用可能な結論先行の表現レイヤーとして [`expression-skill`](./skills/expression-skill/README.md) を追加し、[`nature-polishing`](./skills/nature-polishing/README.md)、[`nature-response`](./skills/nature-response/README.md)、[`nature-data`](./skills/nature-data/README.md) を執筆スタックに組み込みました。これにより、論文執筆、結果報告、応答ワークフローがこれらの skills をより明示的に参照するようになりました。
 - **2026-05-13**: **根拠ゲート付き研究ワークフローと `Sources/Papers` ルーティングを整理** — Evidence Records、claim strength、Claim Promotion Gate を共有する `research-contract.md` を追加しました。研究アイデア出し、Zotero 取り込み、文献統合、結果レポート、論文執筆、rebuttal ワークフローを同じ根拠契約に接続し、プロジェクトの論文ソースノートはまず `Sources/Papers` に置き、根拠ゲートを通った主張だけを `Knowledge` や `Writing` へ進める方針を明確にしました。
 - **2026-04-25**: **Codex Obsidian KB lifecycle を安定化** — Codex の project KB workflow で rename、archive、purge、sync、lint の edge cases を修正し、repo-local binding metadata を Codex runtime と一貫させました。
 - **2026-04-24**: **Vault-first Obsidian KB workflow を Codex へ移植** — 新しい project-scoped Obsidian knowledge workflow を Codex edition に取り込み、旧 memory skills を 4 つの focused skills に統合し、project navigation を machine registry dump ではなく human-first にしました。
@@ -28,7 +29,7 @@
 <details>
 <summary>過去の更新履歴を表示</summary>
 
-- **2026-04-15**: **publication-chart-skill を Claude Scholar に統合** — [`pubfig`](https://github.com/Galaxy-Dawn/pubfig) + [`pubtab`](https://github.com/Galaxy-Dawn/pubtab) を `publication-chart-skill` としてまとめてリポジトリに追加し、Claude Scholar の分析/執筆スタックの boundary に接続しました。これにより、論文品質の図表作業を汎用分析や prose skill に混ぜず、明示的な handoff で扱えるようになりました。
+- **2026-04-15**: **[`publication-chart-skill`](./skills/publication-chart-skill/SKILL.md) を Claude Scholar に統合** — [`pubfig`](https://github.com/Galaxy-Dawn/pubfig) + [`pubtab`](https://github.com/Galaxy-Dawn/pubtab) を [`publication-chart-skill`](./skills/publication-chart-skill/SKILL.md) としてまとめてリポジトリに追加し、Claude Scholar の分析/執筆スタックの境界に接続しました。これにより、論文品質の図表作業を汎用分析や文章作成スキルに混ぜず、明示的な引き渡し経路で扱えるようになりました。
 - **2026-03-31**: **Zotero smart-importワークフロー文書を整合** — 最新の`zotero-mcp`公開インターフェースに合わせて、Claude Scholarの研究向けドキュメントを更新しました。`zotero_add_items_by_identifier`を標準の論文インポート経路として明示し、`zotero_reconcile_collection_duplicates`を標準的なインポート後クリーンアップ手順に位置づけ、source-awareなPDF cascadeの挙動もより正確に説明し直しました。公開機能と内部診断機能の境界も整理しています。
 - **2026-03-31**: **READMEの導入案内を刷新** — Claude Scholarが特にコンピュータサイエンスおよびAI研究者に適していることを明確にし、インストール後すぐ使える実践的な導入シナリオを追加しました。前提条件やブランチ案内も整理し、「既存のローカルmdファイルは手動でマージする必要がある」点をより明確にしました。
 - **2026-03-31**: **インストーラーと hook-emulation の挙動を整理** — インストーラーは既存のローカル`AGENTS.md`を保持しつつ、リポジトリ版を`AGENTS.scholar.md`として追加するようになりました。あわせて、デフォルトのエミュレーション要約出力も整理し、temp filesやuncommitted filesのノイズを抑えつつ、より安全な書き込みガードは維持しています。
@@ -356,9 +357,9 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 | 種類 | 名前 | 一行説明 |
 |---|---|---|
 | Skill | `ml-paper-writing` | リポジトリコンテキスト、エビデンス、文献からML/AI論文を執筆 |
-| Skill | `nature-polishing` | 原稿を推敲・再構成・翻訳し、Nature寄りの簡潔な英語へ整える |
-| Skill | `nature-response` | Nature系修正投稿向けの point-by-point reviewer response を作成・監査・改稿する |
-| Skill | `nature-data` | Nature向け Data Availability、repository plan、FAIR metadata チェックを準備する |
+| Skill | [`nature-polishing`](./skills/nature-polishing/README.md) | 原稿を推敲・再構成・翻訳し、Nature寄りの簡潔な英語へ整える |
+| Skill | [`nature-response`](./skills/nature-response/README.md) | Nature系修正投稿向けの point-by-point reviewer response を作成・監査・改稿する |
+| Skill | [`nature-data`](./skills/nature-data/README.md) | Nature向け Data Availability、repository plan、FAIR metadata チェックを準備する |
 | Skill | `citation-verification` | 参考文献、メタデータ、主張と引用の整合性をチェックし引用ミスを防止 |
 | Skill | `writing-anti-ai` | 機械的な表現を減らし、明瞭さ、リズム、人間的な学術トーンを改善 |
 | Skill | `latex-conference-template-organizer` | 乱雑な学会テンプレートをOverleaf対応のライティング構造に整理 |
@@ -488,6 +489,21 @@ Claude Scholar には、自分自身の skill を改善するためのワーク�
 - 複数の品質軸で skill をレビューする
 - 修正提案を取り込み、継続的に反復する
 
+### 表現と報告の規律レイヤー
+
+結論先行の報告、具体的なエビデンス、可視化されたリスク、または簡潔な次アクションが必要なときは、再利用可能なコミュニケーションレイヤーを使います。
+
+| 種類 | 名前 | 概要 |
+|---|---|---|
+| Skill | [`expression-skill`](./skills/expression-skill/README.md) | 技術作業、執筆、ドキュメント、ファイル操作、多段タスク向けに、結論先行で具体的かつ検証可能な表現規律を適用する |
+
+**仕組み**
+- 経緯説明ではなく結論から始める
+- 抽象的なプロセス語より、コマンド、パス、件数、チェック結果、観測可能な挙動を優先する
+- 結果が変わるときだけ確認質問をする
+- リスク、不確実性、破壊的境界を早めに明示する
+- 長時間作業では step / checkpoint 形式の可視化された進捗目印を出す
+
 ## ドキュメント入口
 
 - [MCP_SETUP.ja-JP.md](./MCP_SETUP.ja-JP.md) — Codex 版 Zotero MCP 設定説明
@@ -547,6 +563,7 @@ Codex CLI ワークフローを基盤に構築され、オープンソース研�
 - **[everything-claude-code](https://github.com/anthropics/everything-claude-code)** - Claude Code CLI の総合リソース
 - **[AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs)** - 研究指向の skills と設定パターン
 - **[codex](https://github.com/openai/codex)** - この分岐が依拠する Codex CLI の基盤能力
+- **[expression-skill](https://github.com/Galaxy-Dawn/expression-skill)** - 報告と応答の規律に使う公開の結論先行コミュニケーション skill
 - **[nature-skills / nature-polishing](https://github.com/Yuan1z0825/nature-skills/tree/main/skills/nature-polishing)** - Nature寄りの学術推敲 skill をここで再利用し、出典を明記
 - **[nature-skills / nature-response](https://github.com/Yuan1z0825/nature-skills/tree/main/skills/nature-response)** - Nature系の査読返信 skill をここで再利用し、出典を明記
 - **[nature-skills / nature-data](https://github.com/Yuan1z0825/nature-skills/tree/main/skills/nature-data)** - Nature向けデータ可用性 skill をここで再利用し、出典を明記
