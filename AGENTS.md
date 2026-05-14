@@ -80,6 +80,12 @@ Keep human decisions at the center. Produce artifacts that the user can reuse di
 
 ## Planning Rule
 
+- For non-trivial tasks, use `planning-with-files` as the default planning and progress-tracking layer unless the task is clearly small enough to finish without persistence.
+- For tasks that involve multiple steps, research, iteration, verification, or likely context growth, create persistent planning files before implementation.
+- Default file pattern:
+  - `task_plan.md` for phases, status, decisions, and blockers
+  - `notes.md` for findings, evidence, and intermediate research
+  - `[deliverable].md` only when a durable written output is part of the task
 - For non-trivial tasks, write a short executable plan before implementation.
 - The plan must list concrete actions, not vague phases.
 - Execute the plan step by step.
@@ -95,6 +101,7 @@ Keep human decisions at the center. Produce artifacts that the user can reuse di
 
 Use the matching OpenCode skill or agent when the task clearly fits:
 
+- Multi-step work, progress tracking, persistent planning, or tasks likely to outgrow context -> `planning-with-files`
 - Research startup, gap analysis, or literature planning -> `research-ideation`
 - Strict experiment analysis, statistics, or scientific figures -> `results-analysis`
 - Post-experiment reporting or retrospective summaries -> `results-report`
@@ -133,6 +140,8 @@ If the current repository is bound to an Obsidian project knowledge base, treat 
 
 - Prefer existing local skills, agents, and workflows before inventing a new path.
 - For complex tasks, list concrete steps first, then implement them.
+- For tasks that are multi-step or span multiple tool calls, persist the plan to disk with `planning-with-files` instead of keeping the plan only in transient context.
+- Re-read the persistent plan before major decisions when the task is long, branched, or interruption-prone.
 - After implementation, run the smallest meaningful verification.
 - Use subtraction. State what is not worth doing now when it prevents scope creep.
 - When blocked, state the exact blocker and the next unblock action.

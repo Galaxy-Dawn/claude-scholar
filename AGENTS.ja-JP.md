@@ -80,6 +80,12 @@ OpenCode Scholar は、OpenCode 上で学術研究とソフトウェア開発を
 
 ## Planning Rule
 
+- 非自明なタスクでは、`planning-with-files` を既定の planning / progress tracking の持続層として使う。ただし、永続化なしで終えられるほど十分に小さいタスクは除く。
+- 複数 step、research、iteration、verification、または context 増大が見込まれるタスクでは、実装前に持続的な planning file を作る。
+- 既定の file pattern:
+  - `task_plan.md`: phase、status、decision、blocker
+  - `notes.md`: finding、evidence、中間 research
+  - `[deliverable].md`: durable な書面成果物が必要な場合のみ
 - 非自明なタスクでは、実装前に短い実行可能な計画を書く。
 - 計画は曖昧な段階ではなく、具体的な行動を書く。
 - 計画に沿って順番に実行する。
@@ -95,6 +101,7 @@ OpenCode Scholar は、OpenCode 上で学術研究とソフトウェア開発を
 
 タスクが明確に一致する場合は、対応する OpenCode skill または agent を使う:
 
+- 複数 step の作業、progress tracking、persistent planning、または context を超えやすいタスク -> `planning-with-files`
 - 研究立ち上げ、gap analysis、文献計画 -> `research-ideation`
 - 厳密な実験分析、統計、科学図表 -> `results-analysis`
 - 実験後レポート、振り返り要約 -> `results-report`
@@ -133,6 +140,8 @@ OpenCode Scholar は、OpenCode 上で学術研究とソフトウェア開発を
 
 - 新しい経路を作る前に、既存の local skills、agents、workflows を優先する。
 - 複雑なタスクでは、まず具体的な手順を列挙してから実行する。
+- 複数 step のタスクや複数の tool call をまたぐタスクでは、計画を一時的な context に置くだけでなく、`planning-with-files` で disk に持続化する。
+- タスクが長い、分岐が多い、または中断しやすい場合は、主要な判断の前に持続 plan を再読する。
 - 実装後は、最小だが意味のある検証を行う。
 - subtraction を使う。scope creep を防げるなら、今やる価値がないことも明示する。
 - ブロックされたら、正確な blocker と次の unblock action を述べる。
