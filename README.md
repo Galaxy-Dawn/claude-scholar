@@ -20,7 +20,7 @@
 
 ## Recent News
 
-- **2026-05-14**: **`expression-skill` promoted as the core communication layer, with the Nature writing stack expanded around it** — made [`expression-skill`](./skills/expression-skill/README.md) the explicit conclusion-first communication discipline for reporting, planning, file operations, and multi-step technical work; introduced [`nature-writing`](./skills/nature-writing/README.md) for section drafting and argument construction; refreshed [`nature-polishing`](./skills/nature-polishing/README.md) to the latest upstream article-pattern release; and kept [`nature-response`](./skills/nature-response/README.md) plus [`nature-data`](./skills/nature-data/README.md) in the journal-writing stack.
+- **2026-05-14**: **`expression-skill` made the communication core, `planning-with-files` restored as the default persistence layer, and the Nature writing stack expanded** — made [`expression-skill`](./skills/expression-skill/README.md) the explicit conclusion-first discipline for reporting, planning, file operations, and multi-step technical work; reintroduced [`planning-with-files`](./skills/planning-with-files/SKILL.md) as the default on-disk planning and progress-tracking workflow for complex tasks; introduced [`nature-writing`](./skills/nature-writing/README.md) for section drafting and argument construction; refreshed [`nature-polishing`](./skills/nature-polishing/README.md) to the latest upstream article-pattern release; and kept [`nature-response`](./skills/nature-response/README.md) plus [`nature-data`](./skills/nature-data/README.md) in the journal-writing stack.
 - **2026-05-13**: **Evidence-gated research workflow and `Sources/Papers` routing tightened** — added a shared `research-contract.md` for Evidence Records, claim strength, and Claim Promotion Gates; connected research ideation, Zotero ingestion, literature synthesis, results reporting, writing, and rebuttal workflows to that contract; and clarified that project paper notes live under `Sources/Papers` before promoted claims move into `Knowledge` or `Writing`.
 - **2026-04-25**: **OpenCode Obsidian KB lifecycle stabilized** — fixed rename, archive, purge, sync, and lint edge cases in the OpenCode project KB workflow, and made the `/kb-*` commands the primary entrypoints.
 - **2026-04-24**: **Vault-first Obsidian KB workflow backported to OpenCode** — brought the new project-scoped Obsidian knowledge workflow to the OpenCode edition, consolidated the older memory skills into four focused skills, and made `/kb-*` commands the only Obsidian command surface.
@@ -512,13 +512,15 @@ Use a reusable communication layer when the task needs conclusion-first reportin
 | Type | Name | One-line explanation |
 |---|---|---|
 | Skill | [`expression-skill`](./skills/expression-skill/README.md) | Enforces conclusion-first, concrete, checkable communication for technical work, writing, documentation, file operations, and multi-step tasks. |
+| Skill | [`planning-with-files`](./skills/planning-with-files/SKILL.md) | Makes complex work persistent on disk with `task_plan.md`, `notes.md`, and deliverable files instead of relying only on transient chat context. |
 
 **How it works**
 - lead with the conclusion instead of narration,
 - prefer commands, paths, counts, checks, and observable behavior over abstract process language,
 - ask clarifying questions only when ambiguity changes the outcome,
 - surface risk, uncertainty, and destructive boundaries early,
-- keep long-running work visible with step / checkpoint style roadmarks.
+- keep long-running work visible with step / checkpoint style roadmarks,
+- persist multi-step work to disk with `task_plan.md` and `notes.md` instead of relying only on transient context.
 
 ### Knowledge Extraction Workflow
 
