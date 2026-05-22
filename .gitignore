@@ -3,6 +3,7 @@
 # System files
 .DS_Store
 Thumbs.db
+.idea
 
 # Sensitive and local configuration
 .env

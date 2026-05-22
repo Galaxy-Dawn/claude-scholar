@@ -114,30 +114,35 @@ Claude Scholarは特に以下のような方に適しています:
 
 ### オプション1: フルインストール（推奨）
 
+**Linux / macOS**:
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 bash /tmp/claude-scholar/scripts/setup.sh
 ```
 
-**Windows**: インストーラーの実行にはGit BashまたはWSLをご使用ください。
+**Windows (PowerShell)**:
+```powershell
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git C:\Temp\claude-scholar
+powershell -ExecutionPolicy Bypass -File C:\Temp\claude-scholar\scripts\setup.ps1
+```
 
 インストーラーは**バックアップ対応かつインクリメンタルアップデートに対応**しています:
-- リポジトリ管理の`skills/commands/agents/rules/hooks/scripts/CLAUDE*.md`を更新
-- 上書きされるファイルを`~/.claude/.claude-scholar-backups/<timestamp>/`にバックアップ
-- `settings.json`を`settings.json.bak`にバックアップ
-- 既存の`~/.claude/CLAUDE.md`を保持し、リポジトリ版を`~/.claude/CLAUDE.scholar.md`としてインストール
-- 既存の`~/.claude/CLAUDE.zh-CN.md`を保持し、リポジトリ版を`~/.claude/CLAUDE.zh-CN.scholar.md`としてインストール
+- リポジトリ管理の`skills/commands/agents/rules/hooks/scripts/CLAUDE*.md`をプラグインディレクトリ`~/.gemini/config/plugins/claude-scholar/`に直接更新
+- 上書きされるファイルを`~/.gemini/config/plugins/claude-scholar/.claude-scholar-backups/<timestamp>/`にバックアップ
+- `mcp_config.json`を`mcp_config.json.bak`にバックアップ
+- 既存の`~/.gemini/config/plugins/claude-scholar/CLAUDE.md`を保持し、リポジトリ版を`~/.gemini/config/plugins/claude-scholar/CLAUDE.scholar.md`としてインストール
+- 既存の`~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`を保持し、リポジトリ版を`~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.scholar.md`としてインストール
 - 既存の`env`、モデル/プロバイダー設定、APIキー、パーミッション、現在の`mcpServers`値を保持
-- 既存のフックセットを置き換えるのではなく、不足しているフックエントリを追加
+- 必要なMCPサーバーを`~/.gemini/config/mcp_config.json`にマージし、既存のすべての設定を置き換えることはありません
 
-**CLAUDEに関する重要事項**: 既に独自の`~/.claude/CLAUDE.md`や`~/.claude/CLAUDE.zh-CN.md`をお持ちの場合、インストール後に`~/.claude/CLAUDE.scholar.md`と`~/.claude/CLAUDE.zh-CN.scholar.md`を確認し、必要なClaude Scholarのセクションを手動で統合してください。別名で配置された補助ファイルは自動的には適用されません。
+**CLAUDEに関する重要事項**: 既に独自の`~/.gemini/config/plugins/claude-scholar/CLAUDE.md`や`~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`をお持ちの場合、インストール後にサイドカー`.scholar.md`ファイルを確認し、必要なClaude Scholarのセクションを手动で統合してください。別名で配置された補助ファイルは自動的には適用されません。
 
 アップデート方法:
 
 ```bash
-cd /tmp/claude-scholar
+cd /tmp/claude-scholar  # Windowsでは C:\Temp\claude-scholar
 git pull --ff-only
-bash scripts/setup.sh
+bash scripts/setup.sh   # Windowsでは powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
 ```
 
 アンインストールする場合:
@@ -148,8 +153,8 @@ bash scripts/uninstall.sh
 ```
 
 インストーラーは次のファイルも書き込みます:
-- `~/.claude/.claude-scholar-manifest.txt`: Claude Scholar が実際に管理するファイル一覧
-- `~/.claude/.claude-scholar-install-state`: 安全なアンインストールに使う ownership メタデータ
+- `~/.gemini/config/plugins/claude-scholar/.claude-scholar-manifest.txt`: Claude Scholar が実際に管理するファイル一覧
+- `~/.gemini/config/plugins/claude-scholar/.claude-scholar-install-state`: 安全なアンインストールに使う ownership メタデータ
 
 アンインストーラーは install state に記録されたファイルと settings エントリだけを削除し、現在のリポジトリ内容から所有権を推測しません。
 
@@ -158,38 +163,38 @@ bash scripts/uninstall.sh
 研究にフォーカスした最小限のサブセットのみをインストール:
 
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.claude/hooks ~/.claude/skills
-cp /tmp/claude-scholar/hooks/*.js ~/.claude/hooks/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/git-workflow ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/bug-detective ~/.claude/skills/
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+mkdir -p ~/.gemini/config/plugins/claude-scholar/hooks ~/.gemini/config/plugins/claude-scholar/skills
+cp /tmp/claude-scholar/hooks/*.js ~/.gemini/config/plugins/claude-scholar/hooks/
+cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/research-ideation ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/results-analysis ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/results-report ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/review-response ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/git-workflow ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/bug-detective ~/.gemini/config/plugins/claude-scholar/skills/
 ```
 
-**インストール後**: ミニマル/手動インストールでは`settings.json`の自動統合は行われません。`settings.json.template`から必要なhooksやMCPエントリのみをコピーしてください。既に独自の`~/.claude/CLAUDE.md`や`~/.claude/CLAUDE.zh-CN.md`をお持ちの場合は、上書きせずにこのリポジトリのCLAUDEファイルから関連セクションを統合してください。
+**インストール後**: ミニマル/手動インストールでは`mcp_config.json`の自動統合は行われません。`settings.json.template`から必要なMCPエントリのみを`~/.gemini/config/mcp_config.json`にコピーしてください。既に独自の`~/.gemini/config/plugins/claude-scholar/CLAUDE.md`や`~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`をお持ちの場合は、上書きせずにこのリポジトリのCLAUDEファイルから関連セクションを統合してください。
 
 ### オプション3: 選択的インストール
 
 必要な部分のみをコピー:
 
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 cd /tmp/claude-scholar
 
-cp hooks/*.js ~/.claude/hooks/
-cp -r skills/latex-conference-template-organizer ~/.claude/skills/
-cp -r skills/architecture-design ~/.claude/skills/
-cp agents/paper-miner.md ~/.claude/agents/
-cp rules/coding-style.md ~/.claude/rules/
-cp rules/agents.md ~/.claude/rules/
+cp hooks/*.js ~/.gemini/config/plugins/claude-scholar/hooks/
+cp -r skills/latex-conference-template-organizer ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r skills/architecture-design ~/.gemini/config/plugins/claude-scholar/skills/
+cp agents/paper-miner.md ~/.gemini/config/plugins/claude-scholar/agents/
+cp rules/coding-style.md ~/.gemini/config/plugins/claude-scholar/rules/
+cp rules/agents.md ~/.gemini/config/plugins/claude-scholar/rules/
 ```
 
-**インストール後**: 選択的/手動インストールでは`settings.json`の自動統合は行われません。`settings.json.template`から実際に必要なhooksやMCPエントリのみをコピーしてください。既に独自の`~/.claude/CLAUDE.md`や`~/.claude/CLAUDE.zh-CN.md`をお持ちの場合は、上書きせずに関連セクションを統合してください。
+**インストール後**: 選択的/手動インストールでは`mcp_config.json`の自動統合は行われません。`settings.json.template`から実際に必要なMCPエントリのみを`~/.gemini/config/mcp_config.json`にコピーしてください。既に独自の`~/.gemini/config/plugins/claude-scholar/CLAUDE.md`や`~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`をお持ちの場合は、上書きせずに関連セクションを統合してください。
 
 ### オプション4: プラグインマーケットプレイス経由のインストール
 
@@ -204,21 +209,21 @@ cp rules/agents.md ~/.claude/rules/
 
 **ステップ2: ルールをインストール（必須）**
 
-Claude Code のプラグインは rules を自動配布できないため、手動で追加してください:
+Claude Code のプラグインは rules を自动配布できないため、手动で追加してください:
 
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 
 # ユーザー全体（全プロジェクト）
-mkdir -p ~/.claude/rules
-cp /tmp/claude-scholar/rules/*.md ~/.claude/rules/
+mkdir -p ~/.gemini/config/plugins/claude-scholar/rules
+cp /tmp/claude-scholar/rules/*.md ~/.gemini/config/plugins/claude-scholar/rules/
 
 # あるいはプロジェクト単位（現在のプロジェクトのみ）
 mkdir -p .claude/rules
 cp /tmp/claude-scholar/rules/*.md .claude/rules/
 ```
 
-**インストール後**: プラグインインストールでは `CLAUDE.md` の自動読み込みや `settings.json` の自動設定は行われません。既に独自の `~/.claude/CLAUDE.md` や `~/.claude/CLAUDE.zh-CN.md` をお持ちの場合は、プラグインが自動適用すると考えず、Claude Scholar 側の関連セクションを手動で統合してください。Zotero MCP などの連携が必要な場合は、[連携ツール](#連携ツール) セクションを参照してください。
+**インストール後**: プラグインインストールでは `CLAUDE.md` の自动読み込みや `mcp_config.json` の自动設定は行われません。既に独自の `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` や `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md` をお持ちの場合は、プラグインが自动適用すると考えず、Claude Scholar 側の関連セクションを手动で統合してください。Zotero MCP などの連携が必要な場合は、[連携ツール](#連携ツール) セクションを参照してください。
 
 ## 使い始めのシナリオ
 

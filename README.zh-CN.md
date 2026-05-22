@@ -119,30 +119,35 @@ Claude Scholar 将研究工作路由为一条可追踪路径：
 
 ### 选项 1：完整安装（推荐）
 
+**Linux / macOS**：
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 bash /tmp/claude-scholar/scripts/setup.sh
 ```
 
-**Windows**：请使用 Git Bash / WSL 运行安装脚本。
+**Windows (PowerShell)**：
+```powershell
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git C:\Temp\claude-scholar
+powershell -ExecutionPolicy Bypass -File C:\Temp\claude-scholar\scripts\setup.ps1
+```
 
 安装器现在支持**带备份的安全增量更新**：
-- 更新仓库托管的 `skills/commands/agents/rules/hooks/scripts/CLAUDE*.md`
-- 将被覆盖的文件备份到 `~/.claude/.claude-scholar-backups/<timestamp>/`
-- 同时把 `settings.json` 备份为 `settings.json.bak`
-- 如果已存在 `~/.claude/CLAUDE.md`，则保留原文件，并把仓库版本另存为 `~/.claude/CLAUDE.scholar.md`
-- 如果已存在 `~/.claude/CLAUDE.zh-CN.md`，则保留原文件，并把仓库版本另存为 `~/.claude/CLAUDE.zh-CN.scholar.md`
+- 更新仓库托管的 `skills/commands/agents/rules/hooks/scripts/CLAUDE*.md` 直接到插件目录 `~/.gemini/config/plugins/claude-scholar/`
+- 将被覆盖的文件备份到 `~/.gemini/config/plugins/claude-scholar/.claude-scholar-backups/<timestamp>/`
+- 同时把 `mcp_config.json` 备份为 `mcp_config.json.bak`
+- 如果已存在 `~/.gemini/config/plugins/claude-scholar/CLAUDE.md`，则保留原文件，并把仓库版本另存为 `~/.gemini/config/plugins/claude-scholar/CLAUDE.scholar.md`
+- 如果已存在 `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`，则保留原文件，并把仓库版本另存为 `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.scholar.md`
 - 保留已有的 `env`、模型/provider 配置、API key、permissions，以及当前 `mcpServers` 的现有取值
-- 对 hooks 采用追加缺失项的方式，而不是整体替换
+- 将所需的 MCP 服务合并到 `~/.gemini/config/mcp_config.json`，而不会替换你现有的全部配置
 
-**重要 CLAUDE 说明**：如果你原来就有自己的 `~/.claude/CLAUDE.md` 或 `~/.claude/CLAUDE.zh-CN.md`，安装后请查看 `~/.claude/CLAUDE.scholar.md` 和 `~/.claude/CLAUDE.zh-CN.scholar.md`，并将其中你需要的 Claude Scholar 内容按需合并到你自己的文件里；不要假设这些旁路文件会自动生效。
+**重要 CLAUDE 说明**：如果你原来就有自己的 `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` 或 `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`，安装后请查看旁路的 `.scholar.md` 文件，并将其中你需要的 Claude Scholar 内容按需合并到你自己的文件里；不要假设这些旁路文件会自动生效。
 
 以后做增量更新时：
 
 ```bash
-cd /tmp/claude-scholar
+cd /tmp/claude-scholar  # Windows 下为 C:\Temp\claude-scholar
 git pull --ff-only
-bash scripts/setup.sh
+bash scripts/setup.sh   # Windows 下为 powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
 ```
 
 以后如果要卸载：
@@ -153,8 +158,8 @@ bash scripts/uninstall.sh
 ```
 
 安装器现在还会写入：
-- `~/.claude/.claude-scholar-manifest.txt`：记录 Claude Scholar 实际管理的文件
-- `~/.claude/.claude-scholar-install-state`：记录安全卸载所需的 ownership 元数据
+- `~/.gemini/config/plugins/claude-scholar/.claude-scholar-manifest.txt`：记录 Claude Scholar 实际管理的文件
+- `~/.gemini/config/plugins/claude-scholar/.claude-scholar-install-state`：记录安全卸载所需的 ownership 元数据
 
 卸载脚本只会删除 install state 中明确记录的文件和 settings 条目，不会再根据当前 repo 工作树去猜测所有权。
 
@@ -163,38 +168,38 @@ bash scripts/uninstall.sh
 只安装一组较小的研究工作流子集：
 
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.claude/hooks ~/.claude/skills
-cp /tmp/claude-scholar/hooks/*.js ~/.claude/hooks/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/git-workflow ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/bug-detective ~/.claude/skills/
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+mkdir -p ~/.gemini/config/plugins/claude-scholar/hooks ~/.gemini/config/plugins/claude-scholar/skills
+cp /tmp/claude-scholar/hooks/*.js ~/.gemini/config/plugins/claude-scholar/hooks/
+cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/research-ideation ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/results-analysis ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/results-report ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/review-response ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/git-workflow ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/bug-detective ~/.gemini/config/plugins/claude-scholar/skills/
 ```
 
-**安装后**：最小化/手动安装**不会自动合并** `settings.json`；请按需从 `settings.json.template` 复制你需要的 hooks 或 MCP 条目。如果你已经有自己的 `~/.claude/CLAUDE.md` 或 `~/.claude/CLAUDE.zh-CN.md`，也请把仓库提供的相关内容按需合并到你的文件里，而不是直接覆盖。
+**安装后**：最小化/手动安装**不会自动合并** `mcp_config.json`；请按需从 `settings.json.template` 复制你需要的 MCP 条目到 `~/.gemini/config/mcp_config.json`。如果你已经有自己的 `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` 或 `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`，也请把仓库提供的相关内容按需合并到你的文件里，而不是直接覆盖。
 
 ### 选项 3：选择性安装
 
 只复制你需要的部分：
 
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 cd /tmp/claude-scholar
 
-cp hooks/*.js ~/.claude/hooks/
-cp -r skills/latex-conference-template-organizer ~/.claude/skills/
-cp -r skills/architecture-design ~/.claude/skills/
-cp agents/paper-miner.md ~/.claude/agents/
-cp rules/coding-style.md ~/.claude/rules/
-cp rules/agents.md ~/.claude/rules/
+cp hooks/*.js ~/.gemini/config/plugins/claude-scholar/hooks/
+cp -r skills/latex-conference-template-organizer ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r skills/architecture-design ~/.gemini/config/plugins/claude-scholar/skills/
+cp agents/paper-miner.md ~/.gemini/config/plugins/claude-scholar/agents/
+cp rules/coding-style.md ~/.gemini/config/plugins/claude-scholar/rules/
+cp rules/agents.md ~/.gemini/config/plugins/claude-scholar/rules/
 ```
 
-**安装后**：选择性/手动安装**不会自动合并** `settings.json`；请按需从 `settings.json.template` 复制你需要的 hooks 或 MCP 条目。如果你已经有自己的 `~/.claude/CLAUDE.md` 或 `~/.claude/CLAUDE.zh-CN.md`，也请把仓库提供的相关内容按需合并到你的文件里，而不是直接覆盖。
+**安装后**：选择性/手动安装**不会自动合并** `mcp_config.json`；请按需从 `settings.json.template` 复制你需要的 MCP 条目到 `~/.gemini/config/mcp_config.json`。如果你已经有自己的 `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` 或 `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`，也请把仓库提供的相关内容按需合并到你的文件里，而不是直接覆盖。
 
 ### 选项 4：插件市场安装
 
@@ -212,18 +217,18 @@ cp rules/agents.md ~/.claude/rules/
 Claude Code 插件无法自动分发 rules，需要手动安装：
 
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 
 # 用户级（所有项目生效）
-mkdir -p ~/.claude/rules
-cp /tmp/claude-scholar/rules/*.md ~/.claude/rules/
+mkdir -p ~/.gemini/config/plugins/claude-scholar/rules
+cp /tmp/claude-scholar/rules/*.md ~/.gemini/config/plugins/claude-scholar/rules/
 
 # 或项目级（仅当前项目生效）
 mkdir -p .claude/rules
 cp /tmp/claude-scholar/rules/*.md .claude/rules/
 ```
 
-**安装后**：插件安装**不会**自动加载 `CLAUDE.md` 或配置 `settings.json`；如果你已经有自己的 `~/.claude/CLAUDE.md` 或 `~/.claude/CLAUDE.zh-CN.md`，也请把仓库提供的相关内容按需合并到你的文件里，而不是假设插件会自动应用。如需 Zotero MCP 或其他集成，请参阅[集成能力](#集成能力)部分手动设置。
+**安装后**：插件安装**不会**自动加载 `CLAUDE.md` 或配置 `mcp_config.json`；如果你已经有自己的 `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` 或 `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`，也请把仓库提供的相关内容按需合并到你的文件里，而不是假设插件会自动应用。如需 Zotero MCP 或其他集成，请参阅[集成能力](#集成能力)部分手动设置。
 
 ## 上手场景
 

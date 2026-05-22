@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CLAUDE_DIR="$HOME/.claude"
+CLAUDE_DIR="$HOME/.gemini/config/plugins/claude-scholar"
 MANIFEST_FILE="$CLAUDE_DIR/.claude-scholar-manifest.txt"
 STATE_FILE="$CLAUDE_DIR/.claude-scholar-install-state"
 BACKUP_ROOT="$CLAUDE_DIR/.claude-scholar-backups"
@@ -111,7 +111,7 @@ cleanup_empty_dirs() {
 }
 
 cleanup_settings() {
-  local settings="$CLAUDE_DIR/settings.json"
+  local settings="$HOME/.gemini/config/mcp_config.json"
   [ -f "$settings" ] || return 0
 
   backup_target "$settings"
@@ -128,28 +128,10 @@ const statePath = process.env.STATE_PATH;
 const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
 const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
 const settingsCreated = Boolean(state.settingsCreated);
-const addedHooks = Array.isArray(state.settings?.addedHooks) ? state.settings.addedHooks : [];
 const addedMcpServers = new Set(Array.isArray(state.settings?.addedMcpServers) ? state.settings.addedMcpServers : []);
 const addedMcpServerFields = state.settings?.addedMcpServerFields && typeof state.settings.addedMcpServerFields === 'object'
   ? state.settings.addedMcpServerFields
   : {};
-const addedEnabledPlugins = new Set(Array.isArray(state.settings?.addedEnabledPlugins) ? state.settings.addedEnabledPlugins : []);
-
-function hookSignature(hook) {
-  return JSON.stringify({
-    type: hook?.type || '',
-    command: hook?.command || '',
-    timeout: hook?.timeout ?? null,
-  });
-}
-
-const ownedHookMatchers = new Map();
-for (const hook of addedHooks) {
-  const key = `${hook.event}::${hook.matcher || '*'}`;
-  const sigs = ownedHookMatchers.get(key) || new Set();
-  sigs.add(hookSignature(hook));
-  ownedHookMatchers.set(key, sigs);
-}
 
 function pruneEmptyContainers(root, parts) {
   for (let i = parts.length - 1; i > 0; i -= 1) {
@@ -178,28 +160,6 @@ function removeNestedPath(root, dottedPath) {
   pruneEmptyContainers(root, parts);
 }
 
-if (settings.hooks && typeof settings.hooks === 'object') {
-  for (const [eventName, matchers] of Object.entries(settings.hooks)) {
-    if (!Array.isArray(matchers)) continue;
-    const nextMatchers = matchers
-      .map((matcher) => {
-        const key = `${eventName}::${matcher.matcher || '*'}`;
-        const owned = ownedHookMatchers.get(key) || new Set();
-        const hooks = Array.isArray(matcher.hooks)
-          ? matcher.hooks.filter((hook) => !owned.has(hookSignature(hook)))
-          : [];
-        return hooks.length > 0 ? { ...matcher, hooks } : null;
-      })
-      .filter(Boolean);
-    if (nextMatchers.length > 0) {
-      settings.hooks[eventName] = nextMatchers;
-    } else {
-      delete settings.hooks[eventName];
-    }
-  }
-  if (Object.keys(settings.hooks).length === 0) delete settings.hooks;
-}
-
 if (settings.mcpServers && typeof settings.mcpServers === 'object') {
   for (const key of addedMcpServers) {
     delete settings.mcpServers[key];
@@ -221,22 +181,13 @@ if (settings.mcpServers && typeof settings.mcpServers === 'object') {
   if (Object.keys(settings.mcpServers).length === 0) delete settings.mcpServers;
 }
 
-if (settings.enabledPlugins && typeof settings.enabledPlugins === 'object') {
-  for (const key of addedEnabledPlugins) {
-    delete settings.enabledPlugins[key];
-  }
-  if (Object.keys(settings.enabledPlugins).length === 0) delete settings.enabledPlugins;
-}
-
-const onlyDefaultTemplateRemainder =
+const onlyEmptyRemainder =
   settingsCreated &&
-  Object.keys(settings).every((key) => ['env', 'verbose'].includes(key)) &&
-  settings.verbose === true &&
-  settings.env &&
-  Object.keys(settings.env).length === 1 &&
-  settings.env.GITHUB_PERSONAL_ACCESS_TOKEN === '<your-github-token-optional>';
+  Object.keys(settings).length === 1 &&
+  settings.mcpServers &&
+  Object.keys(settings.mcpServers).length === 0;
 
-if (onlyDefaultTemplateRemainder) {
+if (onlyEmptyRemainder) {
   fs.unlinkSync(settingsPath);
 } else {
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');

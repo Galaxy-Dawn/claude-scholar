@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CLAUDE_DIR="$HOME/.claude"
+CLAUDE_DIR="$HOME/.gemini/config/plugins/claude-scholar"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SRC_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 COMPONENTS=(skills commands agents rules hooks scripts templates)
@@ -203,59 +203,31 @@ backup_path() {
   BACKUP_COUNT=$((BACKUP_COUNT + 1))
 }
 
-# Create settings.json from template
+# Create mcp_config.json if not present
 create_settings() {
-  local template="$1/settings.json.template"
-  local target="$CLAUDE_DIR/settings.json"
-  if [ -f "$template" ] && [ ! -f "$target" ]; then
-    cp "$template" "$target"
+  local target="$HOME/.gemini/config/mcp_config.json"
+  if [ ! -f "$target" ]; then
+    mkdir -p "$(dirname "$target")"
+    echo '{"mcpServers": {}}' > "$target"
     SETTINGS_CREATED=1
-    CLAUDE_SETTINGS_TEMPLATE="$template" CLAUDE_SETTINGS_META_FILE="$SETTINGS_META_FILE" node <<'NODE'
-const fs = require('fs');
-
-const template = JSON.parse(fs.readFileSync(process.env.CLAUDE_SETTINGS_TEMPLATE, 'utf8'));
-
-const addedHooks = [];
-for (const [eventName, matchers] of Object.entries(template.hooks || {})) {
-  for (const matcher of matchers || []) {
-    for (const hook of matcher.hooks || []) {
-      addedHooks.push({
-        event: eventName,
-        matcher: matcher.matcher || '*',
-        type: hook.type || '',
-        command: hook.command || '',
-        timeout: hook.timeout ?? null,
-      });
-    }
-  }
-}
-
-fs.writeFileSync(process.env.CLAUDE_SETTINGS_META_FILE, JSON.stringify({
-  addedHooks,
-  addedMcpServers: Object.keys(template.mcpServers || {}),
-  addedMcpServerFields: {},
-  addedEnabledPlugins: Object.keys(template.enabledPlugins || {}),
-}, null, 2) + '\n');
-NODE
-    info "Created settings.json from template."
-    info "  → Edit $target to add your GITHUB_PERSONAL_ACCESS_TOKEN (optional)."
+    info "Created empty mcp_config.json."
   fi
 }
 
-# Merge hooks, mcpServers, enabledPlugins from template into existing settings.json
+# Merge mcpServers from template into mcp_config.json
 merge_settings() {
   local template="$1/settings.json.template"
-  local target="$CLAUDE_DIR/settings.json"
+  local target="$HOME/.gemini/config/mcp_config.json"
 
   [ -f "$template" ] || return 0
-  [ -f "$target" ]   || { create_settings "$1"; return 0; }
+  [ -f "$target" ]   || { create_settings "$1"; }
 
   # Backup
   backup_path "$target"
   cp "$target" "${target}.bak"
-  info "Backed up settings.json → settings.json.bak"
+  info "Backed up mcp_config.json → mcp_config.json.bak"
 
-  # Merge hooks, mcpServers, enabledPlugins while preserving user env/model/API key settings.
+  # Merge mcpServers while preserving user configurations
   CLAUDE_SETTINGS_TARGET="$target" CLAUDE_SETTINGS_TEMPLATE="$template" CLAUDE_SETTINGS_META_FILE="$SETTINGS_META_FILE" node <<'NODE'
 const fs = require('fs');
 
@@ -264,10 +236,8 @@ const templatePath = process.env.CLAUDE_SETTINGS_TEMPLATE;
 const metaPath = process.env.CLAUDE_SETTINGS_META_FILE;
 const existing = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
 const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
-const addedHooks = [];
 const addedMcpServers = [];
 const addedMcpServerFields = {};
-const addedEnabledPlugins = [];
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -300,66 +270,9 @@ function mergeMissing(existingValue, templateValue, pathParts, addedPaths) {
   return output;
 }
 
-function mergeHooks(existingHooks, templateHooks) {
-  const output = existingHooks ? clone(existingHooks) : {};
-  for (const [eventName, templateMatchers] of Object.entries(templateHooks || {})) {
-    const existingMatchers = Array.isArray(output[eventName]) ? output[eventName] : [];
-    for (const templateMatcher of templateMatchers) {
-      const matchValue = templateMatcher.matcher || '*';
-      let existingMatcher = existingMatchers.find((item) => (item.matcher || '*') === matchValue);
-      if (!existingMatcher) {
-        existingMatchers.push(clone(templateMatcher));
-        for (const hook of templateMatcher.hooks || []) {
-          addedHooks.push({
-            event: eventName,
-            matcher: matchValue,
-            type: hook.type || '',
-            command: hook.command || '',
-            timeout: hook.timeout ?? null,
-          });
-        }
-        continue;
-      }
-
-      existingMatcher.hooks = Array.isArray(existingMatcher.hooks) ? existingMatcher.hooks : [];
-      const seen = new Set(
-        existingMatcher.hooks.map((hook) =>
-          JSON.stringify({
-            type: hook.type || '',
-            command: hook.command || '',
-            timeout: hook.timeout ?? null,
-          }),
-        ),
-      );
-
-      for (const hook of templateMatcher.hooks || []) {
-        const signature = JSON.stringify({
-          type: hook.type || '',
-          command: hook.command || '',
-          timeout: hook.timeout ?? null,
-        });
-        if (!seen.has(signature)) {
-          existingMatcher.hooks.push(clone(hook));
-          seen.add(signature);
-          addedHooks.push({
-            event: eventName,
-            matcher: matchValue,
-            type: hook.type || '',
-            command: hook.command || '',
-            timeout: hook.timeout ?? null,
-          });
-        }
-      }
-    }
-    output[eventName] = existingMatchers;
-  }
-  return output;
-}
-
-existing.hooks = mergeHooks(existing.hooks, template.hooks);
+existing.mcpServers = existing.mcpServers || {};
 
 if (template.mcpServers) {
-  existing.mcpServers = existing.mcpServers || {};
   for (const [key, value] of Object.entries(template.mcpServers)) {
     if (!(key in existing.mcpServers)) {
       addedMcpServers.push(key);
@@ -374,32 +287,22 @@ if (template.mcpServers) {
   }
 }
 
-if (template.enabledPlugins) {
-  existing.enabledPlugins = existing.enabledPlugins || {};
-  for (const [key, value] of Object.entries(template.enabledPlugins)) {
-    if (!(key in existing.enabledPlugins)) {
-      existing.enabledPlugins[key] = value;
-      addedEnabledPlugins.push(key);
-    }
-  }
-}
-
 fs.writeFileSync(targetPath, JSON.stringify(existing, null, 2) + '\n');
 fs.writeFileSync(metaPath, JSON.stringify({
-  addedHooks,
+  addedHooks: [],
   addedMcpServers,
   addedMcpServerFields,
-  addedEnabledPlugins,
+  addedEnabledPlugins: [],
 }, null, 2) + '\n');
 NODE
 
   local merge_status=$?
   if [ "$merge_status" -ne 0 ]; then
-    warn "Auto-merge failed. Please manually copy settings from settings.json.template."
+    warn "Auto-merge failed. Please manually copy mcpServers from settings.json.template."
     return 0
   fi
 
-  info "Merged hooks/mcpServers/enabledPlugins into settings.json without touching env/model/API key fields."
+  info "Merged mcpServers into mcp_config.json without touching existing configurations."
 }
 
 # Copy one file with backup-aware overwrite
@@ -493,6 +396,11 @@ install_claude_zh_md() {
 
 copy_components() {
   local src="$1"
+
+  if [ -f "$src/.claude-plugin/plugin.json" ]; then
+    copy_file_safely "$src/.claude-plugin/plugin.json" "$CLAUDE_DIR/plugin.json"
+    copy_file_safely "$src/.claude-plugin/plugin.json" "$CLAUDE_DIR/plugins.json"
+  fi
 
   if [ -f "$src/CLAUDE.md" ]; then
     install_claude_md "$src/CLAUDE.md"

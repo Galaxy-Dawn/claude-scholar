@@ -26,17 +26,17 @@ test_roundtrip_empty_home() {
   home="$(make_home)"
   run_setup "$home"
 
-  test -f "$home/.claude/.claude-scholar-manifest.txt"
-  test -f "$home/.claude/.claude-scholar-install-state"
-  test -f "$home/.claude/CLAUDE.md"
+  test -f "$home/.gemini/config/plugins/claude-scholar/.claude-scholar-manifest.txt"
+  test -f "$home/.gemini/config/plugins/claude-scholar/.claude-scholar-install-state"
+  test -f "$home/.gemini/config/plugins/claude-scholar/CLAUDE.md"
 
   run_uninstall "$home"
 
-  test ! -f "$home/.claude/.claude-scholar-manifest.txt"
-  test ! -f "$home/.claude/.claude-scholar-install-state"
-  test ! -f "$home/.claude/settings.json"
-  if [ -d "$home/.claude" ]; then
-    ! find "$home/.claude"/{skills,commands,agents,rules,hooks,scripts} -type f 2>/dev/null | grep -q .
+  test ! -f "$home/.gemini/config/plugins/claude-scholar/.claude-scholar-manifest.txt"
+  test ! -f "$home/.gemini/config/plugins/claude-scholar/.claude-scholar-install-state"
+  test ! -f "$home/.gemini/config/mcp_config.json"
+  if [ -d "$home/.gemini/config/plugins/claude-scholar" ]; then
+    ! find "$home/.gemini/config/plugins/claude-scholar"/{skills,commands,agents,rules,hooks,scripts} -type f 2>/dev/null | grep -q .
   fi
   pass "roundtrip on empty home"
 }
@@ -44,8 +44,8 @@ test_roundtrip_empty_home() {
 test_preserve_preexisting_settings_keys() {
   local home
   home="$(make_home)"
-  mkdir -p "$home/.claude"
-  python3 - "$home/.claude/settings.json" <<'PY'
+  mkdir -p "$home/.gemini/config"
+  python3 - "$home/.gemini/config/mcp_config.json" <<'PY'
 import json, sys
 path = sys.argv[1]
 data = {
@@ -53,23 +53,6 @@ data = {
         "zotero": {
             "command": "custom-zotero"
         }
-    },
-    "enabledPlugins": {
-        "superpowers@claude-plugins-official": False
-    },
-    "hooks": {
-        "Stop": [
-            {
-                "matcher": "*",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "echo user-hook",
-                        "timeout": 3
-                    }
-                ]
-            }
-        ]
     }
 }
 with open(path, "w", encoding="utf-8") as f:
@@ -80,15 +63,12 @@ PY
   run_setup "$home"
   run_uninstall "$home"
 
-  python3 - "$home/.claude/settings.json" <<'PY'
+  python3 - "$home/.gemini/config/mcp_config.json" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
 assert data["mcpServers"]["zotero"]["command"] == "custom-zotero"
 assert "args" not in data["mcpServers"]["zotero"]
 assert "env" not in data["mcpServers"]["zotero"]
-assert data["enabledPlugins"]["superpowers@claude-plugins-official"] is False
-hooks = data["hooks"]["Stop"][0]["hooks"]
-assert len(hooks) == 1 and hooks[0]["command"] == "echo user-hook"
 PY
   pass "preserve pre-existing settings entries with overlapping keys"
 }
@@ -98,15 +78,15 @@ test_manifest_missing_fails_safe() {
   home="$(make_home)"
   run_setup "$home"
 
-  rm -f "$home/.claude/.claude-scholar-manifest.txt"
+  rm -f "$home/.gemini/config/plugins/claude-scholar/.claude-scholar-manifest.txt"
   if HOME="$home" bash "$UNINSTALL_SH" >/tmp/claude-scholar-uninstall-fail.log 2>&1; then
     echo "[FAIL] manifest missing should fail"
     cat /tmp/claude-scholar-uninstall-fail.log
     exit 1
   fi
 
-  test -f "$home/.claude/CLAUDE.md"
-  test -f "$home/.claude/.claude-scholar-install-state"
+  test -f "$home/.gemini/config/plugins/claude-scholar/CLAUDE.md"
+  test -f "$home/.gemini/config/plugins/claude-scholar/.claude-scholar-install-state"
   pass "manifest missing fails safely"
 }
 
@@ -115,7 +95,7 @@ test_state_records_direct_claude_targets() {
   home="$(make_home)"
   run_setup "$home"
 
-  python3 - "$home/.claude/.claude-scholar-install-state" <<'PY'
+  python3 - "$home/.gemini/config/plugins/claude-scholar/.claude-scholar-install-state" <<'PY'
 import json, sys
 state = json.load(open(sys.argv[1], encoding="utf-8"))
 targets = set(state["claudeTargets"])
@@ -124,21 +104,21 @@ assert "CLAUDE.zh-CN.md" in targets, targets
 PY
 
   run_uninstall "$home"
-  test ! -f "$home/.claude/CLAUDE.md"
-  test ! -f "$home/.claude/CLAUDE.zh-CN.md"
+  test ! -f "$home/.gemini/config/plugins/claude-scholar/CLAUDE.md"
+  test ! -f "$home/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md"
   pass "state records direct CLAUDE targets"
 }
 
 test_identical_preexisting_file_is_not_owned() {
   local home
   home="$(make_home)"
-  mkdir -p "$home/.claude/hooks"
-  cp "$REPO_ROOT/hooks/security-guard.js" "$home/.claude/hooks/security-guard.js"
+  mkdir -p "$home/.gemini/config/plugins/claude-scholar/hooks"
+  cp "$REPO_ROOT/hooks/security-guard.js" "$home/.gemini/config/plugins/claude-scholar/hooks/security-guard.js"
 
   run_setup "$home"
   run_uninstall "$home"
 
-  test -f "$home/.claude/hooks/security-guard.js"
+  test -f "$home/.gemini/config/plugins/claude-scholar/hooks/security-guard.js"
   pass "identical pre-existing file is not treated as owned"
 }
 
@@ -149,18 +129,18 @@ test_reinstall_keeps_owned_files_owned() {
   run_setup "$home"
   run_uninstall "$home"
 
-  test ! -f "$home/.claude/hooks/security-guard.js"
-  test ! -f "$home/.claude/CLAUDE.md"
+  test ! -f "$home/.gemini/config/plugins/claude-scholar/hooks/security-guard.js"
+  test ! -f "$home/.gemini/config/plugins/claude-scholar/CLAUDE.md"
   pass "reinstall preserves ownership of previously installed files"
 }
 
 test_legacy_install_upgrade_adopts_existing_files() {
   local home
   home="$(make_home)"
-  mkdir -p "$home/.claude/hooks"
-  cp "$REPO_ROOT/CLAUDE.md" "$home/.claude/CLAUDE.md"
-  cp "$REPO_ROOT/hooks/security-guard.js" "$home/.claude/hooks/security-guard.js"
-  python3 - "$home/.claude/settings.json" <<'PY'
+  mkdir -p "$home/.gemini/config/plugins/claude-scholar/hooks"
+  cp "$REPO_ROOT/CLAUDE.md" "$home/.gemini/config/plugins/claude-scholar/CLAUDE.md"
+  cp "$REPO_ROOT/hooks/security-guard.js" "$home/.gemini/config/plugins/claude-scholar/hooks/security-guard.js"
+  python3 - "$home/.gemini/config/plugins/claude-scholar/settings.json" <<'PY'
 import json, sys
 data = {
     "mcpServers": {
@@ -192,17 +172,17 @@ PY
   run_setup "$home"
   run_uninstall "$home"
 
-  test ! -f "$home/.claude/CLAUDE.md"
-  test ! -f "$home/.claude/hooks/security-guard.js"
+  test ! -f "$home/.gemini/config/plugins/claude-scholar/CLAUDE.md"
+  test ! -f "$home/.gemini/config/plugins/claude-scholar/hooks/security-guard.js"
   pass "legacy install upgrade adopts existing managed files"
 }
 
 test_overlapping_mcp_keys_do_not_trigger_legacy_adoption() {
   local home
   home="$(make_home)"
-  mkdir -p "$home/.claude/hooks"
-  cp "$REPO_ROOT/hooks/security-guard.js" "$home/.claude/hooks/security-guard.js"
-  python3 - "$home/.claude/settings.json" <<'PY'
+  mkdir -p "$home/.gemini/config/plugins/claude-scholar/hooks"
+  cp "$REPO_ROOT/hooks/security-guard.js" "$home/.gemini/config/plugins/claude-scholar/hooks/security-guard.js"
+  python3 - "$home/.gemini/config/plugins/claude-scholar/settings.json" <<'PY'
 import json, sys
 data = {
     "mcpServers": {
@@ -222,7 +202,7 @@ PY
   run_setup "$home"
   run_uninstall "$home"
 
-  test -f "$home/.claude/hooks/security-guard.js"
+  test -f "$home/.gemini/config/plugins/claude-scholar/hooks/security-guard.js"
   pass "overlapping MCP keys alone do not trigger legacy adoption"
 }
 
