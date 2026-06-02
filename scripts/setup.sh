@@ -362,10 +362,9 @@ merge_kimi_config() {
   # Kimi Code CLI uses TOML with [providers], [models], and [[hooks]] sections.
   # Strategy:
   #   - Fresh install (no existing config): copy template as-is.
-  #   - Existing config: preserve user's [providers], [models], [services]
-  #     and any custom hooks. Only add missing top-level defaults and
-  #     Scholar-managed hooks, replacing any previous Scholar hooks to
-  #     avoid duplicates.
+  #   - Existing config: detect hook conflicts by event name.
+  #     If conflicts exist, show interactive prompt for user to decide.
+  #     Never auto-overwrite user hooks without consent.
 
   python3 - "$target" "$template" <<'PY'
 import pathlib
@@ -382,12 +381,19 @@ try:
 except Exception:
     template = {}
 
+template_hooks = template.get("hooks", [])
+if not isinstance(template_hooks, list):
+    template_hooks = [template_hooks]
+
+scholar_events = {h.get("event", "") for h in template_hooks}
+
 # --- Fresh install ---
 if not target_path.exists():
     target_path.write_text(template_text)
+    print("FRESH_INSTALL")
     raise SystemExit(0)
 
-# --- Existing config: merge carefully ---
+# --- Existing config ---
 existing_text = target_path.read_text()
 
 try:
@@ -395,92 +401,193 @@ try:
 except Exception:
     existing = {}
 
-template_hooks = template.get("hooks", [])
-if not isinstance(template_hooks, list):
-    template_hooks = [template_hooks]
+existing_hooks = existing.get("hooks", [])
+if not isinstance(existing_hooks, list):
+    existing_hooks = [existing_hooks]
 
-# Identify Scholar hook events (used to detect old Scholar hooks)
-scholar_events = {h.get("event", "") for h in template_hooks}
+# Build event -> hook map for existing hooks
+existing_event_map = {}
+for i, h in enumerate(existing_hooks):
+    ev = h.get("event", "")
+    if ev:
+        existing_event_map[ev] = i
 
-# 1. Remove previous Scholar hooks from raw text to avoid duplication.
-lines = existing_text.split("\n")
-new_lines = []
-i = 0
-while i < len(lines):
-    line = lines[i]
-    if line.strip() == "[[hooks]]":
-        hook_block = [line]
-        i += 1
-        while i < len(lines) and not lines[i].strip().startswith("["):
-            hook_block.append(lines[i])
+# Find conflicts: template hooks whose event already exists
+conflicts = []
+for th in template_hooks:
+    ev = th.get("event", "")
+    if ev in existing_event_map:
+        conflicts.append({
+            "event": ev,
+            "existing": existing_hooks[existing_event_map[ev]],
+            "scholar": th,
+        })
+
+# No conflicts: merge directly
+if not conflicts:
+    _do_merge(target_path, template, existing, existing_hooks, template_hooks, [])
+    print("MERGED_OK")
+    raise SystemExit(0)
+
+# Conflicts detected: interactive resolution
+print("")
+    print("╔════════════════════════════════════════════════════════════╗")
+    print("║   Hook conflicts detected in config.toml                   ║")
+    print("╚════════════════════════════════════════════════════════════╝")
+    print("")
+    print("The following events already have hooks in your config.toml.")
+    print("Claude Scholar also provides hooks for these events.")
+    print("")
+
+    for i, c in enumerate(conflicts, 1):
+        print(f"  [{i}] event = \"{c['event']}\"")
+        print(f"      existing:  command = \"{c['existing'].get('command', '')}\"")
+        print(f"      Scholar:   command = \"{c['scholar'].get('command', '')}\"")
+        print()
+
+    print("How to resolve conflicts?")
+    print("  (Y) Overwrite all with Scholar versions")
+    print("  (k) Keep all existing (skip Scholar hooks for these events)")
+    print("  (s) Select individually")
+    print("  (n) Abort installation")
+    print()
+
+    while True:
+        try:
+            choice = input("Choice [Y/k/s/n]: ").strip().lower()
+        except EOFError:
+            choice = ""
+        if choice in ("y", "k", "s", "n", ""):
+            break
+
+    if choice == "n":
+        print("ABORT")
+        raise SystemExit(1)
+
+    # Determine which Scholar hooks to use based on user choice
+    scholar_hooks_to_add = []
+    for th in template_hooks:
+        ev = th.get("event", "")
+        is_conflict = any(c["event"] == ev for c in conflicts)
+
+        if not is_conflict:
+            # No conflict, always add
+            scholar_hooks_to_add.append(th)
+            continue
+
+        if choice == "y" or choice == "":
+            # Overwrite all
+            scholar_hooks_to_add.append(th)
+        elif choice == "k":
+            # Keep existing, skip Scholar
+            pass
+        elif choice == "s":
+            # Ask individually
+            for c in conflicts:
+                if c["event"] == ev:
+                    print(f"\n  event = \"{ev}\"")
+                    print(f"  existing: {c['existing'].get('command', '')}")
+                    print(f"  Scholar:  {c['scholar'].get('command', '')}")
+                    while True:
+                        try:
+                            individual = input("  Overwrite with Scholar version? [y/N]: ").strip().lower()
+                        except EOFError:
+                            individual = "n"
+                        if individual in ("y", "n", ""):
+                            break
+                    if individual == "y":
+                        scholar_hooks_to_add.append(th)
+                    break
+
+    _do_merge(target_path, template, existing, existing_hooks, scholar_hooks_to_add, conflicts, choice)
+    print("MERGED_OK")
+    raise SystemExit(0)
+
+
+def _do_merge(target_path, template, existing, existing_hooks, scholar_hooks_to_add, conflicts, choice):
+    existing_text = target_path.read_text()
+
+    # 1. Remove ALL existing hooks from raw text
+    lines = existing_text.split("\n")
+    new_lines = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.strip() == "[[hooks]]":
+            hook_block = [line]
             i += 1
-        hook_text = "\n".join(hook_block)
-        # Check if this hook is managed by Scholar
-        if any(f'event = "{ev}"' in hook_text for ev in scholar_events):
-            # Also remove any "# --- Claude Scholar ..." comment before it
+            while i < len(lines) and not lines[i].strip().startswith("["):
+                hook_block.append(lines[i])
+                i += 1
+            # Remove any Scholar comment markers before this hook block
             while new_lines and new_lines[-1].strip().startswith("# ---"):
                 new_lines.pop()
             while new_lines and new_lines[-1].strip() == "":
                 new_lines.pop()
             continue
-        new_lines.extend(hook_block)
-        continue
-    new_lines.append(line)
-    i += 1
+        new_lines.append(line)
+        i += 1
 
-# Trim trailing blank lines
-while new_lines and new_lines[-1].strip() == "":
-    new_lines.pop()
+    while new_lines and new_lines[-1].strip() == "":
+        new_lines.pop()
 
-text = "\n".join(new_lines) + "\n"
+    text = "\n".join(new_lines) + "\n"
 
-# 2. Detect missing top-level defaults
-missing_top = []
-top_fields = [
-    ("default_model", str),
-    ("default_thinking", bool),
-    ("merge_all_available_skills", bool),
-    ("telemetry", bool),
-]
-for key, val_type in top_fields:
-    if key not in existing and key in template:
-        val = template[key]
-        if val_type is bool:
-            missing_top.append(f'{key} = {str(val).lower()}')
-        elif val_type is str:
-            missing_top.append(f'{key} = "{val}"')
-        elif val_type is int:
-            missing_top.append(f'{key} = {val}')
+    # 2. Detect missing top-level defaults
+    missing_top = []
+    top_fields = [
+        ("default_model", str),
+        ("default_thinking", bool),
+        ("merge_all_available_skills", bool),
+        ("telemetry", bool),
+    ]
+    for key, val_type in top_fields:
+        if key not in existing and key in template:
+            val = template[key]
+            if val_type is bool:
+                missing_top.append(f'{key} = {str(val).lower()}')
+            elif val_type is str:
+                missing_top.append(f'{key} = "{val}"')
+            elif val_type is int:
+                missing_top.append(f'{key} = {val}')
 
-# 3. Build hooks to write (all template hooks)
-hooks_to_write = list(template_hooks)
+    # 3. Build final hooks list based on choice
+    scholar_events = {h.get("event", "") for h in template.get("hooks", [])}
 
-append_lines = []
+    if choice == "k":
+        # Keep all existing hooks, add only non-conflicting Scholar hooks
+        final_hooks = list(existing_hooks) + scholar_hooks_to_add
+    else:
+        # 'y', 's', or default: preserve non-Scholar user hooks + selected Scholar hooks
+        non_scholar_existing = [h for h in existing_hooks if h.get("event", "") not in scholar_events]
+        final_hooks = non_scholar_existing + scholar_hooks_to_add
 
-if missing_top:
-    append_lines.append("")
-    append_lines.append("# --- Claude Scholar defaults ---")
-    append_lines.extend(missing_top)
+    append_lines = []
 
-if hooks_to_write:
-    append_lines.append("")
-    append_lines.append("# --- Claude Scholar hooks ---")
-    for h in hooks_to_write:
-        append_lines.append("[[hooks]]")
-        for k, v in sorted(h.items()):
-            if isinstance(v, str):
-                append_lines.append(f'{k} = "{v}"')
-            elif isinstance(v, int):
-                append_lines.append(f'{k} = {v}')
-            elif isinstance(v, list):
-                items = ", ".join(f'"{item}"' for item in v)
-                append_lines.append(f'{k} = [{items}]')
+    if missing_top:
         append_lines.append("")
+        append_lines.append("# --- Claude Scholar defaults ---")
+        append_lines.extend(missing_top)
 
-if append_lines:
-    text = text.rstrip() + "\n" + "\n".join(append_lines) + "\n"
+    if final_hooks:
+        append_lines.append("")
+        append_lines.append("# --- Claude Scholar hooks ---")
+        for h in final_hooks:
+            append_lines.append("[[hooks]]")
+            for k, v in sorted(h.items()):
+                if isinstance(v, str):
+                    append_lines.append(f'{k} = "{v}"')
+                elif isinstance(v, int):
+                    append_lines.append(f'{k} = {v}')
+                elif isinstance(v, list):
+                    items = ", ".join(f'"{item}"' for item in v)
+                    append_lines.append(f'{k} = [{items}]')
+            append_lines.append("")
 
-target_path.write_text(text)
+    if append_lines:
+        text = text.rstrip() + "\n" + "\n".join(append_lines) + "\n"
+
+    target_path.write_text(text)
 PY
   local py_rc=$?
   if [ "$py_rc" -ne 0 ]; then
