@@ -429,81 +429,157 @@ if not conflicts:
     print("MERGED_OK")
     raise SystemExit(0)
 
-# Conflicts detected: interactive resolution
-print("")
+    # Show diff for each hook change
+    print("")
     print("╔════════════════════════════════════════════════════════════╗")
-    print("║   Hook conflicts detected in config.toml                   ║")
+    print("║   Hook changes in config.toml                              ║")
     print("╚════════════════════════════════════════════════════════════╝")
     print("")
-    print("The following events already have hooks in your config.toml.")
-    print("Claude Scholar also provides hooks for these events.")
-    print("")
 
-    for i, c in enumerate(conflicts, 1):
-        print(f"  [{i}] event = \"{c['event']}\"")
-        print(f"      existing:  command = \"{c['existing'].get('command', '')}\"")
-        print(f"      Scholar:   command = \"{c['scholar'].get('command', '')}\"")
-        print()
+    modified = []
+    new_hooks = []
+    for th in template_hooks:
+        ev = th.get("event", "")
+        if ev in existing_event_map:
+            modified.append({
+                "event": ev,
+                "existing": existing_hooks[existing_event_map[ev]],
+                "scholar": th,
+            })
+        else:
+            new_hooks.append(th)
 
-    print("How to resolve conflicts?")
-    print("  (Y) Overwrite all with Scholar versions")
-    print("  (k) Keep all existing (skip Scholar hooks for these events)")
+    if modified:
+        print(f"  {len(modified)} hook(s) will be overwritten (event already exists):\n")
+        for c in modified:
+            ev = c["event"]
+            old_cmd = c["existing"].get("command", "")
+            new_cmd = c["scholar"].get("command", "")
+            print(f"  [{ev}]")
+            if old_cmd != new_cmd:
+                print(f"    - command = \"{old_cmd}\"")
+                print(f"    + command = \"{new_cmd}\"")
+            else:
+                print(f"    (same command path)")
+            for k in sorted(c["scholar"].keys()):
+                if k == "event":
+                    continue
+                old_val = c["existing"].get(k)
+                new_val = c["scholar"][k]
+                if old_val != new_val:
+                    print(f"    - {k} = {repr(old_val)}")
+                    print(f"    + {k} = {repr(new_val)}")
+            print()
+
+    if new_hooks:
+        print(f"  {len(new_hooks)} new hook(s) will be added:\n")
+        for h in new_hooks:
+            print(f"  [{h.get('event', '')}] (new)")
+            for k, v in sorted(h.items()):
+                if k == "event":
+                    continue
+                print(f"    + {k} = {repr(v)}")
+            print()
+
+    print("Accept these hook changes?")
+    print("  (Y) Yes, overwrite/add all")
+    print("  (n) No, keep existing hooks")
     print("  (s) Select individually")
-    print("  (n) Abort installation")
     print()
 
     while True:
         try:
-            choice = input("Choice [Y/k/s/n]: ").strip().lower()
+            choice = input("Choice [Y/n/s]: ").strip().lower()
         except EOFError:
             choice = ""
-        if choice in ("y", "k", "s", "n", ""):
+        if choice in ("y", "n", "s", ""):
             break
 
     if choice == "n":
-        print("ABORT")
-        raise SystemExit(1)
+        print("SKIPPED")
+        raise SystemExit(0)
 
-    # Determine which Scholar hooks to use based on user choice
+    # Determine which Scholar hooks to add
     scholar_hooks_to_add = []
     for th in template_hooks:
         ev = th.get("event", "")
-        is_conflict = any(c["event"] == ev for c in conflicts)
+        is_modified = any(c["event"] == ev for c in modified)
+        is_new = any(h.get("event", "") == ev for h in new_hooks)
 
-        if not is_conflict:
-            # No conflict, always add
-            scholar_hooks_to_add.append(th)
+        if not is_modified and not is_new:
             continue
 
         if choice == "y" or choice == "":
-            # Overwrite all
             scholar_hooks_to_add.append(th)
-        elif choice == "k":
-            # Keep existing, skip Scholar
-            pass
         elif choice == "s":
-            # Ask individually
-            for c in conflicts:
-                if c["event"] == ev:
-                    print(f"\n  event = \"{ev}\"")
-                    print(f"  existing: {c['existing'].get('command', '')}")
-                    print(f"  Scholar:  {c['scholar'].get('command', '')}")
-                    while True:
-                        try:
-                            individual = input("  Overwrite with Scholar version? [y/N]: ").strip().lower()
-                        except EOFError:
-                            individual = "n"
-                        if individual in ("y", "n", ""):
-                            break
-                    if individual == "y":
-                        scholar_hooks_to_add.append(th)
+            if is_new:
+                prompt = f"Add new hook [{ev}]? [Y/n]: "
+            else:
+                prompt = f"Overwrite existing hook [{ev}]? [Y/n]: "
+            while True:
+                try:
+                    individual = input(prompt).strip().lower()
+                except EOFError:
+                    individual = "y"
+                if individual in ("y", "n", ""):
                     break
+            if individual == "y" or individual == "":
+                scholar_hooks_to_add.append(th)
 
-    _do_merge(target_path, template, existing, existing_hooks, scholar_hooks_to_add, conflicts, choice)
+    _do_merge(target_path, template, existing, existing_hooks, scholar_hooks_to_add)
     print("MERGED_OK")
     raise SystemExit(0)
 
 
+def _do_merge(target_path, template, existing, existing_hooks, scholar_hooks_to_add):
+    existing_text = target_path.read_text()
+
+    # 1. Remove ALL existing hooks from raw text
+    lines = existing_text.split("\n")
+    new_lines = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.strip() == "[[hooks]]":
+            hook_block = [line]
+            i += 1
+            while i < len(lines) and not lines[i].strip().startswith("["):
+                hook_block.append(lines[i])
+                i += 1
+            # Remove any Scholar comment markers before this hook block
+            while new_lines and new_lines[-1].strip().startswith("# ---"):
+                new_lines.pop()
+            while new_lines and new_lines[-1].strip() == "":
+                new_lines.pop()
+            continue
+        new_lines.append(line)
+        i += 1
+
+    while new_lines and new_lines[-1].strip() == "":
+        new_lines.pop()
+
+    text = "\n".join(new_lines) + "\n"
+
+    # 2. Detect missing top-level defaults
+    missing_top = []
+    top_fields = [
+        ("default_model", str),
+        ("default_thinking", bool),
+        ("merge_all_available_skills", bool),
+        ("telemetry", bool),
+    ]
+    for key, val_type in top_fields:
+        if key not in existing and key in template:
+            val = template[key]
+            if val_type is bool:
+                missing_top.append(f'{key} = {str(val).lower()}')
+            elif val_type is str:
+                missing_top.append(f'{key} = "{val}"')
+            elif val_type is int:
+                missing_top.append(f'{key} = {val}')
+
+    # 3. Build final hooks list
+    final_hooks = list(scholar_hooks_to_add)
 def _do_merge(target_path, template, existing, existing_hooks, scholar_hooks_to_add, conflicts, choice):
     existing_text = target_path.read_text()
 
