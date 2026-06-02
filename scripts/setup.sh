@@ -360,21 +360,21 @@ merge_kimi_config() {
   fi
 
   # Kimi Code CLI uses TOML with [providers], [models], and [[hooks]] sections.
-  # We merge by:
-  # 1. Keeping user's existing [providers], [models], [services]
-  # 2. Adding/merging [[hooks]] from template
-  # 3. Setting default_model and merge_all_available_skills if not present
+  # Strategy:
+  #   - Fresh install (no existing config): copy template as-is.
+  #   - Existing config: preserve user's [providers], [models], [services]
+  #     and any custom hooks. Only add missing top-level defaults and
+  #     Scholar-managed hooks, replacing any previous Scholar hooks to
+  #     avoid duplicates.
 
-  python3 - "$target" "$template" "$BACKUP_STAMP" <<'PY'
+  python3 - "$target" "$template" <<'PY'
 import pathlib
 import sys
 import tomllib
-import tomli_w
 
 target_path = pathlib.Path(sys.argv[1])
 template_path = pathlib.Path(sys.argv[2])
 
-# Read template
 template_text = template_path.read_text()
 
 try:
@@ -382,80 +382,124 @@ try:
 except Exception:
     template = {}
 
-# Read existing target if present
-if target_path.exists():
-    try:
-        existing = tomllib.loads(target_path.read_text())
-    except Exception:
-        existing = {}
-else:
+# --- Fresh install ---
+if not target_path.exists():
+    target_path.write_text(template_text)
+    raise SystemExit(0)
+
+# --- Existing config: merge carefully ---
+existing_text = target_path.read_text()
+
+try:
+    existing = tomllib.loads(existing_text)
+except Exception:
     existing = {}
-
-# Start with existing config
-merged = dict(existing)
-
-# Set top-level defaults if not present
-if "default_model" not in merged and "default_model" in template:
-    merged["default_model"] = template["default_model"]
-if "default_thinking" not in merged and "default_thinking" in template:
-    merged["default_thinking"] = template["default_thinking"]
-if "merge_all_available_skills" not in merged and "merge_all_available_skills" in template:
-    merged["merge_all_available_skills"] = template["merge_all_available_skills"]
-if "telemetry" not in merged and "telemetry" in template:
-    merged["telemetry"] = template["telemetry"]
-
-# Merge hooks: template hooks overwrite any existing hooks with same event+matcher
-existing_hooks = merged.get("hooks", [])
-if not isinstance(existing_hooks, list):
-    existing_hooks = [existing_hooks]
 
 template_hooks = template.get("hooks", [])
 if not isinstance(template_hooks, list):
     template_hooks = [template_hooks]
 
-# Build a key map for existing hooks
-hook_keys = {}
-for i, h in enumerate(existing_hooks):
-    key = (h.get("event", ""), h.get("matcher", ""))
-    hook_keys[key] = i
+# Identify Scholar hook events (used to detect old Scholar hooks)
+scholar_events = {h.get("event", "") for h in template_hooks}
 
-for th in template_hooks:
-    key = (th.get("event", ""), th.get("matcher", ""))
-    if key in hook_keys:
-        existing_hooks[hook_keys[key]] = th
-    else:
-        existing_hooks.append(th)
+# 1. Remove previous Scholar hooks from raw text to avoid duplication.
+lines = existing_text.split("\n")
+new_lines = []
+i = 0
+while i < len(lines):
+    line = lines[i]
+    if line.strip() == "[[hooks]]":
+        hook_block = [line]
+        i += 1
+        while i < len(lines) and not lines[i].strip().startswith("["):
+            hook_block.append(lines[i])
+            i += 1
+        hook_text = "\n".join(hook_block)
+        # Check if this hook is managed by Scholar
+        if any(f'event = "{ev}"' in hook_text for ev in scholar_events):
+            # Also remove any "# --- Claude Scholar ..." comment before it
+            while new_lines and new_lines[-1].strip().startswith("# ---"):
+                new_lines.pop()
+            while new_lines and new_lines[-1].strip() == "":
+                new_lines.pop()
+            continue
+        new_lines.extend(hook_block)
+        continue
+    new_lines.append(line)
+    i += 1
 
-if existing_hooks:
-    merged["hooks"] = existing_hooks
+# Trim trailing blank lines
+while new_lines and new_lines[-1].strip() == "":
+    new_lines.pop()
 
-# Write merged config
-# Use tomli_w for proper TOML writing
-try:
-    import tomli_w
-    target_path.write_text(tomli_w.dumps(merged))
-except ImportError:
-    # Fallback: just copy template if tomli_w not available
-    if target_path.exists():
-        target_path.write_text(template_text)
-    else:
-        target_path.write_text(template_text)
+text = "\n".join(new_lines) + "\n"
+
+# 2. Detect missing top-level defaults
+missing_top = []
+top_fields = [
+    ("default_model", str),
+    ("default_thinking", bool),
+    ("merge_all_available_skills", bool),
+    ("telemetry", bool),
+]
+for key, val_type in top_fields:
+    if key not in existing and key in template:
+        val = template[key]
+        if val_type is bool:
+            missing_top.append(f'{key} = {str(val).lower()}')
+        elif val_type is str:
+            missing_top.append(f'{key} = "{val}"')
+        elif val_type is int:
+            missing_top.append(f'{key} = {val}')
+
+# 3. Build hooks to write (all template hooks)
+hooks_to_write = list(template_hooks)
+
+append_lines = []
+
+if missing_top:
+    append_lines.append("")
+    append_lines.append("# --- Claude Scholar defaults ---")
+    append_lines.extend(missing_top)
+
+if hooks_to_write:
+    append_lines.append("")
+    append_lines.append("# --- Claude Scholar hooks ---")
+    for h in hooks_to_write:
+        append_lines.append("[[hooks]]")
+        for k, v in sorted(h.items()):
+            if isinstance(v, str):
+                append_lines.append(f'{k} = "{v}"')
+            elif isinstance(v, int):
+                append_lines.append(f'{k} = {v}')
+            elif isinstance(v, list):
+                items = ", ".join(f'"{item}"' for item in v)
+                append_lines.append(f'{k} = [{items}]')
+        append_lines.append("")
+
+if append_lines:
+    text = text.rstrip() + "\n" + "\n".join(append_lines) + "\n"
+
+target_path.write_text(text)
 PY
   local py_rc=$?
   if [ "$py_rc" -ne 0 ]; then
-    # Fallback: simple merge
+    # Fallback: if Python fails, do a conservative append-only merge
     if [ -f "$target" ]; then
-      # Append hooks from template to existing config
-      local tmp_config
-      tmp_config="$(mktemp)"
-      cp "$target" "$tmp_config"
-      # Extract hooks from template and append
-      awk '/^\[\[hooks\]\]/{flag=1} flag{print} /^\[\[hooks\]\]$/{flag=1}' "$template" >> "$tmp_config"
-      mv "$tmp_config" "$target"
+      # Only append hooks if user has none; otherwise leave config untouched
+      if ! grep -q '^\[\[hooks\]\]' "$target" 2>/dev/null; then
+        echo "" >> "$target"
+        echo "# --- Claude Scholar hooks ---" >> "$target"
+        awk '/^\[\[hooks\]\]/{flag=1} flag{print}' "$template" >> "$target"
+        info "Appended Scholar hooks to existing config.toml"
+      else
+        warn "Existing config.toml already has hooks; skipping auto-merge to avoid duplicates"
+        warn "Manually add hooks from the template if needed: $template"
+      fi
     else
       cp "$template" "$target"
+      CONFIG_CREATED=1
     fi
-    CONFIG_CREATED=1
   fi
 }
 
