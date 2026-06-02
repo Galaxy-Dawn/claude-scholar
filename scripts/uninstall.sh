@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-KIMI_HOME="${KIMI_HOME:-$HOME/.kimi}"
+KIMI_HOME="${KIMI_HOME:-$HOME/.kimi-code}"
 MANIFEST_FILE="$KIMI_HOME/.kimi-scholar-manifest.txt"
 STATE_FILE="$KIMI_HOME/.kimi-scholar-install-state"
 BACKUP_ROOT="$KIMI_HOME/.kimi-scholar-backups"
@@ -20,9 +20,9 @@ usage() {
   cat <<'EOF'
 Usage: bash scripts/uninstall.sh [--dry-run]
 
-Removes Kimi Scholar managed files from ~/.kimi without touching unrelated user files.
-- Uses ~/.kimi/.kimi-scholar-manifest.txt for managed file ownership.
-- Uses ~/.kimi/.kimi-scholar-install-state for safe config.toml cleanup.
+Removes Kimi Scholar managed files from ~/.kimi-code without touching unrelated user files.
+- Uses ~/.kimi-code/.kimi-scholar-manifest.txt for managed file ownership.
+- Uses ~/.kimi-code/.kimi-scholar-install-state for safe config.toml cleanup.
 - Refuses to guess ownership when install metadata is missing.
 EOF
 }
