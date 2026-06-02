@@ -430,7 +430,7 @@ After applying all changes:
 
 2. **Verify YAML syntax**
    ```bash
-   ~/.codex/skills/skill-quality-reviewer/scripts/extract-yaml.sh <skill-path>
+   ~/.kimi/skills/skill-quality-reviewer/scripts/extract-yaml.sh <skill-path>
    ```
 
 3. **Verify content was applied**

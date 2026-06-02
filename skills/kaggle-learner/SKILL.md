@@ -126,7 +126,7 @@ Run pattern learning when you've solved a non-trivial problem during a session.
 
 ### Output Format
 
-Save extracted patterns to `~/.codex/skills/learned/[pattern-name].md`:
+Save extracted patterns to `~/.kimi/skills/learned/[pattern-name].md`:
 
 ```markdown
 # [Descriptive Pattern Name]

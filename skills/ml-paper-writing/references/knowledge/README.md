@@ -24,7 +24,7 @@ It stores:
 
 This memory is:
 - **active installed skill memory**,
-- **cross-project within this Codex install**,
+- **cross-project within this Kimi install**,
 - **not project-specific**.
 
 If `paper-miner` is invoked inside a project, it may use project context to understand relevance, but it still writes only to the active installed skill memory.

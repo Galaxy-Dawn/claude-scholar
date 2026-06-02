@@ -7,7 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { commandExists, readJSON, getProjectRoot, getCodexConfigDir, isWindows } = require('./utils');
+const { commandExists, readJSON, getProjectRoot, getKimiConfigDir, isWindows } = require('./utils');
 
 // 包管理器配置
 const PACKAGE_MANAGERS = {
@@ -55,7 +55,7 @@ const DETECTION_PRIORITY = ['pnpm', 'bun', 'yarn', 'npm'];
 function getProjectConfigPath() {
   const projectRoot = getProjectRoot();
   if (projectRoot) {
-    return path.join(projectRoot, '.codex', 'package-manager.json');
+    return path.join(projectRoot, '.kimi', 'package-manager.json');
   }
   return null;
 }
@@ -65,7 +65,7 @@ function getProjectConfigPath() {
  * @returns {string} 配置文件路径
  */
 function getGlobalConfigPath() {
-  return path.join(getCodexConfigDir(), 'package-manager.json');
+  return path.join(getKimiConfigDir(), 'package-manager.json');
 }
 
 /**

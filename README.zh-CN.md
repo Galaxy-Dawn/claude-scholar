@@ -6,23 +6,23 @@
     <a href="https://github.com/Galaxy-Dawn/claude-scholar/network/members"><img src="https://img.shields.io/github/forks/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Forks"/></a>
     <img src="https://img.shields.io/github/last-commit/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Last Commit"/>
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
-    <img src="https://img.shields.io/badge/Codex_CLI-Compatible-blue?style=flat-square" alt="Codex CLI"/>
+    <img src="https://img.shields.io/badge/Kimi_CLI-Compatible-blue?style=flat-square" alt="Kimi Code CLI"/>
   </p>
 
   <strong>语言</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
 </div>
 
-> 面向学术研究和软件开发的半自动研究助手，尤其适合计算机科学与 AI 研究者，已适配 [Codex CLI](https://github.com/openai/codex)，覆盖研究构思、文献综述、实验、结果报告、写作与项目知识库维护。
+> 面向学术研究和软件开发的半自动研究助手，尤其适合计算机科学与 AI 研究者，已适配 [Kimi Code CLI](https://github.com/openai/kimi)，覆盖研究构思、文献综述、实验、结果报告、写作与项目知识库维护。
 >
-> **分支说明**：这是 Claude Scholar 的 **Codex CLI 版本**。Claude Code 版本请查看 [`main` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)，OpenCode 版本请查看 [`opencode` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode)。
+> **分支说明**：这是 Claude Scholar 的 **Kimi Code CLI 版本**。Claude Code 版本请查看 [`main` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)，OpenCode 版本请查看 [`opencode` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode)。
 
 
 ## 最新动态
 
 - **2026-05-14**: **将 `expression-skill` 提升为核心表达层，把 `planning-with-files` 恢复为默认持久规划层，并继续扩展 Nature 写作栈** — 把 [`expression-skill`](./skills/expression-skill/README.md) 明确为汇报、规划、文件操作和多步骤技术任务的结论先行表达纪律；将 [`planning-with-files`](./skills/planning-with-files/SKILL.md) 重新接回默认的落盘规划与进度跟踪工作流，用 `task_plan.md` / `notes.md` 管理复杂任务；引入用于章节起草与论证构建的 [`nature-writing`](./skills/nature-writing/README.md)；将 [`nature-polishing`](./skills/nature-polishing/README.md) 刷新到上游最新 article-pattern 版本；并继续保留 [`nature-response`](./skills/nature-response/README.md) 与 [`nature-data`](./skills/nature-data/README.md) 作为 journal-writing 栈的一部分。
 - **2026-05-13**: **证据门槛研究工作流与 `Sources/Papers` 路由完成收紧** — 新增共享的 `research-contract.md`，统一 Evidence Records、claim strength 和 Claim Promotion Gate；将研究构思、Zotero 导入、文献综合、结果报告、论文写作与 rebuttal 工作流接入同一证据契约；并明确项目论文源笔记先放在 `Sources/Papers`，通过证据门槛后再进入 `Knowledge` 或 `Writing`。
-- **2026-04-25**: **Codex Obsidian KB lifecycle 稳定化** — 修复 Codex 项目 KB workflow 中 rename、archive、purge、sync、lint 的边界问题，并让 repo-local binding metadata 与 Codex runtime 保持一致。
-- **2026-04-24**: **Vault-first Obsidian KB workflow 回植到 Codex** — 将新的 project-scoped Obsidian knowledge workflow 带到 Codex 版本，把旧的 memory skills 合并为四个核心 skill，并把项目导航改成人类优先，而不是机器 registry dump。
+- **2026-04-25**: **Kimi Obsidian KB lifecycle 稳定化** — 修复 Kimi 项目 KB workflow 中 rename、archive、purge、sync、lint 的边界问题，并让 repo-local binding metadata 与 Kimi runtime 保持一致。
+- **2026-04-24**: **Vault-first Obsidian KB workflow 回植到 Kimi** — 将新的 project-scoped Obsidian knowledge workflow 带到 Kimi 版本，把旧的 memory skills 合并为四个核心 skill，并把项目导航改成人类优先，而不是机器 registry dump。
 - **2026-04-22**: **精简常驻核心指令与安全安装生命周期** — 将大型 always-on `CLAUDE.md` / `AGENTS.md` 改为紧凑核心指令，移除非核心默认 agents，新增中文 companion 文件，并加入基于 manifest/state 的卸载流程，确保更新和卸载只处理安装器拥有的文件与配置项。
 - **2026-04-15**: **提出 pubfig 与 pubtab 两个 Python package** — 推出了 [`pubfig`](https://github.com/Galaxy-Dawn/pubfig)（用于论文级 scientific figures）和 [`pubtab`](https://github.com/Galaxy-Dawn/pubtab)（用于 publication-ready tables 与 Excel↔LaTeX workflows）两个独立 Python package，为研究者提供更清晰的论文图、benchmark 表、导出控制与最终 QA 生产路径。
 
@@ -33,10 +33,10 @@
 - **2026-03-31**: **Zotero smart-import 工作流文档完成对齐** — 围绕最新 `zotero-mcp` 的公开能力，系统更新了 Claude Scholar 的研究工作流文档：将 `zotero_add_items_by_identifier` 明确为默认论文导入入口，把 `zotero_reconcile_collection_duplicates` 设为标准导入后清理步骤，更准确地说明了来源感知 PDF cascade，同时把公开工具与内部诊断能力的边界重新讲清楚了。
 - **2026-03-31**: **README 上手路径完成刷新** — 明确了 Claude Scholar 尤其适合计算机科学与 AI 研究者，在安装说明后补充了更贴近真实使用的上手场景，进一步收紧了 prerequisite / 分支说明，并把“如果用户本地已有 md 文件，需要手动 merge”这件事写得更明确。
 - **2026-03-31**: **安装器与 hook-emulation 行为进一步收口** — 安装器现在会保留已有的本地 `AGENTS.md`，并把仓库版本作为 `AGENTS.scholar.md` sidecar 文件安装；同时默认模拟摘要输出进一步降噪，减少 temp files / uncommitted files 的噪声，同时保留更安全的写入守卫边界。
-- **2026-03-31**: **日文文档补齐** — 为主 README 以及 `AGENTS`、`MCP_SETUP`、`OBSIDIAN_SETUP` 补充了日文文档，使 Codex 分支的多语言文档入口更完整。
+- **2026-03-31**: **日文文档补齐** — 为主 README 以及 `AGENTS`、`MCP_SETUP`、`OBSIDIAN_SETUP` 补充了日文文档，使 Kimi 分支的多语言文档入口更完整。
 
-- **2026-02-25**: **Codex CLI** 支持 — 新增面向 [OpenAI Codex CLI](https://github.com/openai/codex) 的 `codex` 分支，提供 TOML 配置、Codex 原生 skills / agents，以及 sandbox 安全机制。
-- **2026-02-23**: 新增 `setup.sh` 安装脚本 — 面向已有 `~/.codex` 的带备份增量更新，自动备份 Codex 配置，并以追加方式合并安装器管理的内容
+- **2026-02-25**: **Kimi Code CLI** 支持 — 新增面向 [OpenAI Kimi Code CLI](https://github.com/openai/kimi) 的 `kimi` 分支，提供 TOML 配置、Kimi 原生 skills / agents，以及 sandbox 安全机制。
+- **2026-02-23**: 新增 `setup.sh` 安装脚本 — 面向已有 `~/.kimi-code` 的带备份增量更新，自动备份 Kimi 配置，并以追加方式合并安装器管理的内容
 - **2026-02-21**: **OpenCode** 支持 — Claude Scholar 现已支持 [OpenCode](https://github.com/opencode-ai/opencode) 作为替代 CLI；切换到 `opencode` 分支获取兼容配置
 - **2026-02-20**: 双语文档 — 维护英文与中文入口文档，便于不同读者阅读
 - **2026-02-15**: Zotero MCP 集成 — 新增 `/zotero-review` 和 `/zotero-notes` 命令，更新 `research-ideation` skill 添加 Zotero 集成指南，增强 `literature-reviewer` agent 支持 Zotero MCP 自动论文导入、集合管理、全文阅读和引用导出
@@ -53,10 +53,10 @@
 |---|---|
 | [为什么使用 Claude Scholar](#为什么使用-claude-scholar) | 快速理解项目定位与适用场景。 |
 | [核心工作流](#核心工作流) | 查看从研究构思到发表的分阶段主链路。 |
-| [快速开始](#快速开始) | 安全地安装到现有 `~/.codex` 环境。 |
+| [快速开始](#快速开始) | 安全地安装到现有 `~/.kimi-code` 环境。 |
 | [上手场景](#上手场景) | 查看安装完成后几种最常见的上手场景。 |
 | [平台范围](#平台范围) | 了解这个分支覆盖什么，以及其他版本在哪。 |
-| [集成能力](#集成能力) | 了解 Zotero 和 Obsidian 如何接入 Codex 工作流。 |
+| [集成能力](#集成能力) | 了解 Zotero 和 Obsidian 如何接入 Kimi 工作流。 |
 | [主要工作流](#主要工作流) | 浏览核心研究与开发工作流。 |
 | [支撑工作流](#支撑工作流) | 查看强化主工作流的后台机制。 |
 | [文档入口](#文档入口) | 跳转到安装、配置与 setup 文档。 |
@@ -70,7 +70,7 @@ Claude Scholar **不是**一个试图替代研究者的端到端全自动科研�
 
 > **人的决策始终在中心，助手负责加速围绕它展开的科研流程。**
 
-这意味着 Codex 版更适合承担科研中那些高重复、重结构、但仍需要人来把关的部分——例如文献整理、笔记沉淀、实验分析、结果汇报和写作辅助——而真正关键的判断仍然应该由研究者自己做出：
+这意味着 Kimi 版更适合承担科研中那些高重复、重结构、但仍需要人来把关的部分——例如文献整理、笔记沉淀、实验分析、结果汇报和写作辅助——而真正关键的判断仍然应该由研究者自己做出：
 
 - 哪个问题值得做，
 - 哪些论文真的重要，
@@ -106,7 +106,7 @@ Claude Scholar 当前尤其适合：
 
 ### 系统要求
 
-- [Codex CLI](https://github.com/openai/codex)
+- [Kimi Code CLI](https://github.com/openai/kimi)
 - Git
 - （可选）Python + [uv](https://docs.astral.sh/uv/) 用于 Python 开发
 - （可选）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) 用于文献工作流
@@ -115,20 +115,20 @@ Claude Scholar 当前尤其适合：
 ### 选项 1：完整安装（推荐）
 
 ```bash
-git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 bash /tmp/claude-scholar/scripts/setup.sh
 ```
 
 安装器现在支持**带备份的安全增量更新**：
 - 同步仓库托管的 `skills/`、`agents/`、`scripts/` 与 `utils/`
-- 当你选择保留现有 provider/model 时，把 Claude Scholar 所需 section 合并进现有 `~/.codex/config.toml`
+- 当你选择保留现有 provider/model 时，把 Claude Scholar 所需 section 合并进现有 `~/.kimi-code/config.toml`
 - 覆盖前自动备份 `config.toml` 与 `auth.json`
-- 如果已存在 `~/.codex/AGENTS.md`，则保留原文件，并把仓库版本另存为 `~/.codex/AGENTS.scholar.md`
-- 如果已存在 `~/.codex/AGENTS.zh-CN.md`，则保留原文件，并把仓库中文版本另存为 `~/.codex/AGENTS.zh-CN.scholar.md`
+- 如果已存在 `~/.kimi-code/AGENTS.md`，则保留原文件，并把仓库版本另存为 `~/.kimi-code/AGENTS.scholar.md`
+- 如果已存在 `~/.kimi-code/AGENTS.zh-CN.md`，则保留原文件，并把仓库中文版本另存为 `~/.kimi-code/AGENTS.zh-CN.scholar.md`
 - 在增量更新路径下保留现有 provider / model / API key
 - 可选启用模板中已经存在的 Zotero MCP 配置块
 
-**重要 AGENTS 说明**：如果你原来就有自己的 `~/.codex/AGENTS.md`，安装后请查看 `~/.codex/AGENTS.scholar.md` 和 `~/.codex/AGENTS.zh-CN.scholar.md`，并将其中你需要的 Claude Scholar 内容按需 merge 到你自己的文件里；不要假设这个 sidecar 文件会自动生效。
+**重要 AGENTS 说明**：如果你原来就有自己的 `~/.kimi-code/AGENTS.md`，安装后请查看 `~/.kimi-code/AGENTS.scholar.md` 和 `~/.kimi-code/AGENTS.zh-CN.scholar.md`，并将其中你需要的 Claude Scholar 内容按需 merge 到你自己的文件里；不要假设这个 sidecar 文件会自动生效。
 
 以后做增量更新时：
 
@@ -146,8 +146,8 @@ bash scripts/uninstall.sh
 ```
 
 安装器会写入：
-- `~/.codex/.codex-scholar-manifest.txt`：记录 Codex Scholar 实际管理的文件
-- `~/.codex/.codex-scholar-install-state`：记录安全卸载所需的元数据，包括实际安装的 `AGENTS*.md` 目标和新增的 `config.toml` sections
+- `~/.kimi-code/.kimi-scholar-manifest.txt`：记录 Kimi Scholar 实际管理的文件
+- `~/.kimi-code/.kimi-scholar-install-state`：记录安全卸载所需的元数据，包括实际安装的 `AGENTS*.md` 目标和新增的 `config.toml` sections
 
 卸载脚本只会删除 install state 中明确记录的文件和 config sections，不会根据当前 repo 工作树猜测所有权。
 
@@ -158,42 +158,42 @@ bash scripts/uninstall.sh
 只安装较小的一组研究工作流子集：
 
 ```bash
-git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.codex/skills ~/.codex/agents
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.codex/agents/
-cp -r /tmp/claude-scholar/agents/paper-miner ~/.codex/agents/
-cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
-cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
+git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+mkdir -p ~/.kimi-code/skills ~/.kimi-code/agents
+cp -r /tmp/claude-scholar/skills/research-ideation ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/results-analysis ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/results-report ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/review-response ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.kimi-code/agents/
+cp -r /tmp/claude-scholar/agents/paper-miner ~/.kimi-code/agents/
+cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
+cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
 
-**安装后**：最小化/手动安装**不会自动合并** `config.toml`；请根据需要手动复制仓库配置与 setup 文档里的相关 section。如果你已经有自己的 `~/.codex/AGENTS.md`，也请把仓库 `AGENTS.md` 中相关内容按需 merge 到你的文件里，而不是直接覆盖。
+**安装后**：最小化/手动安装**不会自动合并** `config.toml`；请根据需要手动复制仓库配置与 setup 文档里的相关 section。如果你已经有自己的 `~/.kimi-code/AGENTS.md`，也请把仓库 `AGENTS.md` 中相关内容按需 merge 到你的文件里，而不是直接覆盖。
 
 ### 选项 3：选择性安装
 
 只复制你需要的部分：
 
 ```bash
-git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-cp -r /tmp/claude-scholar/skills/<skill-name> ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/<agent-name> ~/.codex/agents/
-cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
-cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
+git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+cp -r /tmp/claude-scholar/skills/<skill-name> ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/agents/<agent-name> ~/.kimi-code/agents/
+cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
+cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
 
-**安装后**：选择性/手动安装不仅不会自动合并 `config.toml`，如果你已经有自己的 `~/.codex/AGENTS.md`，也请把仓库 `AGENTS.md` 中相关内容按需 merge 到你的文件里，而不是直接覆盖。
+**安装后**：选择性/手动安装不仅不会自动合并 `config.toml`，如果你已经有自己的 `~/.kimi-code/AGENTS.md`，也请把仓库 `AGENTS.md` 中相关内容按需 merge 到你的文件里，而不是直接覆盖。
 
-**Codex 使用说明**：
-- Codex **不会**在 `/...` 菜单里列出自定义 skills。
+**Kimi 使用说明**：
+- Kimi **不会**在 `/...` 菜单里列出自定义 skills。
 - 优先使用自然语言触发；必要时可显式写 `$skill-name`。
 
 ## 上手场景
 
-安装完成后，最简单的上手方式就是直接用自然语言描述你的任务，不需要先把整套系统全部背下来；在 Codex 里，这些工作流也不依赖你先去记 slash 菜单。下面给几种最常见、也最实用的起步场景。
+安装完成后，最简单的上手方式就是直接用自然语言描述你的任务，不需要先把整套系统全部背下来；在 Kimi 里，这些工作流也不依赖你先去记 slash 菜单。下面给几种最常见、也最实用的起步场景。
 
 ### 1. 启动一个新的研究主题
 **你可以这样说：**
@@ -240,15 +240,15 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 
 ### 使用建议
 - 先从一个具体任务开始，而不是一上来让系统“把所有事情都做了”。
-- 在 Codex 里，自然语言是默认入口；只有当你想强制调用某个 skill 时，才需要显式写 `$skill-name`。
+- 在 Kimi 里，自然语言是默认入口；只有当你想强制调用某个 skill 时，才需要显式写 `$skill-name`。
 - 如果你已经有自己的本地 `AGENTS.md` 或 `AGENTS.zh-CN.md` 文件，请把你需要的 Claude Scholar 内容从 `AGENTS.scholar.md` 或 `AGENTS.zh-CN.scholar.md` 里按需 merge 进去，不要假设 sidecar 文件会自动生效。
 - Zotero 和 Obsidian 都不是强制的，但如果你希望得到 durable literature notes 或 project memory，而不是一次性聊天输出，它们会非常有帮助。
 
 ## 平台范围
 
-这个分支面向 **Codex CLI**。
+这个分支面向 **Kimi Code CLI**。
 
-- **Codex CLI（`codex` 分支）** — TOML 配置、AGENTS 驱动的工作约束、以文件系统为核心的 Obsidian 工作流，以及 Codex 专用安装文档
+- **Kimi Code CLI（`kimi` 分支）** — TOML 配置、AGENTS 驱动的工作约束、以文件系统为核心的 Obsidian 工作流，以及 Kimi 专用安装文档
 - **Claude Code（`main` 分支）** — Claude Code 配置、原生 hooks，以及主线文档组织方式
 - **OpenCode（`opencode` 分支）** — OpenCode 专用配置与安装路径
 
@@ -283,7 +283,7 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 
 完整学术研究生命周期 —— 从研究构思到发表的 7 个阶段。
 
-> **Codex 入口说明**：这个分支不依赖仓库级 slash commands。默认入口是自然语言触发；必要时可显式调用 `$results-analysis` 这样的 skill。
+> **Kimi 入口说明**：这个分支不依赖仓库级 slash commands。默认入口是自然语言触发；必要时可显式调用 `$results-analysis` 这样的 skill。
 
 ### 1. 研究构思（Zotero 集成）
 
@@ -422,7 +422,7 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 
 ## 支撑工作流
 
-这些工作流运行在主工作流背后，用来增强整体 Codex 使用体验。
+这些工作流运行在主工作流背后，用来增强整体 Kimi 使用体验。
 
 ### Obsidian 项目知识库
 
@@ -443,16 +443,16 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 - 把新的 source material 路由进正确的 canonical note，
 - 只有在显式请求时才生成额外的 `.base` 或 canvas。
 
-旧的 `obsidian-project-memory`、`obsidian-project-bootstrap`、`obsidian-experiment-log` 等 Codex 时代 Obsidian skill shim 已移除。请直接使用 `obsidian-project-kb-core`、`obsidian-source-ingestion`、`obsidian-literature-workflow` 和 `obsidian-kb-artifacts`。
+旧的 `obsidian-project-memory`、`obsidian-project-bootstrap`、`obsidian-experiment-log` 等 Kimi 时代 Obsidian skill shim 已移除。请直接使用 `obsidian-project-kb-core`、`obsidian-source-ingestion`、`obsidian-literature-workflow` 和 `obsidian-kb-artifacts`。
 
-### Codex 会话约束与 Hook 模拟
+### Kimi 会话约束与 Hook 模拟
 
-Codex 不提供原生 Claude Code hooks，所以这个分支通过 AGENTS 工作约束和本地辅助脚本来模拟最高价值的行为。
+Kimi 不提供原生 Claude Code hooks，所以这个分支通过 AGENTS 工作约束和本地辅助脚本来模拟最高价值的行为。
 
 | 类型 | 名字 | 一句话解释 |
 |---|---|---|
-| File | `AGENTS.md` | 编码会话约束、skill 评估规则、安全规则和 Codex 专用工作流说明。 |
-| Script | `scripts/codex_hook_emulation.py` | 在仓库工作流内模拟 session-start、preflight、post-edit、session-end 行为。 |
+| File | `AGENTS.md` | 编码会话约束、skill 评估规则、安全规则和 Kimi 专用工作流说明。 |
+| Script | `scripts/kimi_hook_emulation.py` | 在仓库工作流内模拟 session-start、preflight、post-edit、session-end 行为。 |
 | Skill | `session-wrap-up` | 在会话结束时生成工作日志、清理提醒和收尾总结。 |
 
 **工作方式**
@@ -509,21 +509,21 @@ Claude Scholar 也包含一套自我改进的 skill 工作流。
 
 ## 文档入口
 
-- [MCP_SETUP.zh-CN.md](./MCP_SETUP.zh-CN.md) — Codex 版 Zotero MCP 配置说明
+- [MCP_SETUP.zh-CN.md](./MCP_SETUP.zh-CN.md) — Kimi 版 Zotero MCP 配置说明
 - [OBSIDIAN_SETUP.zh-CN.md](./OBSIDIAN_SETUP.zh-CN.md) — Obsidian 项目知识库工作流
-- [AGENTS.md](./AGENTS.md) — 轻量版 Codex 核心指令
+- [AGENTS.md](./AGENTS.md) — 轻量版 Kimi 核心指令
 - [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) — 轻量核心指令的中文 companion 文件
 - [README.ja-JP.md](./README.ja-JP.md) — 本 README 的日文版
-- [config.toml](./config.toml) — 包含 skills、agents 与 MCP 配置块的 Codex 模板配置
+- [config.toml](./config.toml) — 包含 skills、agents 与 MCP 配置块的 Kimi 模板配置
 
 ## 项目规则
 
-Claude Scholar 的 Codex 版包含以下规则：
+Claude Scholar 的 Kimi 版包含以下规则：
 - 代码风格
 - agent 编排
 - 安全约束
 - 实验可复现性
-- Codex 专用会话约束
+- Kimi 专用会话约束
 
 常驻规则主要体现在 `AGENTS.md`；详细工作流保留在仓库附带的 skills 和文档中。
 
@@ -531,7 +531,7 @@ Claude Scholar 的 Codex 版包含以下规则：
 
 欢迎提交 issue、PR 和工作流改进建议。
 
-如果你想修改 installer、Zotero 工作流、Obsidian 路由或 Codex 会话约束，建议在提案中说明：
+如果你想修改 installer、Zotero 工作流、Obsidian 路由或 Kimi 会话约束，建议在提案中说明：
 - 用户场景
 - 当前限制
 - 预期行为
@@ -557,7 +557,7 @@ MIT 许可证。
 
 ## 致谢
 
-基于 Codex CLI 工作流构建，并由开源研究工具链持续增强。
+基于 Kimi Code CLI 工作流构建，并由开源研究工具链持续增强。
 
 ### 参考资料
 
@@ -565,7 +565,7 @@ MIT 许可证。
 
 - **[everything-claude-code](https://github.com/anthropics/everything-claude-code)** - Claude Code CLI 综合资源
 - **[AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs)** - 研究导向的 skills 与配置模式
-- **[codex](https://github.com/openai/codex)** - 本分支所依赖的 Codex CLI 基础能力
+- **[kimi](https://github.com/openai/kimi)** - 本分支所依赖的 Kimi Code CLI 基础能力
 - **[expression-skill](https://github.com/Galaxy-Dawn/expression-skill)** - 这里复用了其公开的结论先行表达 skill，用于汇报和回应约束
 - **[nature-skills](https://github.com/Yuan1z0825/nature-skills)** - 这里统一复用了其 Nature 风格的章节起草、学术润色、审稿回复和数据可用性 skills，并保留来源引用
 

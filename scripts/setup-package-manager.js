@@ -26,15 +26,15 @@ const { log } = require('./lib/utils');
 
 function showHelp() {
   console.log(`
-Package Manager Setup for Codex CLI
+Package Manager Setup for Kimi CLI
 
 Usage:
   node scripts/setup-package-manager.js [options] [package-manager]
 
 Options:
   --detect        Detect and show current package manager
-  --global <pm>   Set global preference (saves to ~/.codex/package-manager.json)
-  --project <pm>  Set project preference (saves to .codex/package-manager.json)
+  --global <pm>   Set global preference (saves to ~/.kimi/package-manager.json)
+  --project <pm>  Set project preference (saves to .kimi/package-manager.json)
   --list          List available package managers
   --help          Show this help message
 
@@ -129,7 +129,7 @@ function setGlobal(pmName) {
   try {
     setPreferredPackageManager(pmName);
     console.log(`\n✓ Global preference set to: ${pmName}`);
-    console.log('  Saved to: ~/.codex/package-manager.json');
+    console.log('  Saved to: ~/.kimi/package-manager.json');
     console.log('');
   } catch (err) {
     console.error(`Error: ${err.message}`);
@@ -147,7 +147,7 @@ function setProject(pmName) {
   try {
     setProjectPackageManager(pmName);
     console.log(`\n✓ Project preference set to: ${pmName}`);
-    console.log('  Saved to: .codex/package-manager.json');
+    console.log('  Saved to: .kimi/package-manager.json');
     console.log('');
   } catch (err) {
     console.error(`Error: ${err.message}`);

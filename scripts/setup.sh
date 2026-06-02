@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # ============================================================
-# Claude Scholar — Codex CLI Installer
+# Claude Scholar — Kimi Code CLI Installer
 # ============================================================
 # Usage: bash scripts/setup.sh
 # Supports fresh install and safer incremental updates.
 
 set -uo pipefail
 
-CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+KIMI_HOME="${KIMI_HOME:-$HOME/.kimi}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SRC_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 AGENTS_MD_SIDECAR="AGENTS.scholar.md"
 AGENTS_ZH_MD_SIDECAR="AGENTS.zh-CN.scholar.md"
-BACKUP_ROOT="$CODEX_HOME/.codex-scholar-backups"
-MANIFEST_FILE="$CODEX_HOME/.codex-scholar-manifest.txt"
-STATE_FILE="$CODEX_HOME/.codex-scholar-install-state"
+BACKUP_ROOT="$KIMI_HOME/.kimi-scholar-backups"
+MANIFEST_FILE="$KIMI_HOME/.kimi-scholar-manifest.txt"
+STATE_FILE="$KIMI_HOME/.kimi-scholar-install-state"
 PREVIOUS_MANAGED_PATHS_FILE="$(mktemp)"
 BACKUP_STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_DIR="$BACKUP_ROOT/$BACKUP_STAMP"
@@ -65,11 +65,11 @@ debug() {
 
 debug_state() {
   [ "$SCHOLAR_DEBUG" = "1" ] || return 0
-  debug "state: CODEX_HOME=$CODEX_HOME"
+  debug "state: KIMI_HOME=$KIMI_HOME"
   debug "state: SRC_DIR=$SRC_DIR"
   debug "state: SKIP_PROVIDER=$SKIP_PROVIDER SKIP_AUTH=$SKIP_AUTH PERSIST_AUTH=$PERSIST_AUTH ENV_AUTH_DETECTED=$ENV_AUTH_DETECTED"
   debug "state: PROVIDER_NAME=${PROVIDER_NAME:-<empty>} MODEL=${MODEL:-<empty>}"
-  debug "state: config_exists=$([ -f "$CODEX_HOME/config.toml" ] && printf yes || printf no) auth_exists=$([ -f "$CODEX_HOME/auth.json" ] && printf yes || printf no) manifest_exists=$([ -f "$MANIFEST_FILE" ] && printf yes || printf no)"
+  debug "state: config_exists=$([ -f "$KIMI_HOME/config.toml" ] && printf yes || printf no) auth_exists=$([ -f "$KIMI_HOME/auth.json" ] && printf yes || printf no) manifest_exists=$([ -f "$MANIFEST_FILE" ] && printf yes || printf no)"
 }
 
 run_step() {
@@ -193,18 +193,18 @@ load_previous_manifest() {
 }
 
 detect_legacy_install() {
-  local config="$CODEX_HOME/config.toml"
+  local config="$KIMI_HOME/config.toml"
   [ -f "$MANIFEST_FILE" ] && return 0
   [ -f "$config" ] || return 0
 
-  if grep -q 'config_file = "~/.codex/agents/' "$config" 2>/dev/null; then
+  if grep -q 'config_file = "~/.kimi-code/agents/' "$config" 2>/dev/null; then
     LEGACY_INSTALL_DETECTED=1
   fi
 }
 
 record_managed_path() {
   local target="$1"
-  local rel="${target#$CODEX_HOME/}"
+  local rel="${target#$KIMI_HOME/}"
   [ "$rel" = "$target" ] && return 0
   [ -z "$rel" ] && return 0
   MANAGED_PATHS+=("$rel")
@@ -212,7 +212,7 @@ record_managed_path() {
 
 record_agents_target() {
   local target="$1"
-  local rel="${target#$CODEX_HOME/}"
+  local rel="${target#$KIMI_HOME/}"
   [ "$rel" = "$target" ] && return 0
   [ -z "$rel" ] && return 0
   AGENTS_TARGETS+=("$rel")
@@ -220,7 +220,7 @@ record_agents_target() {
 
 was_previously_managed() {
   local target="$1"
-  local rel="${target#$CODEX_HOME/}"
+  local rel="${target#$KIMI_HOME/}"
   [ "$rel" = "$target" ] && return 1
   grep -Fxq "$rel" "$PREVIOUS_MANAGED_PATHS_FILE"
 }
@@ -238,7 +238,7 @@ should_adopt_existing_path() {
 
 is_existing_scholar_agents_file() {
   local target="$1"
-  local rel="${target#$CODEX_HOME/}"
+  local rel="${target#$KIMI_HOME/}"
   [ "$rel" = "$target" ] && return 1
 
   case "$rel" in
@@ -248,11 +248,11 @@ is_existing_scholar_agents_file() {
 
   [ -f "$target" ] || return 1
 
-  # Older Codex Scholar installs may predate the install manifest. In that case
+  # Older Kimi Scholar installs may predate the install manifest. In that case
   # the global AGENTS files are still installer-owned and should be updated in
   # place. Keep the marker strict so genuinely custom user AGENTS files are
   # still preserved via AGENTS.scholar.md sidecars.
-  head -n 40 "$target" | grep -Eq '^# (Codex Scholar|Claude Scholar) (Core Instructions|核心指令)$'
+  head -n 40 "$target" | grep -Eq '^# (Kimi Scholar|Claude Scholar) (Core Instructions|核心指令)$'
 }
 
 file_sha256() {
@@ -312,7 +312,7 @@ join_lines_csv() {
 }
 
 write_install_state() {
-  mkdir -p "$CODEX_HOME" || error "Failed to create CODEX_HOME at $CODEX_HOME"
+  mkdir -p "$KIMI_HOME" || error "Failed to create KIMI_HOME at $KIMI_HOME"
   write_unique_lines "$MANIFEST_FILE" "${MANAGED_PATHS[@]}" || error "Failed to write install manifest"
 
   local managed_paths_file agents_targets_file
@@ -323,16 +323,16 @@ write_install_state() {
 
   write_unique_lines "$agents_targets_file" "${AGENTS_TARGETS[@]}" || error "Failed to write agents targets temp file"
 
-  CODEX_STATE_FILE="$(normalize_host_path "$STATE_FILE")" \
-  CODEX_CONFIG_META_FILE="$(normalize_host_path "$CONFIG_META_FILE")" \
-  CODEX_MANAGED_PATHS_FILE="$(normalize_host_path "$managed_paths_file")" \
-  CODEX_AGENTS_TARGETS_FILE="$(normalize_host_path "$agents_targets_file")" \
-  CODEX_INSTALLED_AT="$BACKUP_STAMP" \
-  CODEX_SOURCE_DIR="$(normalize_host_path "$SRC_DIR")" \
-  CODEX_CONFIG_CREATED="$CONFIG_CREATED" \
-  CODEX_CONFIG_SHA256="$CONFIG_SHA256" \
-  CODEX_BACKUP_DIR="$(normalize_host_path "$BACKUP_DIR")" \
-  CODEX_BACKUP_READY="$BACKUP_READY" \
+  KIMI_STATE_FILE="$(normalize_host_path "$STATE_FILE")" \
+  KIMI_CONFIG_META_FILE="$(normalize_host_path "$CONFIG_META_FILE")" \
+  KIMI_MANAGED_PATHS_FILE="$(normalize_host_path "$managed_paths_file")" \
+  KIMI_AGENTS_TARGETS_FILE="$(normalize_host_path "$agents_targets_file")" \
+  KIMI_INSTALLED_AT="$BACKUP_STAMP" \
+  KIMI_SOURCE_DIR="$(normalize_host_path "$SRC_DIR")" \
+  KIMI_CONFIG_CREATED="$CONFIG_CREATED" \
+  KIMI_CONFIG_SHA256="$CONFIG_SHA256" \
+  KIMI_BACKUP_DIR="$(normalize_host_path "$BACKUP_DIR")" \
+  KIMI_BACKUP_READY="$BACKUP_READY" \
   node <<'NODE'
 const fs = require('fs');
 
@@ -347,17 +347,17 @@ function readJson(path) {
 }
 
 const state = {
-  installedAt: process.env.CODEX_INSTALLED_AT,
-  sourceDir: process.env.CODEX_SOURCE_DIR,
-  configCreated: process.env.CODEX_CONFIG_CREATED === '1',
-  configSha256: process.env.CODEX_CONFIG_SHA256 || '',
-  backupDir: process.env.CODEX_BACKUP_READY === '1' ? process.env.CODEX_BACKUP_DIR : '',
-  managedPaths: readLines(process.env.CODEX_MANAGED_PATHS_FILE),
-  agentsTargets: readLines(process.env.CODEX_AGENTS_TARGETS_FILE),
-  config: readJson(process.env.CODEX_CONFIG_META_FILE),
+  installedAt: process.env.KIMI_INSTALLED_AT,
+  sourceDir: process.env.KIMI_SOURCE_DIR,
+  configCreated: process.env.KIMI_CONFIG_CREATED === '1',
+  configSha256: process.env.KIMI_CONFIG_SHA256 || '',
+  backupDir: process.env.KIMI_BACKUP_READY === '1' ? process.env.KIMI_BACKUP_DIR : '',
+  managedPaths: readLines(process.env.KIMI_MANAGED_PATHS_FILE),
+  agentsTargets: readLines(process.env.KIMI_AGENTS_TARGETS_FILE),
+  config: readJson(process.env.KIMI_CONFIG_META_FILE),
 };
 
-fs.writeFileSync(process.env.CODEX_STATE_FILE, JSON.stringify(state, null, 2) + '\n');
+fs.writeFileSync(process.env.KIMI_STATE_FILE, JSON.stringify(state, null, 2) + '\n');
 NODE
   local node_rc=$?
   rm -f "$managed_paths_file" "$agents_targets_file"
@@ -378,7 +378,7 @@ backup_path() {
 
   ensure_backup_dir
 
-  local rel="${target#$CODEX_HOME/}"
+  local rel="${target#$KIMI_HOME/}"
   if [ "$rel" = "$target" ]; then
     rel="$(basename "$target")"
   fi
@@ -389,7 +389,7 @@ backup_path() {
   else
     cp -p "$target" "$BACKUP_DIR/$rel" || error "Failed to back up file $target"
   fi
-  debug "backup: ${target#$CODEX_HOME/} -> $BACKUP_DIR/$rel"
+  debug "backup: ${target#$KIMI_HOME/} -> $BACKUP_DIR/$rel"
   BACKUP_COUNT=$((BACKUP_COUNT + 1))
 }
 
@@ -416,7 +416,7 @@ copy_file_safely() {
     if should_adopt_existing_path "$target_file"; then
       record_managed_path "$target_file"
     fi
-    debug "copy:skip unchanged ${target_file#$CODEX_HOME/}"
+    debug "copy:skip unchanged ${target_file#$KIMI_HOME/}"
     SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
     return 0
   fi
@@ -429,7 +429,7 @@ copy_file_safely() {
   fi
 
   cp -p "$src_file" "$target_file" || error "Failed to copy $src_file to $target_file"
-  debug "copy:update ${target_file#$CODEX_HOME/}"
+  debug "copy:update ${target_file#$KIMI_HOME/}"
   record_managed_path "$target_file"
   UPDATED_COUNT=$((UPDATED_COUNT + 1))
 }
@@ -454,8 +454,8 @@ copy_dir_safely() {
 
 install_agents_md() {
   local src_file="$1"
-  local target_file="$CODEX_HOME/AGENTS.md"
-  local sidecar_file="$CODEX_HOME/$AGENTS_MD_SIDECAR"
+  local target_file="$KIMI_HOME/AGENTS.md"
+  local sidecar_file="$KIMI_HOME/$AGENTS_MD_SIDECAR"
 
   if [ -f "$target_file" ] && should_adopt_existing_path "$target_file"; then
     copy_file_safely "$src_file" "$target_file"
@@ -477,8 +477,8 @@ install_agents_md() {
 
 install_agents_zh_md() {
   local src_file="$1"
-  local target_file="$CODEX_HOME/AGENTS.zh-CN.md"
-  local sidecar_file="$CODEX_HOME/$AGENTS_ZH_MD_SIDECAR"
+  local target_file="$KIMI_HOME/AGENTS.zh-CN.md"
+  local sidecar_file="$KIMI_HOME/$AGENTS_ZH_MD_SIDECAR"
 
   if [ -f "$target_file" ] && should_adopt_existing_path "$target_file"; then
     copy_file_safely "$src_file" "$target_file"
@@ -582,7 +582,7 @@ detect_existing_env_auth() {
       API_KEY="$value"
       PERSIST_AUTH=true
       ENV_AUTH_DETECTED=1
-      info "No auth.json found; detected an API key in the environment and will persist it for Codex compatibility"
+      info "No auth.json found; detected an API key in the environment and will persist it for Kimi compatibility"
       return 0
     fi
   done < <(collect_api_key_candidates "$provider") || true
@@ -594,18 +594,18 @@ check_deps() {
   command -v git >/dev/null || error "Git is required."
   command -v python3 >/dev/null || error "Python 3 is required."
   select_find_cmd
-  if ! command -v codex >/dev/null; then
-    warn "Codex CLI not found. Install: npm i -g @openai/codex"
+  if ! command -v kimi >/dev/null; then
+    warn "Kimi Code CLI not found. Install: npm i -g @openai/kimi"
   fi
 }
 
 detect_existing() {
   echo ""
-  if [ -f "$CODEX_HOME/config.toml" ]; then
-    info "Existing config.toml found at $CODEX_HOME/config.toml"
+  if [ -f "$KIMI_HOME/config.toml" ]; then
+    info "Existing config.toml found at $KIMI_HOME/config.toml"
     local cur_model cur_provider
-    cur_model=$(grep '^model ' "$CODEX_HOME/config.toml" 2>/dev/null | head -1 | sed 's/.*= *"//;s/".*//' || true)
-    cur_provider=$(grep '^model_provider ' "$CODEX_HOME/config.toml" 2>/dev/null | head -1 | sed 's/.*= *"//;s/".*//' || true)
+    cur_model=$(grep '^model ' "$KIMI_HOME/config.toml" 2>/dev/null | head -1 | sed 's/.*= *"//;s/".*//' || true)
+    cur_provider=$(grep '^model_provider ' "$KIMI_HOME/config.toml" 2>/dev/null | head -1 | sed 's/.*= *"//;s/".*//' || true)
     PROVIDER_NAME="$cur_provider"
     [ -n "$cur_model" ] && info "  Current model: $cur_model"
     [ -n "$cur_provider" ] && info "  Current provider: $cur_provider"
@@ -613,9 +613,9 @@ detect_existing() {
     info "Detected existing provider/model configuration; keeping it without prompting"
   fi
 
-  if [ -f "$CODEX_HOME/auth.json" ]; then
+  if [ -f "$KIMI_HOME/auth.json" ]; then
     local auth_entry existing_key_name existing_key_value
-    auth_entry=$(read_auth_entry "$CODEX_HOME/auth.json")
+    auth_entry=$(read_auth_entry "$KIMI_HOME/auth.json")
     if [ -n "$auth_entry" ]; then
       IFS=$'\t' read -r existing_key_name existing_key_value <<< "$auth_entry"
       AUTH_ENV_VAR_NAME="$existing_key_name"
@@ -629,7 +629,7 @@ detect_existing() {
     SKIP_AUTH=true
     detect_existing_env_auth "$PROVIDER_NAME"
     if [ "$ENV_AUTH_DETECTED" -ne 1 ]; then
-      info "Existing Codex config detected; installer will not prompt for credentials or overwrite your current auth flow"
+      info "Existing Kimi config detected; installer will not prompt for credentials or overwrite your current auth flow"
     fi
   fi
   debug "detect_existing: complete"
@@ -805,7 +805,7 @@ merge_scholar_config() {
 
 generate_config() {
   local template="$SRC_DIR/config.toml"
-  local target="$CODEX_HOME/config.toml"
+  local target="$KIMI_HOME/config.toml"
 
   [ -f "$template" ] || error "Template config.toml not found at $template"
 
@@ -835,7 +835,7 @@ write_auth() {
     return
   fi
 
-  local target="$CODEX_HOME/auth.json"
+  local target="$KIMI_HOME/auth.json"
   if [ -f "$target" ]; then
     backup_path "$target"
     cp "$target" "${target}.bak" || error "Failed to write auth.json.bak"
@@ -861,19 +861,19 @@ PY
   if [ "$AUTH_ENV_VAR_NAME" = "OPENAI_API_KEY" ]; then
     info "Wrote auth.json (permissions: 600)"
   else
-    info "Wrote auth.json with $AUTH_ENV_VAR_NAME and OPENAI_API_KEY for Codex compatibility (permissions: 600)"
+    info "Wrote auth.json with $AUTH_ENV_VAR_NAME and OPENAI_API_KEY for Kimi compatibility (permissions: 600)"
   fi
 }
 
 copy_components() {
   if [ -d "$SRC_DIR/skills" ]; then
-    copy_dir_safely "$SRC_DIR/skills" "$CODEX_HOME/skills"
+    copy_dir_safely "$SRC_DIR/skills" "$KIMI_HOME/skills"
   fi
   if [ -d "$SRC_DIR/templates" ]; then
-    copy_dir_safely "$SRC_DIR/templates" "$CODEX_HOME/templates"
+    copy_dir_safely "$SRC_DIR/templates" "$KIMI_HOME/templates"
   fi
   if [ -d "$SRC_DIR/agents" ]; then
-    copy_dir_safely "$SRC_DIR/agents" "$CODEX_HOME/agents"
+    copy_dir_safely "$SRC_DIR/agents" "$KIMI_HOME/agents"
   fi
   if [ -f "$SRC_DIR/AGENTS.md" ]; then
     install_agents_md "$SRC_DIR/AGENTS.md"
@@ -882,21 +882,21 @@ copy_components() {
     install_agents_zh_md "$SRC_DIR/AGENTS.zh-CN.md"
   fi
   if [ -d "$SRC_DIR/scripts" ]; then
-    copy_dir_safely "$SRC_DIR/scripts" "$CODEX_HOME/scripts"
+    copy_dir_safely "$SRC_DIR/scripts" "$KIMI_HOME/scripts"
   fi
   if [ -d "$SRC_DIR/utils" ]; then
-    copy_dir_safely "$SRC_DIR/utils" "$CODEX_HOME/utils"
+    copy_dir_safely "$SRC_DIR/utils" "$KIMI_HOME/utils"
   fi
 
-  info "Synced repo-managed Codex components"
+  info "Synced repo-managed Kimi components"
 }
 
 configure_mcp() {
-  if ! grep -q '\[mcp_servers\.zotero\]' "$CODEX_HOME/config.toml" 2>/dev/null; then
+  if ! grep -q '\[mcp_servers\.zotero\]' "$KIMI_HOME/config.toml" 2>/dev/null; then
     return
   fi
 
-  if awk '/\[mcp_servers\.zotero\]/{flag=1;next}/^\[/{flag=0}flag && /enabled = true/{found=1}END{exit(found?0:1)}' "$CODEX_HOME/config.toml"; then
+  if awk '/\[mcp_servers\.zotero\]/{flag=1;next}/^\[/{flag=0}flag && /enabled = true/{found=1}END{exit(found?0:1)}' "$KIMI_HOME/config.toml"; then
     info "Zotero MCP already enabled"
     return
   fi
@@ -929,11 +929,11 @@ configure_mcp() {
           exit 1
         }
       }
-    ' "$CODEX_HOME/config.toml" > "$tmp_config" || {
+    ' "$KIMI_HOME/config.toml" > "$tmp_config" || {
       rm -f "$tmp_config"
       error "Failed to enable Zotero MCP"
     }
-    mv "$tmp_config" "$CODEX_HOME/config.toml" || error "Failed to replace config.toml after enabling Zotero MCP"
+    mv "$tmp_config" "$KIMI_HOME/config.toml" || error "Failed to replace config.toml after enabling Zotero MCP"
     info "Zotero MCP enabled"
     if ! command -v zotero-mcp >/dev/null 2>&1; then
       warn "zotero-mcp not found. Install latest with: uv tool install --reinstall git+https://github.com/Galaxy-Dawn/zotero-mcp.git"
@@ -945,7 +945,7 @@ main() {
   parse_args "$@"
   echo ""
   echo "╔══════════════════════════════════════╗"
-  echo "║   Claude Scholar Installer (Codex)   ║"
+  echo "║   Claude Scholar Installer (Kimi)   ║"
   echo "╚══════════════════════════════════════╝"
   echo ""
 
@@ -954,8 +954,8 @@ main() {
   run_step "detect_legacy_install" detect_legacy_install
 
   info "Source: $SRC_DIR"
-  info "Target: $CODEX_HOME"
-  mkdir -p "$CODEX_HOME" || error "Failed to create CODEX_HOME at $CODEX_HOME"
+  info "Target: $KIMI_HOME"
+  mkdir -p "$KIMI_HOME" || error "Failed to create KIMI_HOME at $KIMI_HOME"
 
   run_step "detect_existing" detect_existing
   run_step "choose_provider" choose_provider
@@ -975,14 +975,14 @@ main() {
     info "Recover previous files from: $BACKUP_DIR"
   fi
   echo ""
-  echo "  Config:  $CODEX_HOME/config.toml"
-  echo "  Auth:    $CODEX_HOME/auth.json"
-  echo "  Skills:  $CODEX_HOME/skills/"
-  echo "  Templates: $CODEX_HOME/templates/"
-  echo "  Agents:  $CODEX_HOME/agents/"
+  echo "  Config:  $KIMI_HOME/config.toml"
+  echo "  Auth:    $KIMI_HOME/auth.json"
+  echo "  Skills:  $KIMI_HOME/skills/"
+  echo "  Templates: $KIMI_HOME/templates/"
+  echo "  Agents:  $KIMI_HOME/agents/"
   echo ""
   info "Existing model/provider/API key settings are preserved when you choose the incremental update path."
-  echo "  Run $(bold 'codex') to start."
+  echo "  Run $(bold 'kimi') to start."
   echo "============================================================"
 }
 

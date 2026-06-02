@@ -4,7 +4,7 @@
 
 ## Affected surfaces
 - [ ] main
-- [ ] codex
+- [ ] kimi
 - [ ] opencode
 - [ ] README / docs
 - [ ] installer

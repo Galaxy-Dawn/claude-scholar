@@ -31,7 +31,7 @@ body:
       label: Client
       options:
         - Claude Code
-        - Codex
+        - Kimi
         - OpenCode
         - Other / unsure
     validations:
@@ -43,7 +43,7 @@ body:
       label: Branch
       options:
         - main
-        - codex
+        - kimi
         - opencode
         - unsure
     validations:

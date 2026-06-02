@@ -1,4 +1,4 @@
-# Claude Configuration Git Ignore
+# Kimi Configuration Git Ignore
 
 # System files
 .DS_Store
@@ -45,4 +45,4 @@ temp/
 tasks/
 teams/
 
-.codex/
+.kimi-code/

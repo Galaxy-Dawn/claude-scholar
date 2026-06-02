@@ -83,7 +83,7 @@ After batch ingestion or schema refactors:
 Recommended verification command:
 
 ```bash
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/zotero-obsidian-bridge/scripts/verify_paper_notes.py" \
+python3 "${KIMI_HOME:-$HOME/.kimi}/skills/zotero-obsidian-bridge/scripts/verify_paper_notes.py" \
   --papers-dir "/absolute/path/to/Sources/Papers" \
   --expected-zotero-keys "KEY1,KEY2,KEY3" \
   --inventory-note "/absolute/path/to/Knowledge/Zotero-Collection-collection-slug-Inventory.md"

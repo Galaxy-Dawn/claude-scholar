@@ -1,6 +1,6 @@
 /**
  * 跨平台工具函数库
- * 为 Codex Scholar 安装与辅助脚本提供跨平台兼容性支持
+ * 为 Kimi Scholar 安装与辅助脚本提供跨平台兼容性支持
  *
  * @module utils
  */
@@ -85,12 +85,12 @@ function runCommand(cmd, options = {}) {
 }
 
 /**
- * 获取 Codex 配置目录（跨平台）
- * @returns {string} Codex 配置目录路径
+ * 获取 Kimi 配置目录（跨平台）
+ * @returns {string} Kimi 配置目录路径
  */
-function getCodexConfigDir() {
+function getKimiConfigDir() {
   const homeDir = getHomeDir();
-  return path.join(homeDir, '.codex');
+  return path.join(homeDir, '.kimi');
 }
 
 /**
@@ -102,10 +102,10 @@ function getProjectRoot(startDir = process.cwd()) {
   let currentDir = startDir;
 
   while (currentDir !== path.parse(currentDir).root) {
-    // 检查是否存在 Codex 项目标记
-    const codexConfig = path.join(currentDir, 'config.toml');
+    // 检查是否存在 Kimi 项目标记
+    const kimiConfig = path.join(currentDir, 'config.toml');
     const agentsDoc = path.join(currentDir, 'AGENTS.md');
-    if (fs.existsSync(codexConfig) || fs.existsSync(agentsDoc)) {
+    if (fs.existsSync(kimiConfig) || fs.existsSync(agentsDoc)) {
       return currentDir;
     }
 
@@ -222,7 +222,7 @@ module.exports = {
   ensureDir,
   commandExists,
   runCommand,
-  getCodexConfigDir,
+  getKimiConfigDir,
   getProjectRoot,
   joinPath,
   resolvePath,

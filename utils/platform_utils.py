@@ -24,9 +24,9 @@ def get_home_dir() -> Path:
     return Path.home()
 
 
-def get_codex_dir() -> Path:
-    """Get the Codex config directory"""
-    return get_home_dir() / '.codex'
+def get_kimi_dir() -> Path:
+    """Get the Kimi config directory"""
+    return get_home_dir() / '.kimi-code'
 
 
 def get_temp_dir() -> Path:
@@ -36,7 +36,7 @@ def get_temp_dir() -> Path:
 
 def get_plan_dir() -> Path:
     """Get the plan directory"""
-    plan_dir = get_codex_dir() / 'plan'
+    plan_dir = get_kimi_dir() / 'plan'
     plan_dir.mkdir(parents=True, exist_ok=True)
     return plan_dir
 
@@ -295,7 +295,7 @@ __all__ = [
 
     # Directories
     'get_home_dir',
-    'get_codex_dir',
+    'get_kimi_dir',
     'get_temp_dir',
     'get_plan_dir',
     'ensure_dir',

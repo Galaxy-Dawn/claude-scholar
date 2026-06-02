@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "zotero": {
+      "command": "zotero-mcp",
+      "args": ["serve"],
+      "transport": "stdio",
+      "env": {
+        "ZOTERO_LOCAL": "true",
+        "NO_PROXY": "localhost,127.0.0.1",
+        "ZOTERO_API_KEY": "<your-api-key>",
+        "ZOTERO_LIBRARY_ID": "<your-library-id>",
+        "ZOTERO_LIBRARY_TYPE": "user",
+        "UNPAYWALL_EMAIL": "<your-email@example.com>",
+        "UNSAFE_OPERATIONS": "all"
+      }
+    }
+  }
+}

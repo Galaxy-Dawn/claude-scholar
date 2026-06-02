@@ -37,7 +37,7 @@ If the user does not specify a stack, default to `html-tailwind`.
 Use the helper script to produce a compact design recommendation:
 
 ```bash
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/ui-ux-pro-max/scripts/search.py" "<product_type> <industry> <keywords>" --design-system -p "Project Name"
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/ui-ux-pro-max/scripts/search.py" "<product_type> <industry> <keywords>" --design-system -p "Project Name"
 ```
 
 This produces:
@@ -51,8 +51,8 @@ This produces:
 If the work spans multiple turns or pages, persist the design system:
 
 ```bash
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/ui-ux-pro-max/scripts/search.py" "<query>" --design-system --persist -p "Project Name"
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/ui-ux-pro-max/scripts/search.py" "<query>" --design-system --persist -p "Project Name" --page "dashboard"
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/ui-ux-pro-max/scripts/search.py" "<query>" --design-system --persist -p "Project Name"
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/ui-ux-pro-max/scripts/search.py" "<query>" --design-system --persist -p "Project Name" --page "dashboard"
 ```
 
 This creates:
@@ -64,10 +64,10 @@ This creates:
 Use a focused search instead of loading everything at once:
 
 ```bash
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/ui-ux-pro-max/scripts/search.py" "glassmorphism dark" --domain style
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/ui-ux-pro-max/scripts/search.py" "animation accessibility" --domain ux
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/ui-ux-pro-max/scripts/search.py" "real-time dashboard" --domain chart
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/ui-ux-pro-max/scripts/search.py" "elegant luxury serif" --domain typography
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/ui-ux-pro-max/scripts/search.py" "glassmorphism dark" --domain style
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/ui-ux-pro-max/scripts/search.py" "animation accessibility" --domain ux
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/ui-ux-pro-max/scripts/search.py" "real-time dashboard" --domain chart
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/ui-ux-pro-max/scripts/search.py" "elegant luxury serif" --domain typography
 ```
 
 Supported domains:
@@ -82,7 +82,7 @@ Supported domains:
 ### 4. Add stack-specific guidance before coding
 
 ```bash
-python3 "${CODEX_HOME:-$HOME/.codex}/skills/ui-ux-pro-max/scripts/search.py" "forms table responsive" --stack html-tailwind
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/ui-ux-pro-max/scripts/search.py" "forms table responsive" --stack html-tailwind
 ```
 
 Supported stacks:

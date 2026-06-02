@@ -62,9 +62,9 @@ Claude Code v2.1.5以降の場合、`~/.claude.json`の`mcpServers`に追加。
 }
 ```
 
-##### Codex CLI
+##### Kimi CLI
 
-`~/.codex/config.toml`に追加:
+`~/.kimi/config.toml`に追加:
 
 ```toml
 [mcp_servers.zotero]

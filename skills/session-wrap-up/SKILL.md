@@ -17,13 +17,7 @@ Trigger this skill when:
 
 ## Instructions
 
-If available in the current repo, first run:
-
-```bash
-python3 scripts/codex_hook_emulation.py session-end --cwd "$PWD"
-```
-
-Use that output as the deterministic Codex substitute for a `SessionEnd` / `Stop` hook before writing the final human-readable summary.
+Kimi Code CLI runs `session-summary` and `stop-summary` hooks automatically at session end. Use their output as the deterministic foundation before writing the final human-readable summary.
 
 ### 1. Generate Work Log
 

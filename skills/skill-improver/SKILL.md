@@ -108,11 +108,11 @@ Order changes by priority within each file.
 
 ### Step 5: Backup and Execute
 
-**Backup location:** `~/.codex/skills/backup/{skill-name}-{timestamp}/`
+**Backup location:** `~/.kimi/skills/backup/{skill-name}-{timestamp}/`
 
 ```bash
 # Use backup script
-~/.codex/skills/skill-improver/scripts/backup-skill.sh <skill-path>
+~/.kimi/skills/skill-improver/scripts/backup-skill.sh <skill-path>
 ```
 
 **Apply changes:**
@@ -130,7 +130,7 @@ Order changes by priority within each file.
 
 ```bash
 # Use verify script
-~/.codex/skills/skill-improver/scripts/verify-update.sh <skill-path>
+~/.kimi/skills/skill-improver/scripts/verify-update.sh <skill-path>
 ```
 
 **Generate update-report-{skill-name}-{timestamp}.md** documenting:

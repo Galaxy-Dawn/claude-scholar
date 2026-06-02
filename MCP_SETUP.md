@@ -38,9 +38,9 @@ uv tool install git+https://github.com/Galaxy-Dawn/zotero-mcp.git
 
 Choose your platform below:
 
-##### Codex CLI
+##### Kimi Code CLI
 
-Add to your `~/.codex/config.toml`:
+Add to your `~/.kimi-code/config.toml`:
 
 ```toml
 [mcp_servers.zotero]

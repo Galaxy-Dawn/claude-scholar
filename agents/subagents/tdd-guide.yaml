@@ -1,0 +1,5 @@
+version: 1
+agent:
+  extend: ../kimi-scholar.yaml
+  name: tdd-guide
+  system_prompt_path: ./tdd-guide.md

@@ -1,74 +1,62 @@
-# Codex Scholar - Main Configuration
-# Run: bash scripts/setup.sh to configure interactively
+default_model = "kimi-code/kimi-for-coding"
+default_thinking = true
+merge_all_available_skills = true
+telemetry = true
 
-# ============================================================
-# Model & Provider (configured by setup.sh)
-# ============================================================
-model = "__MODEL__"
-model_provider = "__PROVIDER_NAME__"
-model_reasoning_effort = "medium"
-disable_response_storage = true
+[providers."managed:kimi-code"]
+type = "kimi"
+api_key = ""
+base_url = "https://api.kimi.com/coding/v1"
 
-[model_providers.__PROVIDER_NAME__]
-name = "__PROVIDER_NAME__"
-base_url = "__PROVIDER_URL__"
-wire_api = "responses"
-requires_openai_auth = true
+[providers."managed:kimi-code".oauth]
+storage = "file"
+key = "oauth/kimi-code"
 
-# ============================================================
-# Sandbox & Instructions
-# ============================================================
-sandbox_mode = "workspace-write"
+[models."kimi-code/kimi-for-coding"]
+provider = "managed:kimi-code"
+model = "kimi-for-coding"
+max_context_size = 262144
+capabilities = [ "thinking", "image_in", "video_in", "tool_use" ]
+display_name = "Kimi-k2.6"
 
-# ============================================================
-# Features
-# ============================================================
-[features]
-multi_agent = true
-memories = true
+[services.moonshot_search]
+base_url = "https://api.kimi.com/coding/v1/search"
+api_key = ""
 
-# ============================================================
-# MCP Servers (optional, enable after installing zotero-mcp)
-# ============================================================
-[mcp_servers.zotero]
-command = "zotero-mcp"
-args = ["serve"]
-enabled = false
-[mcp_servers.zotero.env]
-ZOTERO_API_KEY = "your-api-key"
-ZOTERO_LIBRARY_ID = "your-library-id"
-ZOTERO_LIBRARY_TYPE = "user"
-UNPAYWALL_EMAIL = "your-email@example.com"
-UNSAFE_OPERATIONS = "all"
+[services.moonshot_search.oauth]
+storage = "file"
+key = "oauth/kimi-code"
 
-# ============================================================
-# Agents
-# ============================================================
+[services.moonshot_fetch]
+base_url = "https://api.kimi.com/coding/v1/fetch"
+api_key = ""
 
-# --- Research Workflow ---
+[services.moonshot_fetch.oauth]
+storage = "file"
+key = "oauth/kimi-code"
 
-[agents.literature-reviewer]
-description = "Literature search, classification, and trend analysis with Zotero MCP integration"
-config_file = "~/.codex/agents/literature-reviewer/config.toml"
+[[hooks]]
+event = "PreToolUse"
+matcher = "Shell|WriteFile|StrReplaceFile"
+command = "bash ~/.kimi-code/hooks/security-guard.sh"
+timeout = 5
 
-[agents.rebuttal-writer]
-description = "Systematic rebuttal writing with tone optimization"
-config_file = "~/.codex/agents/rebuttal-writer/config.toml"
+[[hooks]]
+event = "SessionStart"
+command = "bash ~/.kimi-code/hooks/session-start.sh"
+timeout = 10
 
-[agents.paper-miner]
-description = "Extract writing knowledge from successful papers"
-config_file = "~/.codex/agents/paper-miner/config.toml"
+[[hooks]]
+event = "UserPromptSubmit"
+command = "bash ~/.kimi-code/hooks/skill-forced-eval.sh"
+timeout = 10
 
-[agents.kaggle-miner]
-description = "Extract engineering practices from Kaggle solutions"
-config_file = "~/.codex/agents/kaggle-miner/config.toml"
+[[hooks]]
+event = "SessionEnd"
+command = "bash ~/.kimi-code/hooks/session-summary.sh"
+timeout = 15
 
-# --- Development Workflow ---
-
-[agents.code-reviewer]
-description = "Expert code review for quality, security, and maintainability"
-config_file = "~/.codex/agents/code-reviewer/config.toml"
-
-[agents.tdd-guide]
-description = "Test-driven development workflow guidance"
-config_file = "~/.codex/agents/tdd-guide/config.toml"
+[[hooks]]
+event = "Stop"
+command = "bash ~/.kimi-code/hooks/stop-summary.sh"
+timeout = 10

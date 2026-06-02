@@ -10,13 +10,13 @@ pass() {
 }
 
 make_home() {
-  mktemp -d /tmp/codex-scholar-test.XXXXXX
+  mktemp -d /tmp/kimi-scholar-test.XXXXXX
 }
 
 write_base_config() {
   local home="$1"
-  mkdir -p "$home/.codex"
-  cat > "$home/.codex/config.toml" <<'TOML'
+  mkdir -p "$home/.kimi"
+  cat > "$home/.kimi/config.toml" <<'TOML'
 model = "gpt-5.4"
 model_provider = "openai"
 
@@ -29,11 +29,11 @@ TOML
 }
 
 run_setup() {
-  printf 'n\n' | CODEX_HOME="$1/.codex" bash "$SETUP_SH" >/dev/null
+  printf 'n\n' | KIMI_HOME="$1/.kimi" bash "$SETUP_SH" >/dev/null
 }
 
 run_uninstall() {
-  CODEX_HOME="$1/.codex" bash "$UNINSTALL_SH" >/dev/null
+  KIMI_HOME="$1/.kimi" bash "$UNINSTALL_SH" >/dev/null
 }
 
 test_roundtrip_existing_config() {
@@ -42,18 +42,18 @@ test_roundtrip_existing_config() {
   write_base_config "$home"
 
   run_setup "$home"
-  test -f "$home/.codex/.codex-scholar-manifest.txt"
-  test -f "$home/.codex/.codex-scholar-install-state"
-  test -f "$home/.codex/AGENTS.md"
-  test -f "$home/.codex/skills/research-ideation/references/research-contract.md"
-  grep -Fxq "skills/research-ideation/references/research-contract.md" "$home/.codex/.codex-scholar-manifest.txt"
+  test -f "$home/.kimi/.kimi-scholar-manifest.txt"
+  test -f "$home/.kimi/.kimi-scholar-install-state"
+  test -f "$home/.kimi/AGENTS.md"
+  test -f "$home/.kimi/skills/research-ideation/references/research-contract.md"
+  grep -Fxq "skills/research-ideation/references/research-contract.md" "$home/.kimi/.kimi-scholar-manifest.txt"
 
   run_uninstall "$home"
-  test ! -f "$home/.codex/.codex-scholar-manifest.txt"
-  test ! -f "$home/.codex/.codex-scholar-install-state"
-  test -f "$home/.codex/config.toml"
-  ! grep -q '\[agents\.' "$home/.codex/config.toml"
-  ! grep -q '\[mcp_servers\.zotero' "$home/.codex/config.toml"
+  test ! -f "$home/.kimi/.kimi-scholar-manifest.txt"
+  test ! -f "$home/.kimi/.kimi-scholar-install-state"
+  test -f "$home/.kimi/config.toml"
+  ! grep -q '\[agents\.' "$home/.kimi/config.toml"
+  ! grep -q '\[mcp_servers\.zotero' "$home/.kimi/config.toml"
   pass "roundtrip with existing config"
 }
 
@@ -61,7 +61,7 @@ test_preserve_existing_mcp_section() {
   local home
   home="$(make_home)"
   write_base_config "$home"
-  cat >> "$home/.codex/config.toml" <<'TOML'
+  cat >> "$home/.kimi/config.toml" <<'TOML'
 
 [mcp_servers.zotero]
 command = "custom-zotero"
@@ -71,9 +71,9 @@ TOML
   run_setup "$home"
   run_uninstall "$home"
 
-  grep -q '\[mcp_servers\.zotero\]' "$home/.codex/config.toml"
-  grep -q 'command = "custom-zotero"' "$home/.codex/config.toml"
-  ! grep -q '\[mcp_servers\.zotero\.env\]' "$home/.codex/config.toml"
+  grep -q '\[mcp_servers\.zotero\]' "$home/.kimi/config.toml"
+  grep -q 'command = "custom-zotero"' "$home/.kimi/config.toml"
+  ! grep -q '\[mcp_servers\.zotero\.env\]' "$home/.kimi/config.toml"
   pass "preserve existing mcp server while removing injected env section"
 }
 
@@ -83,15 +83,15 @@ test_manifest_missing_fails_safe() {
   write_base_config "$home"
   run_setup "$home"
 
-  rm -f "$home/.codex/.codex-scholar-manifest.txt"
-  if CODEX_HOME="$home/.codex" bash "$UNINSTALL_SH" >/tmp/codex-scholar-uninstall-fail.log 2>&1; then
+  rm -f "$home/.kimi/.kimi-scholar-manifest.txt"
+  if KIMI_HOME="$home/.kimi" bash "$UNINSTALL_SH" >/tmp/kimi-scholar-uninstall-fail.log 2>&1; then
     echo "[FAIL] manifest missing should fail"
-    cat /tmp/codex-scholar-uninstall-fail.log
+    cat /tmp/kimi-scholar-uninstall-fail.log
     exit 1
   fi
 
-  test -f "$home/.codex/AGENTS.md"
-  test -f "$home/.codex/.codex-scholar-install-state"
+  test -f "$home/.kimi/AGENTS.md"
+  test -f "$home/.kimi/.kimi-scholar-install-state"
   pass "manifest missing fails safely"
 }
 
@@ -99,13 +99,13 @@ test_identical_preexisting_file_is_not_owned() {
   local home
   home="$(make_home)"
   write_base_config "$home"
-  mkdir -p "$home/.codex/scripts"
-  cp "$REPO_ROOT/scripts/setup-package-manager.js" "$home/.codex/scripts/setup-package-manager.js"
+  mkdir -p "$home/.kimi/scripts"
+  cp "$REPO_ROOT/scripts/setup-package-manager.js" "$home/.kimi/scripts/setup-package-manager.js"
 
   run_setup "$home"
   run_uninstall "$home"
 
-  test -f "$home/.codex/scripts/setup-package-manager.js"
+  test -f "$home/.kimi/scripts/setup-package-manager.js"
   pass "identical pre-existing file is not treated as owned"
 }
 
@@ -118,7 +118,7 @@ test_reinstall_keeps_owned_files_owned() {
   run_setup "$home"
   run_uninstall "$home"
 
-  test ! -f "$home/.codex/AGENTS.md"
+  test ! -f "$home/.kimi/AGENTS.md"
   pass "reinstall preserves ownership of installed files"
 }
 
@@ -126,21 +126,21 @@ test_legacy_install_upgrade_adopts_existing_files() {
   local home
   home="$(make_home)"
   write_base_config "$home"
-  mkdir -p "$home/.codex/scripts"
-  cp "$REPO_ROOT/AGENTS.md" "$home/.codex/AGENTS.md"
-  cp "$REPO_ROOT/scripts/setup-package-manager.js" "$home/.codex/scripts/setup-package-manager.js"
-  cat >> "$home/.codex/config.toml" <<'TOML'
+  mkdir -p "$home/.kimi/scripts"
+  cp "$REPO_ROOT/AGENTS.md" "$home/.kimi/AGENTS.md"
+  cp "$REPO_ROOT/scripts/setup-package-manager.js" "$home/.kimi/scripts/setup-package-manager.js"
+  cat >> "$home/.kimi/config.toml" <<'TOML'
 
 [agents.code-reviewer]
 description = "Expert code review"
-config_file = "~/.codex/agents/code-reviewer/config.toml"
+config_file = "~/.kimi/agents/code-reviewer/config.toml"
 TOML
 
   run_setup "$home"
   run_uninstall "$home"
 
-  test ! -f "$home/.codex/AGENTS.md"
-  test ! -f "$home/.codex/scripts/setup-package-manager.js"
+  test ! -f "$home/.kimi/AGENTS.md"
+  test ! -f "$home/.kimi/scripts/setup-package-manager.js"
   pass "legacy install upgrade adopts existing managed files"
 }
 

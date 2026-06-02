@@ -1,0 +1,5 @@
+version: 1
+agent:
+  extend: ../kimi-scholar.yaml
+  name: kaggle-miner
+  system_prompt_path: ./kaggle-miner.md

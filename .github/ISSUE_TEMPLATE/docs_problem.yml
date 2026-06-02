@@ -34,7 +34,7 @@ body:
       label: Affected branch
       options:
         - main
-        - codex
+        - kimi
         - opencode
         - multiple branches
         - unsure

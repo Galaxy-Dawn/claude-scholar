@@ -1,0 +1,5 @@
+version: 1
+agent:
+  extend: ../kimi-scholar.yaml
+  name: code-reviewer
+  system_prompt_path: ./code-reviewer.md

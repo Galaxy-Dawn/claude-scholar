@@ -6,23 +6,23 @@
     <a href="https://github.com/Galaxy-Dawn/claude-scholar/network/members"><img src="https://img.shields.io/github/forks/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Forks"/></a>
     <img src="https://img.shields.io/github/last-commit/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Last Commit"/>
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
-    <img src="https://img.shields.io/badge/Codex_CLI-Compatible-blue?style=flat-square" alt="Codex CLI"/>
+    <img src="https://img.shields.io/badge/Kimi_Code_CLI-Compatible-blue?style=flat-square" alt="Kimi Code CLI"/>
   </p>
 
   <strong>Language</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
 </div>
 
-> Semi-automated research assistant for academic research and software development, especially for computer science and AI researchers, adapted for [Codex CLI](https://github.com/openai/codex) across ideation, literature review, experiments, reporting, writing, and project knowledge management.
+> Semi-automated research assistant for academic research and software development, especially for computer science and AI researchers, adapted for [Kimi Code CLI](https://github.com/MoonshotAI/kimi-code) across ideation, literature review, experiments, reporting, writing, and project knowledge management.
 >
-> **Branch note**: this is the **Codex CLI edition** of Claude Scholar. For the Claude Code version, see the [`main` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/main). For the OpenCode version, see the [`opencode` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode).
+> **Branch note**: this is the **Kimi Code CLI edition** of Claude Scholar. For the Claude Code version, see the [`main` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/main). For the OpenCode version, see the [`opencode` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode).
 
 
 ## Recent News
 
 - **2026-05-14**: **`expression-skill` made the communication core, `planning-with-files` restored as the default persistence layer, and the Nature writing stack expanded** — made [`expression-skill`](./skills/expression-skill/README.md) the explicit conclusion-first discipline for reporting, planning, file operations, and multi-step technical work; reintroduced [`planning-with-files`](./skills/planning-with-files/SKILL.md) as the default on-disk planning and progress-tracking workflow for complex tasks; introduced [`nature-writing`](./skills/nature-writing/README.md) for section drafting and argument construction; refreshed [`nature-polishing`](./skills/nature-polishing/README.md) to the latest upstream article-pattern release; and kept [`nature-response`](./skills/nature-response/README.md) plus [`nature-data`](./skills/nature-data/README.md) in the journal-writing stack.
 - **2026-05-13**: **Evidence-gated research workflow and `Sources/Papers` routing tightened** — added a shared `research-contract.md` for Evidence Records, claim strength, and Claim Promotion Gates; connected research ideation, Zotero ingestion, literature synthesis, results reporting, writing, and rebuttal workflows to that contract; and clarified that project paper notes live under `Sources/Papers` before promoted claims move into `Knowledge` or `Writing`.
-- **2026-04-25**: **Codex Obsidian KB lifecycle stabilized** — fixed rename, archive, purge, sync, and lint edge cases in the Codex project KB workflow, and made repo-local binding metadata consistent with the Codex runtime.
-- **2026-04-24**: **Vault-first Obsidian KB workflow backported to Codex** — brought the new project-scoped Obsidian knowledge workflow to the Codex edition, consolidated the older memory skills into four focused skills, and kept project navigation human-first instead of a machine registry dump.
+- **2026-04-25**: **Kimi Obsidian KB lifecycle stabilized** — fixed rename, archive, purge, sync, and lint edge cases in the Kimi project KB workflow, and made repo-local binding metadata consistent with the Kimi runtime.
+- **2026-04-24**: **Vault-first Obsidian KB workflow backported to Kimi** — brought the new project-scoped Obsidian knowledge workflow to the Kimi edition, consolidated the older memory skills into four focused skills, and kept project navigation human-first instead of a machine registry dump.
 - **2026-04-22**: **Lightweight core and safe installer lifecycle** — replaced the large always-on `CLAUDE.md` / `AGENTS.md` files with compact core instructions, removed non-core default agents, added Chinese companion files, and added a manifest/state-based uninstall workflow so updates and removals only touch installer-owned files and config entries.
 - **2026-04-15**: **pubfig and pubtab introduced** — introduced [`pubfig`](https://github.com/Galaxy-Dawn/pubfig), a Python package for publication-grade scientific figures, and [`pubtab`](https://github.com/Galaxy-Dawn/pubtab), a Python package for publication-ready tables and Excel↔LaTeX workflows. Together they provide a cleaner production stack for paper figures, benchmark tables, export control, and final artifact QA.
 
@@ -33,10 +33,10 @@
 - **2026-03-31**: **Zotero smart-import workflow docs aligned** — updated Claude Scholar's research-facing docs around the latest `zotero-mcp` public surface: `zotero_add_items_by_identifier` is now the default paper-import path, `zotero_reconcile_collection_duplicates` is the standard post-import cleanup step, source-aware PDF cascade behavior is documented more accurately, and public vs internal diagnostics are now clearly separated.
 - **2026-03-31**: **README onboarding refreshed** — clarified that Claude Scholar is especially well-suited to computer science and AI researchers, added practical getting-started scenarios after installation, improved prerequisite and branch guidance, and made the “existing local md files must be manually merged” expectation much more explicit.
 - **2026-03-31**: **Installer and hook-emulation behavior tightened** — the installer now preserves existing local `AGENTS.md` while installing the repo-managed version as `AGENTS.scholar.md`, and the default emulation summaries were trimmed to reduce noisy temp-file / uncommitted-file output while keeping safer write-guard behavior.
-- **2026-03-31**: **Japanese documentation added** — added Japanese docs for the main README plus `AGENTS`, `MCP_SETUP`, and `OBSIDIAN_SETUP`, so the Codex branch now has a more complete multilingual documentation surface.
+- **2026-03-31**: **Japanese documentation added** — added Japanese docs for the main README plus `AGENTS`, `MCP_SETUP`, and `OBSIDIAN_SETUP`, so the kimi branch now has a more complete multilingual documentation surface.
 
-- **2026-02-25**: **Codex CLI** support — added the `codex` branch for [OpenAI Codex CLI](https://github.com/openai/codex) with TOML config, Codex-native skills and agents, and sandbox security.
-- **2026-02-23**: Added `setup.sh` installer — backup-aware incremental updates for existing `~/.codex`, auto-backup for Codex config, and additive merge of managed surfaces
+- **2026-02-25**: **Kimi Code CLI** support — added the `kimi` branch for [Kimi Code CLI](https://github.com/MoonshotAI/kimi-code) with TOML config, Kimi-native skills and agents, and sandbox security.
+- **2026-02-23**: Added `setup.sh` installer — backup-aware incremental updates for existing `~/.kimi-code`, auto-backup for Kimi Code CLI config, and additive merge of managed surfaces
 - **2026-02-21**: **OpenCode** support — Claude Scholar now supports [OpenCode](https://github.com/opencode-ai/opencode) as an alternative CLI; switch to the `opencode` branch for OpenCode-compatible configuration
 - **2026-02-20**: Bilingual docs — maintained English and Chinese entry documents for broader readability
 - **2026-02-15**: Zotero MCP integration — added `/zotero-review` and `/zotero-notes` commands, updated `research-ideation` skill with Zotero integration guide, enhanced `literature-reviewer` agent with Zotero MCP support for automated paper import, collection management, full-text reading, and citation export
@@ -53,10 +53,10 @@
 |---|---|
 | [Why Claude Scholar](#why-claude-scholar) | Understand the project positioning and target use cases. |
 | [Core Workflow](#core-workflow) | See the staged research pipeline from ideation to publication. |
-| [Quick Start](#quick-start) | Install Claude Scholar safely into an existing `~/.codex` setup. |
+| [Quick Start](#quick-start) | Install Claude Scholar safely into an existing `~/.kimi-code` setup. |
 | [Getting Started Scenarios](#getting-started-scenarios) | See a few realistic first-use scenarios after installation. |
 | [Platform Scope](#platform-scope) | See what this branch covers and where the other editions live. |
-| [Integrations](#integrations) | Learn how Zotero and Obsidian fit into the Codex workflow. |
+| [Integrations](#integrations) | Learn how Zotero and Obsidian fit into the Kimi workflow. |
 | [Primary Workflows](#primary-workflows) | Browse the main research and development workflows. |
 | [Supporting Workflows](#supporting-workflows) | See the background systems that strengthen the main workflow. |
 | [Documentation](#documentation) | Jump to setup docs, configuration, and installation guides. |
@@ -70,7 +70,7 @@ Its core idea is simple:
 
 > **human decision-making stays at the center; the assistant accelerates the workflow around it.**
 
-That means the Codex edition is designed to help with the heavy, repetitive, and structure-sensitive parts of research — literature organization, note-taking, experiment analysis, reporting, and writing support — while still keeping the key judgments in human hands:
+That means the Kimi edition is designed to help with the heavy, repetitive, and structure-sensitive parts of research — literature organization, note-taking, experiment analysis, reporting, and writing support — while still keeping the key judgments in human hands:
 
 - which problem is worth pursuing,
 - which papers actually matter,
@@ -106,7 +106,7 @@ It can still help in other research settings, but its current workflow design is
 
 ### Requirements
 
-- [Codex CLI](https://github.com/openai/codex)
+- [Kimi Code CLI](https://github.com/MoonshotAI/kimi-code)
 - Git
 - (Optional) Python + [uv](https://docs.astral.sh/uv/) for Python development
 - (Optional) [Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) for literature workflows
@@ -115,20 +115,20 @@ It can still help in other research settings, but its current workflow design is
 ### Option 1: Full Installation (Recommended)
 
 ```bash
-git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 bash /tmp/claude-scholar/scripts/setup.sh
 ```
 
 The installer is **backup-aware and incremental-update friendly**:
 - syncs repo-managed `skills/`, `agents/`, `scripts/`, and `utils/`,
-- merges Claude Scholar sections into an existing `~/.codex/config.toml` when you keep your current provider/model,
+- merges Claude Scholar sections into an existing `~/.kimi-code/config.toml` when you keep your current provider/model,
 - backs up `config.toml` and `auth.json` before overwriting,
-- preserves an existing `~/.codex/AGENTS.md` and installs the repo-managed version as `~/.codex/AGENTS.scholar.md`,
-- preserves an existing `~/.codex/AGENTS.zh-CN.md` and installs the repo-managed Chinese version as `~/.codex/AGENTS.zh-CN.scholar.md`,
+- preserves an existing `~/.kimi-code/AGENTS.md` and installs the repo-managed version as `~/.kimi-code/AGENTS.scholar.md`,
+- preserves an existing `~/.kimi-code/AGENTS.zh-CN.md` and installs the repo-managed Chinese version as `~/.kimi-code/AGENTS.zh-CN.scholar.md`,
 - preserves your existing provider/model/API key when you choose the incremental-update path,
 - optionally enables the Zotero MCP block already present in the template config.
 
-**Important AGENTS note**: if you already maintain your own `~/.codex/AGENTS.md`, review `~/.codex/AGENTS.scholar.md` and `~/.codex/AGENTS.zh-CN.scholar.md` after installation and manually merge the Claude Scholar sections you want into your own files. Do not assume the sidecar file is applied automatically.
+**Important AGENTS note**: if you already maintain your own `~/.kimi-code/AGENTS.md`, review `~/.kimi-code/AGENTS.scholar.md` and `~/.kimi-code/AGENTS.zh-CN.scholar.md` after installation and manually merge the Claude Scholar sections you want into your own files. Do not assume the sidecar file is applied automatically.
 
 To update later:
 
@@ -146,8 +146,8 @@ bash scripts/uninstall.sh
 ```
 
 The installer writes:
-- `~/.codex/.codex-scholar-manifest.txt` for files managed by Codex Scholar
-- `~/.codex/.codex-scholar-install-state` for safe uninstall metadata, including installed `AGENTS*.md` targets and added `config.toml` sections
+- `~/.kimi-code/.kimi-scholar-manifest.txt` for files managed by Kimi Scholar
+- `~/.kimi-code/.kimi-scholar-install-state` for safe uninstall metadata, including installed `AGENTS*.md` targets and added `config.toml` sections
 
 The uninstaller removes only files and config sections recorded in that install state. It does not guess ownership from the current repo checkout.
 
@@ -158,42 +158,42 @@ The uninstaller removes only files and config sections recorded in that install 
 Install only a small research-focused subset:
 
 ```bash
-git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.codex/skills ~/.codex/agents
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.codex/agents/
-cp -r /tmp/claude-scholar/agents/paper-miner ~/.codex/agents/
-cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
-cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
+git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+mkdir -p ~/.kimi-code/skills ~/.kimi-code/agents
+cp -r /tmp/claude-scholar/skills/research-ideation ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/results-analysis ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/results-report ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/review-response ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.kimi-code/agents/
+cp -r /tmp/claude-scholar/agents/paper-miner ~/.kimi-code/agents/
+cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
+cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
 
-**Post-install**: minimal/manual install does **not** auto-merge your `config.toml`; copy only the sections you need from the repository config and setup guides. If you already have your own `~/.codex/AGENTS.md`, merge the relevant sections from this repo's `AGENTS.md` into your file instead of blindly overwriting it.
+**Post-install**: minimal/manual install does **not** auto-merge your `config.toml`; copy only the sections you need from the repository config and setup guides. If you already have your own `~/.kimi-code/AGENTS.md`, merge the relevant sections from this repo's `AGENTS.md` into your file instead of blindly overwriting it.
 
 ### Option 3: Selective Installation
 
 Copy only the pieces you want:
 
 ```bash
-git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-cp -r /tmp/claude-scholar/skills/<skill-name> ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/<agent-name> ~/.codex/agents/
-cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
-cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
+git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+cp -r /tmp/claude-scholar/skills/<skill-name> ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/agents/<agent-name> ~/.kimi-code/agents/
+cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
+cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
 
-**Post-install**: selective/manual install does **not** auto-merge your `config.toml`, and if you already have your own `~/.codex/AGENTS.md`, merge the relevant sections from this repo's `AGENTS.md` into your file instead of blindly overwriting it.
+**Post-install**: selective/manual install does **not** auto-merge your `config.toml`, and if you already have your own `~/.kimi-code/AGENTS.md`, merge the relevant sections from this repo's `AGENTS.md` into your file instead of blindly overwriting it.
 
-**Important Codex note**:
-- Codex does **not** show custom skills in `/...` menus.
+**Important Kimi note**:
+- Kimi does **not** show custom skills in `/...` menus.
 - Use natural language prompts, or explicitly invoke a skill as `$skill-name` when needed.
 
 ## Getting Started Scenarios
 
-After installation, the simplest way to begin is to describe your task in natural language. You do not need to memorize the whole system first, and Codex does not require slash-menu discovery for these workflows. Below are a few realistic starting points.
+After installation, the simplest way to begin is to describe your task in natural language. You do not need to memorize the whole system first, and Kimi does not require slash-menu discovery for these workflows. Below are a few realistic starting points.
 
 ### 1. Start a New Research Topic
 **You can say:**
@@ -240,15 +240,15 @@ or:
 
 ### Practical Notes
 - Start with one concrete task, not a vague request for "everything."
-- In Codex, natural-language prompts are the default entrypoint; use `$skill-name` only when you want to force a specific skill.
+- In Kimi, natural-language prompts are the default entrypoint; use `$skill-name` only when you want to force a specific skill.
 - If you already maintain your own local `AGENTS.md` or `AGENTS.zh-CN.md`, merge the Claude Scholar sections you want from `AGENTS.scholar.md` or `AGENTS.zh-CN.scholar.md` instead of assuming sidecar files apply automatically.
 - Zotero and Obsidian are optional, but they become much more useful when you want durable literature notes or project memory rather than one-off chat output.
 
 ## Platform Scope
 
-This branch targets **Codex CLI**.
+This branch targets **Kimi Code CLI**.
 
-- **Codex CLI (`codex` branch)** — TOML config, AGENTS-based discipline, filesystem-first Obsidian workflow, and Codex-native installation docs
+- **Kimi Code CLI (`kimi` branch)** — TOML config, AGENTS-based discipline, filesystem-first Obsidian workflow, and Kimi-native installation docs
 - **Claude Code (`main` branch)** — Claude Code setup, native hooks, and the main cross-platform documentation line
 - **OpenCode (`opencode` branch)** — OpenCode-specific configuration and installation path
 
@@ -283,7 +283,7 @@ See [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md).
 
 Complete academic research lifecycle — 7 stages from idea to publication.
 
-> **Codex entrypoint note**: this branch does not rely on repo slash commands. The normal entrypoint is natural language plus explicit skill invocation such as `$results-analysis` when needed.
+> **Kimi entrypoint note**: this branch does not rely on repo slash commands. The normal entrypoint is natural language plus explicit skill invocation such as `$results-analysis` when needed.
 
 ### 1. Research Ideation (Zotero-Integrated)
 
@@ -422,7 +422,7 @@ Conference preparation and research communication after acceptance.
 
 ## Supporting Workflows
 
-These workflows run behind the primary workflows to strengthen the overall Codex experience.
+These workflows run behind the primary workflows to strengthen the overall Kimi experience.
 
 ### Obsidian Project Knowledge Base
 
@@ -443,12 +443,12 @@ Use Obsidian as the project-scoped durable knowledge surface, not just as a note
 - ingest new source material into the correct canonical destination,
 - only generate extra Bases or canvases on explicit request.
 
-Legacy Codex-era Obsidian skill shims such as `obsidian-project-memory`, `obsidian-project-bootstrap`, and `obsidian-experiment-log` have been removed. Use `obsidian-project-kb-core`, `obsidian-source-ingestion`, `obsidian-literature-workflow`, and `obsidian-kb-artifacts` directly.
+Legacy Claude Code-era Obsidian skill shims such as `obsidian-project-memory`, `obsidian-project-bootstrap`, and `obsidian-experiment-log` have been removed. Use `obsidian-project-kb-core`, `obsidian-source-ingestion`, `obsidian-literature-workflow`, and `obsidian-kb-artifacts` directly.
 
 **Note language configuration**
 
 Generated and synced Obsidian notes now resolve their language with this priority:
-1. project config: `.codex/project-memory/registry.yaml` -> `note_language`
+1. project config: `.kimi-code/project-memory/registry.yaml` -> `note_language`
 2. environment variable: `OBSIDIAN_NOTE_LANGUAGE`
 3. default: `en`
 
@@ -470,21 +470,25 @@ Per-project example:
 
 English and Chinese section headings remain mutually compatible during sync, so older notes in either language can still be updated safely after switching configuration.
 
-### Codex Session Discipline and Hook Emulation
+### Kimi Session Discipline and Hooks
 
-Codex does not expose native Claude Code hooks, so this branch emulates the highest-value behaviors through AGENTS discipline and local helper scripts.
+Kimi Code CLI supports native bash hooks via `config.toml`, so this branch uses real hooks instead of emulation.
 
 | Type | Name | One-line explanation |
 |---|---|---|
-| File | `AGENTS.md` | Encodes session discipline, skill evaluation rules, safety rules, and Codex-specific workflow instructions. |
-| Script | `scripts/codex_hook_emulation.py` | Emulates session-start, preflight, post-edit, and session-end behaviors inside repo workflows. |
+| File | `AGENTS.md` | Encodes session discipline, skill evaluation rules, safety rules, and Kimi-specific workflow instructions. |
+| Hook | `hooks/security-guard.sh` | Pre-flight check for dangerous commands and sensitive file modifications. |
+| Hook | `hooks/session-start.sh` | Displays repo state, skills, TODOs, and project context at session start. |
+| Hook | `hooks/skill-forced-eval.sh` | Silent skill scanning against user prompts before submission. |
+| Hook | `hooks/session-summary.sh` | Generates session work log at session end. |
+| Hook | `hooks/stop-summary.sh` | Generates stop summary when the stop signal is received. |
 | Skill | `session-wrap-up` | Produces work logs, cleanup reminders, and closeout summaries at the end of a session. |
 
 **How it works**
-- **Session start surrogate**: inspect repo state, skills, TODOs, and project context.
-- **Preflight surrogate**: check dangerous or irreversible commands before execution.
-- **Post-edit surrogate**: decide verification needs and minimum Obsidian write-back after meaningful edits.
-- **Session end surrogate**: summarize work and remind follow-up maintenance actions.
+- **Session start**: inspect repo state, skills, TODOs, and project context.
+- **Pre-flight**: check dangerous or irreversible commands before execution.
+- **Skill evaluation**: silently scan prompts against available skills and auto-activate matches.
+- **Session end**: summarize work and remind follow-up maintenance actions.
 
 ### Communication and Reporting Discipline
 
@@ -534,21 +538,21 @@ Claude Scholar also includes a self-improvement loop for its own skills.
 
 ## Documentation
 
-- [MCP_SETUP.md](./MCP_SETUP.md) — Zotero MCP setup for Codex
+- [MCP_SETUP.md](./MCP_SETUP.md) — Zotero MCP setup for Kimi Code CLI
 - [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md) — Obsidian project knowledge base workflow
-- [AGENTS.md](./AGENTS.md) — lightweight Codex core instructions
+- [AGENTS.md](./AGENTS.md) — lightweight Kimi core instructions
 - [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) — Chinese companion for the lightweight core instructions
 - [README.ja-JP.md](./README.ja-JP.md) — Japanese version of this README
-- [config.toml](./config.toml) — template Codex configuration with skills, agents, and MCP blocks
+- [config.toml](./config.toml) — template Kimi Code CLI configuration with skills, agents, and MCP blocks
 
 ## Project Rules
 
-Claude Scholar for Codex includes rules around:
+Claude Scholar for Kimi Code CLI includes rules around:
 - coding style,
 - agent orchestration,
 - security constraints,
 - experiment reproducibility,
-- and Codex-specific session discipline.
+- and Kimi-specific session discipline.
 
 The always-on rules live primarily in `AGENTS.md`; detailed workflows remain in repo-managed skills and docs.
 
@@ -556,7 +560,7 @@ The always-on rules live primarily in `AGENTS.md`; detailed workflows remain in 
 
 Issues, pull requests, and workflow improvement suggestions are welcome.
 
-If you want to modify the installer, Zotero workflow, Obsidian routing, or Codex session discipline, it helps to describe:
+If you want to modify the installer, Zotero workflow, Obsidian routing, or Kimi session discipline, it helps to describe:
 - the user scenario,
 - the current limitation,
 - the expected behavior,
@@ -582,7 +586,7 @@ MIT License.
 
 ## Acknowledgments
 
-Built with Codex CLI workflows and extended through open-source research tooling.
+Built with Kimi Code CLI workflows and extended through open-source research tooling.
 
 ### References
 
@@ -590,7 +594,7 @@ This project was inspired by and built on excellent community work:
 
 - **[everything-claude-code](https://github.com/anthropics/everything-claude-code)** - comprehensive Claude Code CLI resources
 - **[AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs)** - research-oriented skills and configuration patterns
-- **[codex](https://github.com/openai/codex)** - the Codex CLI foundation used by this branch
+- **[kimi-code](https://github.com/MoonshotAI/kimi-code)** - the Kimi Code CLI foundation used by this branch
 - **[expression-skill](https://github.com/Galaxy-Dawn/expression-skill)** - Public conclusion-first communication skill reused here for reporting and response discipline
 - **[nature-skills](https://github.com/Yuan1z0825/nature-skills)** - Nature-oriented writing, polishing, reviewer-response, and data-availability skills reused here with attribution
 

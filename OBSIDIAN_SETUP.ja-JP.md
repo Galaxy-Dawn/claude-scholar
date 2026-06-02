@@ -1,6 +1,6 @@
 # Obsidianプロジェクトナレッジベース セットアップ
 
-Codex Scholarには、Obsidian研究ナレッジベースワークフローが内蔵されています。MCPやAPIキーは不要です。
+Kimi Scholarには、Obsidian研究ナレッジベースワークフローが内蔵されています。MCPやAPIキーは不要です。
 
 ## このワークフローでできること
 
@@ -26,7 +26,7 @@ Obsidianは単なる論文ライブラリではなく、研究プロジェクト
 
 ## 内蔵 skills
 
-Codex Scholar には project-scoped な Obsidian KB workflow が含まれています。
+Kimi Scholar には project-scoped な Obsidian KB workflow が含まれています。
 
 既定ワークフローの中心は次の skills です。
 
@@ -40,7 +40,7 @@ Codex Scholar には project-scoped な Obsidian KB workflow が含まれてい�
 
 ## 既定の挙動
 
-Codex Scholar が `.codex/project-memory/registry.yaml` を含むリポジトリ内で実行されている場合、そのリポジトリを Obsidian プロジェクトナレッジベースにバインド済みとして扱い、既定で更新を行います。
+Kimi Scholar が `.kimi/project-memory/registry.yaml` を含むリポジトリ内で実行されている場合、そのリポジトリを Obsidian プロジェクトナレッジベースにバインド済みとして扱い、既定で更新を行います。
 
 まだバインドされていなくても、`.git`、`README.md`、`docs/`、`notes/`、`plan/`、`results/`、`outputs/`、`src/`、`scripts/` などから研究リポジトリらしいと判断できる場合は、自動で bootstrap します。
 
@@ -78,7 +78,7 @@ Research/{project-slug}/
 - `_system/registry.md`
 - `_system/schema.md`
 - `_system/lint-report.md`
-- `.codex/project-memory/{project_id}.md`
+- `.kimi/project-memory/{project_id}.md`
 - 文献ワークフローで必要な場合の `Maps/literature.canvas`
 
 ## Repo-local binding metadata
@@ -86,7 +86,7 @@ Research/{project-slug}/
 各研究リポジトリは次を持ちます。
 
 ```text
-.codex/project-memory/
+.kimi/project-memory/
   registry.yaml
   {project_id}.md
 ```
@@ -97,15 +97,15 @@ Research/{project-slug}/
 ## ノート言語
 
 生成・同期ノートの言語は次の優先順位で決まります。
-1. `.codex/project-memory/registry.yaml` の project config
+1. `.kimi/project-memory/registry.yaml` の project config
 2. 環境変数 `OBSIDIAN_NOTE_LANGUAGE`
 3. 既定値 `en`
 
 注意：`registry.yaml` は repo-local runtime binding file のままです。プロジェクト内で見える source of truth は `_system/registry.md` です。
 
-## Codex での主なワークフロー
+## Kimi での主なワークフロー
 
-Codex では Claude Code 風の slash command を前提にしません。同じ KB ワークフローは自然言語の依頼と対応 skill / helper script で進めます。
+Kimi では Claude Code 風の slash command を前提にしません。同じ KB ワークフローは自然言語の依頼と対応 skill / helper script で進めます。
 
 - `obsidian-project-kb-core` で project KB を初期化または導入する
 - `obsidian-source-ingestion` で外部資料を `Sources/*` に振り分ける
@@ -116,11 +116,11 @@ Codex では Claude Code 風の slash command を前提にしません。同じ 
 
 ## バインド済み repo の最小メンテナンス面
 
-リポジトリが `.codex/project-memory/registry.yaml` で既にバインドされている場合、Codex Scholar は保守を保守的に行います。
+リポジトリが `.kimi/project-memory/registry.yaml` で既にバインドされている場合、Kimi Scholar は保守を保守的に行います。
 
 - 研究状態が変わったら `Daily/YYYY-MM-DD.md` を確認する
 - project のトップレベル状態が本当に変わったときだけ `00-Hub.md` を更新する
-- project 状態が変わったら `.codex/project-memory/{project_id}.md` を更新する
+- project 状態が変わったら `.kimi/project-memory/{project_id}.md` を更新する
 - `Knowledge/`、`Experiments/`、`Results/`、`Writing/` は毎回自動で書き換えず agent-first を維持する
 
 ## オプション: Obsidian CLI のインストール

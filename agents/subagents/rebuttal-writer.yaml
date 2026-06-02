@@ -1,0 +1,5 @@
+version: 1
+agent:
+  extend: ../kimi-scholar.yaml
+  name: rebuttal-writer
+  system_prompt_path: ./rebuttal-writer.md

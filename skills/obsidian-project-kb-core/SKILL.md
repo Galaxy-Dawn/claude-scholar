@@ -1,6 +1,6 @@
 ---
 name: obsidian-project-kb-core
-description: Use this as the main Codex Scholar skill for a vault-first, project-scoped Obsidian research knowledge base rooted at Research/{project-slug}/. It owns bootstrap, routing, daily logging, hub/plan/index maintenance, registry updates, lifecycle actions, and lint orchestration.
+description: Use this as the main Kimi Scholar skill for a vault-first, project-scoped Obsidian research knowledge base rooted at Research/{project-slug}/. It owns bootstrap, routing, daily logging, hub/plan/index maintenance, registry updates, lifecycle actions, and lint orchestration.
 ---
 
 # Obsidian Project KB Core
@@ -34,7 +34,7 @@ _system/
 ## Core rules
 
 - Keep all durable project knowledge inside the current `Research/{project-slug}/`.
-- Keep repo-local `.codex/project-memory/*` only as the runtime binding layer.
+- Keep repo-local `.kimi/project-memory/*` only as the runtime binding layer.
 - `_system/registry.md` is the only visible project registry.
 - `02-Index.md` is a human navigation note, not a registry mirror.
 - `Maps/` is a derived-artifact area; do not generate non-essential canvases by default.

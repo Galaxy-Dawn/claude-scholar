@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-MANIFEST_FILE="$CODEX_HOME/.codex-scholar-manifest.txt"
-STATE_FILE="$CODEX_HOME/.codex-scholar-install-state"
-BACKUP_ROOT="$CODEX_HOME/.codex-scholar-backups"
+KIMI_HOME="${KIMI_HOME:-$HOME/.kimi}"
+MANIFEST_FILE="$KIMI_HOME/.kimi-scholar-manifest.txt"
+STATE_FILE="$KIMI_HOME/.kimi-scholar-install-state"
+BACKUP_ROOT="$KIMI_HOME/.kimi-scholar-backups"
 UNINSTALL_STAMP="$(date +%Y%m%d-%H%M%S)"
 UNINSTALL_BACKUP_DIR="$BACKUP_ROOT/uninstall-$UNINSTALL_STAMP"
 COMPONENT_DIRS=(skills templates agents scripts utils)
@@ -20,9 +20,9 @@ usage() {
   cat <<'EOF'
 Usage: bash scripts/uninstall.sh [--dry-run]
 
-Removes Codex Scholar managed files from ~/.codex without touching unrelated user files.
-- Uses ~/.codex/.codex-scholar-manifest.txt for managed file ownership.
-- Uses ~/.codex/.codex-scholar-install-state for safe config.toml cleanup.
+Removes Kimi Scholar managed files from ~/.kimi without touching unrelated user files.
+- Uses ~/.kimi/.kimi-scholar-manifest.txt for managed file ownership.
+- Uses ~/.kimi/.kimi-scholar-install-state for safe config.toml cleanup.
 - Refuses to guess ownership when install metadata is missing.
 EOF
 }
@@ -57,7 +57,7 @@ file_sha256() {
 backup_target() {
   local target="$1"
   [ -e "$target" ] || return 0
-  local rel="${target#$CODEX_HOME/}"
+  local rel="${target#$KIMI_HOME/}"
   [ "$rel" = "$target" ] && rel="$(basename "$target")"
   mkdir -p "$UNINSTALL_BACKUP_DIR/$(dirname "$rel")"
   if [ "$DRY_RUN" -eq 0 ]; then
@@ -80,7 +80,7 @@ remove_managed_files() {
     case "$rel" in
       .*|*..*|/*) continue ;;
     esac
-    local target="$CODEX_HOME/$rel"
+    local target="$KIMI_HOME/$rel"
     if [ ! -e "$target" ]; then
       SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
       continue
@@ -96,19 +96,19 @@ remove_managed_files() {
 cleanup_empty_dirs() {
   local comp
   for comp in "${COMPONENT_DIRS[@]}"; do
-    if [ -d "$CODEX_HOME/$comp" ] && [ "$DRY_RUN" -eq 0 ]; then
-      find "$CODEX_HOME/$comp" -depth -type d -empty -delete
+    if [ -d "$KIMI_HOME/$comp" ] && [ "$DRY_RUN" -eq 0 ]; then
+      find "$KIMI_HOME/$comp" -depth -type d -empty -delete
     fi
   done
 }
 
 cleanup_config() {
-  local config="$CODEX_HOME/config.toml"
+  local config="$KIMI_HOME/config.toml"
   [ -f "$config" ] || return 0
   backup_target "$config"
 
   if [ "$DRY_RUN" -eq 1 ]; then
-    info "Would clean Codex Scholar entries from $config"
+    info "Would clean Kimi Scholar entries from $config"
     return 0
   fi
 
@@ -161,7 +161,7 @@ main() {
 
   echo ""
   echo "╔══════════════════════════════════════╗"
-  echo "║   Claude Scholar Uninstaller (Codex) ║"
+  echo "║   Claude Scholar Uninstaller (Kimi) ║"
   echo "╚══════════════════════════════════════╝"
   echo ""
 

@@ -209,7 +209,7 @@ def resolve_binding(repo_root: Path, project_id: str | None = None) -> Binding:
     registry = load_binding_registry(binding_registry_path(repo_root))
     projects = registry.get('projects') or {}
     if not projects:
-        raise SystemExit('No registered projects found in .codex/project-memory/registry.yaml')
+        raise SystemExit('No registered projects found in .kimi/project-memory/registry.yaml')
     if project_id is None:
         if len(projects) == 1:
             project_id = next(iter(projects))

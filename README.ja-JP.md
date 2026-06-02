@@ -6,23 +6,23 @@
     <a href="https://github.com/Galaxy-Dawn/claude-scholar/network/members"><img src="https://img.shields.io/github/forks/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Forks"/></a>
     <img src="https://img.shields.io/github/last-commit/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Last Commit"/>
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
-    <img src="https://img.shields.io/badge/Codex_CLI-Compatible-blue?style=flat-square" alt="Codex CLI"/>
+    <img src="https://img.shields.io/badge/Kimi_CLI-Compatible-blue?style=flat-square" alt="Kimi CLI"/>
   </p>
 
   <strong>Language</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
 </div>
 
-> 学術研究とソフトウェア開発のための半自動リサーチアシスタントであり、特にコンピュータサイエンスと AI 研究者に適しています。[Codex CLI](https://github.com/openai/codex) 向けに調整されており、研究構想、文献レビュー、実験、結果レポート、執筆、プロジェクト知識ベースの保守までを一つの流れで支援します。
+> 学術研究とソフトウェア開発のための半自動リサーチアシスタントであり、特にコンピュータサイエンスと AI 研究者に適しています。[Kimi CLI](https://github.com/openai/kimi) 向けに調整されており、研究構想、文献レビュー、実験、結果レポート、執筆、プロジェクト知識ベースの保守までを一つの流れで支援します。
 >
-> **ブランチ説明**：これは Claude Scholar の **Codex CLI 版**です。Claude Code 版は [`main` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)、OpenCode 版は [`opencode` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode) を参照してください。
+> **ブランチ説明**：これは Claude Scholar の **Kimi CLI 版**です。Claude Code 版は [`main` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)、OpenCode 版は [`opencode` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode) を参照してください。
 
 
 ## 最新ニュース
 
 - **2026-05-14**: **`expression-skill` を中核のコミュニケーション層に据え、`planning-with-files` を既定の永続 planning 層として戻し、Nature 執筆スタックも拡張** — [`expression-skill`](./skills/expression-skill/README.md) を、報告・計画・ファイル操作・多段の技術作業における結論先行の表現規律として明示しました。さらに [`planning-with-files`](./skills/planning-with-files/SKILL.md) を、複雑な作業で `task_plan.md` / `notes.md` を使う既定の on-disk planning / progress-tracking workflow として再導入しました。あわせて、章構成の起草と論証構築向けに [`nature-writing`](./skills/nature-writing/README.md) を導入し、[`nature-polishing`](./skills/nature-polishing/README.md) を上流の最新 article-pattern 版へ更新し、[`nature-response`](./skills/nature-response/README.md) と [`nature-data`](./skills/nature-data/README.md) も journal-writing スタックに維持しています。
 - **2026-05-13**: **根拠ゲート付き研究ワークフローと `Sources/Papers` ルーティングを整理** — Evidence Records、claim strength、Claim Promotion Gate を共有する `research-contract.md` を追加しました。研究アイデア出し、Zotero 取り込み、文献統合、結果レポート、論文執筆、rebuttal ワークフローを同じ根拠契約に接続し、プロジェクトの論文ソースノートはまず `Sources/Papers` に置き、根拠ゲートを通った主張だけを `Knowledge` や `Writing` へ進める方針を明確にしました。
-- **2026-04-25**: **Codex Obsidian KB lifecycle を安定化** — Codex の project KB workflow で rename、archive、purge、sync、lint の edge cases を修正し、repo-local binding metadata を Codex runtime と一貫させました。
-- **2026-04-24**: **Vault-first Obsidian KB workflow を Codex へ移植** — 新しい project-scoped Obsidian knowledge workflow を Codex edition に取り込み、旧 memory skills を 4 つの focused skills に統合し、project navigation を machine registry dump ではなく human-first にしました。
+- **2026-04-25**: **Kimi Obsidian KB lifecycle を安定化** — Kimi の project KB workflow で rename、archive、purge、sync、lint の edge cases を修正し、repo-local binding metadata を Kimi runtime と一貫させました。
+- **2026-04-24**: **Vault-first Obsidian KB workflow を Kimi へ移植** — 新しい project-scoped Obsidian knowledge workflow を Kimi edition に取り込み、旧 memory skills を 4 つの focused skills に統合し、project navigation を machine registry dump ではなく human-first にしました。
 - **2026-04-22**: **軽量コア指示と安全なインストール lifecycle** — 大きな always-on `CLAUDE.md` / `AGENTS.md` をコンパクトなコア指示に置き換え、非中核の default agents を削除し、中国語 companion ファイルを追加しました。さらに manifest/state ベースのアンインストールを追加し、更新と削除がインストーラー所有のファイルと設定項目だけを扱うようにしました。
 - **2026-04-15**: **pubfig と pubtab という 2 つの Python package を導入** — [`pubfig`](https://github.com/Galaxy-Dawn/pubfig) を論文品質の scientific figures 向け Python package、[`pubtab`](https://github.com/Galaxy-Dawn/pubtab) を publication-ready な tables と Excel↔LaTeX workflows 向け Python package として打ち出し、論文図、benchmark 表、書き出し制御、最終 QA までの生産経路をより明確にしました。
 
@@ -33,10 +33,10 @@
 - **2026-03-31**: **Zotero smart-importワークフロー文書を整合** — 最新の`zotero-mcp`公開インターフェースに合わせて、Claude Scholarの研究向けドキュメントを更新しました。`zotero_add_items_by_identifier`を標準の論文インポート経路として明示し、`zotero_reconcile_collection_duplicates`を標準的なインポート後クリーンアップ手順に位置づけ、source-awareなPDF cascadeの挙動もより正確に説明し直しました。公開機能と内部診断機能の境界も整理しています。
 - **2026-03-31**: **READMEの導入案内を刷新** — Claude Scholarが特にコンピュータサイエンスおよびAI研究者に適していることを明確にし、インストール後すぐ使える実践的な導入シナリオを追加しました。前提条件やブランチ案内も整理し、「既存のローカルmdファイルは手動でマージする必要がある」点をより明確にしました。
 - **2026-03-31**: **インストーラーと hook-emulation の挙動を整理** — インストーラーは既存のローカル`AGENTS.md`を保持しつつ、リポジトリ版を`AGENTS.scholar.md`として追加するようになりました。あわせて、デフォルトのエミュレーション要約出力も整理し、temp filesやuncommitted filesのノイズを抑えつつ、より安全な書き込みガードは維持しています。
-- **2026-03-31**: **日本語ドキュメントを追加** — メインREADMEに加え、`AGENTS`、`MCP_SETUP`、`OBSIDIAN_SETUP`の日本語版も追加し、Codexブランチ全体の多言語ドキュメント導線をより充実させました。
+- **2026-03-31**: **日本語ドキュメントを追加** — メインREADMEに加え、`AGENTS`、`MCP_SETUP`、`OBSIDIAN_SETUP`の日本語版も追加し、Kimiブランチ全体の多言語ドキュメント導線をより充実させました。
 
-- **2026-02-25**: **Codex CLI** サポート — [OpenAI Codex CLI](https://github.com/openai/codex) 向けの `codex` 分岐を追加し、TOML 設定、Codex ネイティブの skills / agents、sandbox 安全機構を整備しました。
-- **2026-02-23**: `setup.sh` インストーラー追加 — 既存 `~/.codex` 向けのバックアップ付き増分更新、Codex 設定の自動バックアップ、インストーラー管理対象の追加入力マージに対応
+- **2026-02-25**: **Kimi CLI** サポート — [OpenAI Kimi CLI](https://github.com/openai/kimi) 向けの `kimi` 分岐を追加し、TOML 設定、Kimi ネイティブの skills / agents、sandbox 安全機構を整備しました。
+- **2026-02-23**: `setup.sh` インストーラー追加 — 既存 `~/.kimi` 向けのバックアップ付き増分更新、Kimi 設定の自動バックアップ、インストーラー管理対象の追加入力マージに対応
 - **2026-02-21**: **OpenCode** サポート — Claude Scholar は [OpenCode](https://github.com/opencode-ai/opencode) を代替 CLI としてサポート。互換設定は `opencode` 分岐で提供
 - **2026-02-20**: バイリンガル文書 — 英文と中文の入口文書を整備し、異なる読者層が読みやすいよう改善
 - **2026-02-15**: Zotero MCP 統合 — `/zotero-review` と `/zotero-notes` を追加し、`research-ideation` skill に Zotero ガイドを追加、`literature-reviewer` agent を Zotero MCP 対応へ強化
@@ -53,10 +53,10 @@
 |---|---|
 | [なぜ Claude Scholar なのか](#なぜ-claude-scholar-なのか) | プロジェクトの位置づけと適用シーンを素早く把握する。 |
 | [コアワークフロー](#コアワークフロー) | 研究構想から投稿までの主線を確認する。 |
-| [クイックスタート](#クイックスタート) | 既存の `~/.codex` 環境へ安全に導入する。 |
+| [クイックスタート](#クイックスタート) | 既存の `~/.kimi` 環境へ安全に導入する。 |
 | [使い始めのシナリオ](#使い始めのシナリオ) | インストール後の代表的な使い始め方を見る。 |
 | [プラットフォーム範囲](#プラットフォーム範囲) | この分岐の対象範囲と他バージョンの所在を確認する。 |
-| [連携機能](#連携機能) | Zotero と Obsidian を Codex ワークフローへどう接続するかを確認する。 |
+| [連携機能](#連携機能) | Zotero と Obsidian を Kimi ワークフローへどう接続するかを確認する。 |
 | [主要ワークフロー](#主要ワークフロー) | 中核となる研究・開発ワークフローを俯瞰する。 |
 | [支援ワークフロー](#支援ワークフロー) | 主ワークフローを支える裏側の仕組みを見る。 |
 | [ドキュメント入口](#ドキュメント入口) | インストール、設定、setup 文書へ移動する。 |
@@ -70,7 +70,7 @@ Claude Scholar は、研究者を置き換えることを目指したエンド�
 
 > **意思決定は常に人間が中心に持ち、アシスタントはその周囲の研究プロセスを加速する。**
 
-つまり Codex 版は、文献整理、知識の蓄積、実験分析、結果報告、執筆支援のような「反復的で構造依存だが、なお人間の判断が必要な仕事」に特に向いています。本当に重要な判断は、やはり研究者自身が行うべきです。
+つまり Kimi 版は、文献整理、知識の蓄積、実験分析、結果報告、執筆支援のような「反復的で構造依存だが、なお人間の判断が必要な仕事」に特に向いています。本当に重要な判断は、やはり研究者自身が行うべきです。
 
 - どの問題に取り組むべきか
 - どの論文が本当に重要か
@@ -106,7 +106,7 @@ Claude Scholar は特に次のような人に向いています。
 
 ### 前提条件
 
-- [Codex CLI](https://github.com/openai/codex)
+- [Kimi CLI](https://github.com/openai/kimi)
 - Git
 - （任意）Python + [uv](https://docs.astral.sh/uv/) — Python 開発用
 - （任意）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) — 文献ワークフロー用
@@ -115,20 +115,20 @@ Claude Scholar は特に次のような人に向いています。
 ### オプション 1：フルインストール（推奨）
 
 ```bash
-git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 bash /tmp/claude-scholar/scripts/setup.sh
 ```
 
 インストーラーは現在、**バックアップ付きの安全な増分更新**をサポートしています。
 - リポジトリ管理の `skills/`、`agents/`、`scripts/`、`utils/` を同期
-- 既存 provider/model を保持したい場合、Claude Scholar に必要な section を現在の `~/.codex/config.toml` にマージ
+- 既存 provider/model を保持したい場合、Claude Scholar に必要な section を現在の `~/.kimi/config.toml` にマージ
 - 上書き前に `config.toml` と `auth.json` を自動バックアップ
-- `~/.codex/AGENTS.md` が既に存在する場合は元ファイルを保持し、リポジトリ版を `~/.codex/AGENTS.scholar.md` として保存
-- `~/.codex/AGENTS.zh-CN.md` が既に存在する場合は元ファイルを保持し、リポジトリ版の中国語 companion を `~/.codex/AGENTS.zh-CN.scholar.md` として保存
+- `~/.kimi/AGENTS.md` が既に存在する場合は元ファイルを保持し、リポジトリ版を `~/.kimi/AGENTS.scholar.md` として保存
+- `~/.kimi/AGENTS.zh-CN.md` が既に存在する場合は元ファイルを保持し、リポジトリ版の中国語 companion を `~/.kimi/AGENTS.zh-CN.scholar.md` として保存
 - 増分更新パスでは既存の provider / model / API key を保持
 - テンプレート内にある Zotero MCP 設定ブロックを任意で有効化可能
 
-**重要な AGENTS 説明**：すでに自分用の `~/.codex/AGENTS.md` を持っている場合は、インストール後に `~/.codex/AGENTS.scholar.md` と `~/.codex/AGENTS.zh-CN.scholar.md` を確認し、必要な Claude Scholar の内容だけを自分のファイルに手動で merge してください。sidecar ファイルが自動で有効化されるとは考えないでください。
+**重要な AGENTS 説明**：すでに自分用の `~/.kimi/AGENTS.md` を持っている場合は、インストール後に `~/.kimi/AGENTS.scholar.md` と `~/.kimi/AGENTS.zh-CN.scholar.md` を確認し、必要な Claude Scholar の内容だけを自分のファイルに手動で merge してください。sidecar ファイルが自動で有効化されるとは考えないでください。
 
 以後の増分更新は次の通りです。
 
@@ -146,8 +146,8 @@ bash scripts/uninstall.sh
 ```
 
 インストーラーは次のファイルも書き込みます:
-- `~/.codex/.codex-scholar-manifest.txt`: Codex Scholar が実際に管理するファイル一覧
-- `~/.codex/.codex-scholar-install-state`: 安全なアンインストールに使うメタデータ。実際にインストールされた `AGENTS*.md` の対象と、追加された `config.toml` sections を含みます
+- `~/.kimi/.kimi-scholar-manifest.txt`: Kimi Scholar が実際に管理するファイル一覧
+- `~/.kimi/.kimi-scholar-install-state`: 安全なアンインストールに使うメタデータ。実際にインストールされた `AGENTS*.md` の対象と、追加された `config.toml` sections を含みます
 
 アンインストーラーは install state に記録されたファイルと config sections だけを削除し、現在のリポジトリ内容から所有権を推測しません。
 
@@ -158,42 +158,42 @@ bash scripts/uninstall.sh
 研究ワークフローの小さめのサブセットだけを導入します。
 
 ```bash
-git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.codex/skills ~/.codex/agents
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.codex/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.codex/agents/
-cp -r /tmp/claude-scholar/agents/paper-miner ~/.codex/agents/
-cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
-cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
+git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+mkdir -p ~/.kimi/skills ~/.kimi/agents
+cp -r /tmp/claude-scholar/skills/research-ideation ~/.kimi/skills/
+cp -r /tmp/claude-scholar/skills/results-analysis ~/.kimi/skills/
+cp -r /tmp/claude-scholar/skills/results-report ~/.kimi/skills/
+cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.kimi/skills/
+cp -r /tmp/claude-scholar/skills/review-response ~/.kimi/skills/
+cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.kimi/agents/
+cp -r /tmp/claude-scholar/agents/paper-miner ~/.kimi/agents/
+cp /tmp/claude-scholar/AGENTS.md ~/.kimi/AGENTS.md
+cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi/AGENTS.zh-CN.md
 ```
 
-**インストール後**：最小化 / 手動インストールでは `config.toml` は**自動マージされません**。必要な section を setup 文書やリポジトリ設定から手動で取り込んでください。自分の `~/.codex/AGENTS.md` がある場合も、関連する部分だけを手動で merge し、丸ごと上書きしないでください。
+**インストール後**：最小化 / 手動インストールでは `config.toml` は**自動マージされません**。必要な section を setup 文書やリポジトリ設定から手動で取り込んでください。自分の `~/.kimi/AGENTS.md` がある場合も、関連する部分だけを手動で merge し、丸ごと上書きしないでください。
 
 ### オプション 3：選択インストール
 
 必要な部分だけをコピーします。
 
 ```bash
-git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-cp -r /tmp/claude-scholar/skills/<skill-name> ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/<agent-name> ~/.codex/agents/
-cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
-cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
+git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+cp -r /tmp/claude-scholar/skills/<skill-name> ~/.kimi/skills/
+cp -r /tmp/claude-scholar/agents/<agent-name> ~/.kimi/agents/
+cp /tmp/claude-scholar/AGENTS.md ~/.kimi/AGENTS.md
+cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi/AGENTS.zh-CN.md
 ```
 
-**インストール後**：選択的 / 手動インストールでも `config.toml` は自動マージされません。既に `~/.codex/AGENTS.md` を持っている場合も、必要な内容だけを手動で merge してください。
+**インストール後**：選択的 / 手動インストールでも `config.toml` は自動マージされません。既に `~/.kimi/AGENTS.md` を持っている場合も、必要な内容だけを手動で merge してください。
 
-**Codex 利用メモ**：
-- Codex は `/...` メニューにカスタム skill を表示しません。
+**Kimi 利用メモ**：
+- Kimi は `/...` メニューにカスタム skill を表示しません。
 - 基本は自然言語で起動し、必要な場合だけ `$skill-name` を明示してください。
 
 ## 使い始めのシナリオ
 
-インストール後は、自然言語で今やりたいことをそのまま伝えるのがいちばん簡単です。Codex ではこれらのワークフローを使うために `/...` メニューを先に覚える必要もありません。ここでは、最初の一歩として使いやすい代表的なシナリオをいくつか挙げます。
+インストール後は、自然言語で今やりたいことをそのまま伝えるのがいちばん簡単です。Kimi ではこれらのワークフローを使うために `/...` メニューを先に覚える必要もありません。ここでは、最初の一歩として使いやすい代表的なシナリオをいくつか挙げます。
 
 ### 1. 新しい研究テーマを立ち上げる
 **たとえばこう言えます:**
@@ -240,15 +240,15 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 
 ### 実用上のメモ
 - 最初は「全部やって」ではなく、具体的な一つのタスクから始めるのがおすすめです。
-- Codex では自然言語が基本の入口で、特定の skill を明示したいときだけ `$skill-name` を使えば十分です。
+- Kimi では自然言語が基本の入口で、特定の skill を明示したいときだけ `$skill-name` を使えば十分です。
 - すでに自分用のローカル`AGENTS.md`または`AGENTS.zh-CN.md`を運用している場合は、`AGENTS.scholar.md`または`AGENTS.zh-CN.scholar.md`から必要な内容だけを手動でマージしてください。別名で配置されたファイルが自動適用されるわけではありません。
 - ZoteroとObsidianは必須ではありませんが、単発のチャット出力ではなく、継続的な文献ノートやプロジェクトメモリを残したい場合にはかなり有用です。
 
 ## プラットフォーム範囲
 
-この分岐は **Codex CLI** 向けです。
+この分岐は **Kimi CLI** 向けです。
 
-- **Codex CLI（`codex` 分岐）** — TOML 設定、AGENTS 駆動の作業規律、ファイルシステム中心の Obsidian ワークフロー、Codex 専用インストール文書
+- **Kimi CLI（`kimi` 分岐）** — TOML 設定、AGENTS 駆動の作業規律、ファイルシステム中心の Obsidian ワークフロー、Kimi 専用インストール文書
 - **Claude Code（`main` 分岐）** — Claude Code 設定、ネイティブ hooks、主線の文書構成
 - **OpenCode（`opencode` 分岐）** — OpenCode 向け設定とインストールパス
 
@@ -283,7 +283,7 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 
 研究構想から発表までを含む、完全な学術研究ライフサイクルの 7 段階です。
 
-> **Codex 入口説明**：この分岐は repo レベルの slash commands に依存しません。通常は自然言語で起動し、必要に応じて `$results-analysis` のような skill を明示してください。
+> **Kimi 入口説明**：この分岐は repo レベルの slash commands に依存しません。通常は自然言語で起動し、必要に応じて `$results-analysis` のような skill を明示してください。
 
 ### 1. 研究構想（Zotero 統合）
 
@@ -422,7 +422,7 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 
 ## 支援ワークフロー
 
-これらのワークフローは主ワークフローの背後で動き、全体の Codex 体験を強化します。
+これらのワークフローは主ワークフローの背後で動き、全体の Kimi 体験を強化します。
 
 ### Obsidian プロジェクト知識ベース
 
@@ -443,16 +443,16 @@ Obsidian を、単なるメモ置き場ではなく、project-scoped な永続�
 - 新しい source material を正しい canonical note に取り込む
 - 追加の `.base` や canvas は明示要求があるときだけ生成する
 
-`obsidian-project-memory`、`obsidian-project-bootstrap`、`obsidian-experiment-log` など旧来の Codex 向け Obsidian skill shim は削除済みです。`obsidian-project-kb-core`、`obsidian-source-ingestion`、`obsidian-literature-workflow`、`obsidian-kb-artifacts` を直接使用してください。
+`obsidian-project-memory`、`obsidian-project-bootstrap`、`obsidian-experiment-log` など旧来の Kimi 向け Obsidian skill shim は削除済みです。`obsidian-project-kb-core`、`obsidian-source-ingestion`、`obsidian-literature-workflow`、`obsidian-kb-artifacts` を直接使用してください。
 
-### Codex セッション規律と Hook エミュレーション
+### Kimi セッション規律と Hook エミュレーション
 
-Codex は Claude Code のネイティブ hooks を提供しないため、この分岐では AGENTS 規律とローカル補助スクリプトで高価値な挙動を再現します。
+Kimi は Claude Code のネイティブ hooks を提供しないため、この分岐では AGENTS 規律とローカル補助スクリプトで高価値な挙動を再現します。
 
 | 種類 | 名前 | 一行説明 |
 |---|---|---|
-| File | `AGENTS.md` | セッション規律、skill 評価規則、安全規則、Codex 専用ワークフロー説明を記述する |
-| Script | `scripts/codex_hook_emulation.py` | repo ワークフロー内で session-start、preflight、post-edit、session-end を模擬する |
+| File | `AGENTS.md` | セッション規律、skill 評価規則、安全規則、Kimi 専用ワークフロー説明を記述する |
+| Script | `scripts/kimi_hook_emulation.py` | repo ワークフロー内で session-start、preflight、post-edit、session-end を模擬する |
 | Skill | `session-wrap-up` | セッション終了時に作業ログ、清理リマインド、締めサマリを生成する |
 
 **進め方**
@@ -509,21 +509,21 @@ Claude Scholar には、自分自身の skill を改善するためのワーク�
 
 ## ドキュメント入口
 
-- [MCP_SETUP.ja-JP.md](./MCP_SETUP.ja-JP.md) — Codex 版 Zotero MCP 設定説明
+- [MCP_SETUP.ja-JP.md](./MCP_SETUP.ja-JP.md) — Kimi 版 Zotero MCP 設定説明
 - [OBSIDIAN_SETUP.ja-JP.md](./OBSIDIAN_SETUP.ja-JP.md) — Obsidian プロジェクト知識ベースワークフロー
-- [AGENTS.md](./AGENTS.md) — 軽量な Codex コア指示
+- [AGENTS.md](./AGENTS.md) — 軽量な Kimi コア指示
 - [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) — 軽量コア指示の中国語 companion ファイル
 - [README.zh-CN.md](./README.zh-CN.md) — この README の中国語版
-- [config.toml](./config.toml) — skills、agents、MCP 設定ブロックを含む Codex テンプレート設定
+- [config.toml](./config.toml) — skills、agents、MCP 設定ブロックを含む Kimi テンプレート設定
 
 ## プロジェクトルール
 
-Claude Scholar の Codex 版には次のルールが含まれます。
+Claude Scholar の Kimi 版には次のルールが含まれます。
 - コードスタイル
 - agent オーケストレーション
 - 安全制約
 - 実験再現性
-- Codex 専用セッション規律
+- Kimi 専用セッション規律
 
 常時有効なルールは主に `AGENTS.md` にあり、詳細なワークフローは同梱 skills と docs に残しています。
 
@@ -531,7 +531,7 @@ Claude Scholar の Codex 版には次のルールが含まれます。
 
 issue、PR、ワークフロー改善提案を歓迎します。
 
-installer、Zotero ワークフロー、Obsidian ルーティング、または Codex セッション規律を変更したい場合は、提案に次を含めてください。
+installer、Zotero ワークフロー、Obsidian ルーティング、または Kimi セッション規律を変更したい場合は、提案に次を含めてください。
 - ユーザーシナリオ
 - 現在の制約
 - 期待される挙動
@@ -557,7 +557,7 @@ MIT License。
 
 ## 謝辞
 
-Codex CLI ワークフローを基盤に構築され、オープンソース研究ツール群によって継続的に強化されています。
+Kimi CLI ワークフローを基盤に構築され、オープンソース研究ツール群によって継続的に強化されています。
 
 ### 参考資料
 
@@ -565,7 +565,7 @@ Codex CLI ワークフローを基盤に構築され、オープンソース研�
 
 - **[everything-claude-code](https://github.com/anthropics/everything-claude-code)** - Claude Code CLI の総合リソース
 - **[AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs)** - 研究指向の skills と設定パターン
-- **[codex](https://github.com/openai/codex)** - この分岐が依拠する Codex CLI の基盤能力
+- **[kimi](https://github.com/openai/kimi)** - この分岐が依拠する Kimi CLI の基盤能力
 - **[expression-skill](https://github.com/Galaxy-Dawn/expression-skill)** - 報告と応答の規律に使う公開の結論先行コミュニケーション skill
 - **[nature-skills](https://github.com/Yuan1z0825/nature-skills)** - Nature スタイルの章起草、学術推敲、査読返信、データ可用性 skills をここで再利用し、出典を明記
 

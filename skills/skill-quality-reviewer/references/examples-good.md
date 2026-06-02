@@ -1,6 +1,6 @@
 # Exemplary Skill Examples
 
-Use these examples when reviewing or improving Codex-installed skills.
+Use these examples when reviewing or improving Kimi-installed skills.
 
 ## Example 1: research-ideation
 
@@ -28,16 +28,16 @@ Strong implementation-support skills expose helper scripts without loading all g
 
 Good traits:
 - SKILL.md gives a compact workflow
-- script examples use `${CODEX_HOME:-$HOME/.codex}` for Codex installs
+- script examples use `${KIMI_HOME:-$HOME/.kimi}` for Kimi installs
 - detailed design guidance is searched on demand
 - verification asks for concrete screenshots or interaction checks when relevant
 
 ## Study These Skills
 
 ```bash
-cat ~/.codex/skills/research-ideation/SKILL.md
-cat ~/.codex/skills/obsidian-project-kb-core/SKILL.md
-python3 ~/.codex/skills/ui-ux-pro-max/scripts/search.py "dashboard accessibility" --domain ux
+cat ~/.kimi/skills/research-ideation/SKILL.md
+cat ~/.kimi/skills/obsidian-project-kb-core/SKILL.md
+python3 ~/.kimi/skills/ui-ux-pro-max/scripts/search.py "dashboard accessibility" --domain ux
 ```
 
-Use these as templates when creating or improving Codex-native skills.
+Use these as templates when creating or improving Kimi-native skills.

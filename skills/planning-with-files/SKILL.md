@@ -8,7 +8,7 @@ version: 0.1.0
 
 Work like Manus: use persistent markdown files as your working memory on disk.
 
-This is not just an optional planning style. It should be the default persistence layer for complex Codex work.
+This is not just an optional planning style. It should be the default persistence layer for complex Kimi work.
 
 Use it proactively when:
 
