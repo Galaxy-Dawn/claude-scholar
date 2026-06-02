@@ -509,12 +509,58 @@ configure_zotero_mcp() {
   echo ""
   local enable_zotero=""
   read -rp "Enable Zotero MCP server? [y/N]: " enable_zotero
-  if [ "$enable_zotero" = "y" ] || [ "$enable_zotero" = "Y" ]; then
-    if ! command -v zotero-mcp >/dev/null 2>&1; then
-      warn "zotero-mcp not found. Install with: uv tool install git+https://github.com/Galaxy-Dawn/zotero-mcp.git"
-    fi
-    info "Zotero MCP configured in mcp.json"
+  if [ "$enable_zotero" != "y" ] && [ "$enable_zotero" != "Y" ]; then
+    return 0
   fi
+
+  if ! command -v zotero-mcp >/dev/null 2>&1; then
+    warn "zotero-mcp not found. Install with: uv tool install git+https://github.com/Galaxy-Dawn/zotero-mcp.git"
+  fi
+
+  # Prompt for Zotero credentials
+  echo ""
+  echo "  Zotero MCP configuration (all fields optional — press Enter to skip):"
+  echo ""
+
+  local zotero_api_key=""
+  local zotero_library_id=""
+  local unpaywall_email=""
+
+  read -rp "    ZOTERO_API_KEY (for Web API write access): " zotero_api_key
+  read -rp "    ZOTERO_LIBRARY_ID (your numeric User ID):  " zotero_library_id
+  read -rp "    UNPAYWALL_EMAIL (for PDF lookup):          " unpaywall_email
+
+  # Update mcp.json with provided values
+  python3 - "$mcp_file" "$zotero_api_key" "$zotero_library_id" "$unpaywall_email" <<'PY'
+import json
+import pathlib
+import sys
+
+mcp_path = pathlib.Path(sys.argv[1])
+api_key = sys.argv[2]
+library_id = sys.argv[3]
+email = sys.argv[4]
+
+data = json.loads(mcp_path.read_text())
+
+if "zotero" in data.get("mcpServers", {}):
+    env = data["mcpServers"]["zotero"].setdefault("env", {})
+    if api_key:
+        env["ZOTERO_API_KEY"] = api_key
+    if library_id:
+        env["ZOTERO_LIBRARY_ID"] = library_id
+    if email:
+        env["UNPAYWALL_EMAIL"] = email
+    # Always ensure these defaults
+    env.setdefault("ZOTERO_LIBRARY_TYPE", "user")
+    env.setdefault("UNSAFE_OPERATIONS", "all")
+    env.setdefault("NO_PROXY", "localhost,127.0.0.1")
+    env.setdefault("ZOTERO_LOCAL", "true")
+
+mcp_path.write_text(json.dumps(data, indent=2) + '\n')
+PY
+
+  info "Zotero MCP configured in mcp.json"
 }
 
 check_deps() {
@@ -524,6 +570,161 @@ check_deps() {
   if ! command -v kimi-code >/dev/null 2>&1 && ! command -v kimi >/dev/null 2>&1; then
     warn "Kimi Code CLI not detected. Make sure it is installed and on PATH."
   fi
+}
+
+check_kimi_login() {
+  local oauth_file="$KIMI_HOME/oauth/kimi-code"
+  local creds_file="$KIMI_HOME/credentials/kimi-code.json"
+
+  if [ -f "$oauth_file" ] || [ -f "$creds_file" ]; then
+    info "Kimi login detected"
+    return 0
+  fi
+
+  echo ""
+  warn "Kimi Code CLI login not detected."
+  echo ""
+  echo "  Claude Scholar requires an active Kimi login to function."
+  echo "  Please run one of the following commands to authenticate:"
+  echo ""
+  echo "    kimi login"
+  echo "    kimi-code login"
+  echo ""
+  echo "  After logging in, re-run this installer."
+  echo ""
+
+  local proceed=""
+  read -rp "Continue installation anyway? [y/N]: " proceed
+  if [ "$proceed" != "y" ] && [ "$proceed" != "Y" ]; then
+    info "Installation aborted. Run 'kimi login' and try again."
+    exit 0
+  fi
+}
+
+collect_preview() {
+  local -a new_files=()
+  local -a modified_files=()
+  local -a config_changes=()
+
+  # Config changes
+  if [ -f "$KIMI_HOME/config.toml" ]; then
+    config_changes+=("config.toml  (merge hooks, set defaults)")
+  else
+    new_files+=("config.toml")
+  fi
+
+  # MCP changes
+  if [ -f "$KIMI_HOME/mcp.json" ]; then
+    config_changes+=("mcp.json  (merge Zotero MCP)")
+  else
+    new_files+=("mcp.json")
+  fi
+
+  # Component directories
+  local comp src_dir target_dir
+  for comp in skills agents hooks templates; do
+    src_dir="$SRC_DIR/$comp"
+    target_dir="$KIMI_HOME/$comp"
+    [ -d "$src_dir" ] || continue
+
+    while IFS= read -r -d '' src_file; do
+      local rel="${src_file#$src_dir/}"
+      local target_file="$target_dir/$rel"
+      if [ ! -e "$target_file" ]; then
+        new_files+=("$comp/$rel")
+      elif ! cmp -s "$src_file" "$target_file"; then
+        modified_files+=("$comp/$rel")
+      fi
+    done < <("$FIND_CMD" "$src_dir" -type f -print0)
+  done
+
+  # AGENTS.md
+  if [ -f "$SRC_DIR/AGENTS.md" ]; then
+    if [ ! -f "$KIMI_HOME/AGENTS.md" ]; then
+      new_files+=("AGENTS.md")
+    elif ! cmp -s "$SRC_DIR/AGENTS.md" "$KIMI_HOME/AGENTS.md"; then
+      if was_previously_managed "$KIMI_HOME/AGENTS.md"; then
+        modified_files+=("AGENTS.md")
+      else
+        new_files+=("AGENTS.scholar.md")
+      fi
+    fi
+  fi
+
+  if [ -f "$SRC_DIR/AGENTS.zh-CN.md" ]; then
+    if [ ! -f "$KIMI_HOME/AGENTS.zh-CN.md" ]; then
+      new_files+=("AGENTS.zh-CN.md")
+    elif ! cmp -s "$SRC_DIR/AGENTS.zh-CN.md" "$KIMI_HOME/AGENTS.zh-CN.md"; then
+      if was_previously_managed "$KIMI_HOME/AGENTS.zh-CN.md"; then
+        modified_files+=("AGENTS.zh-CN.md")
+      else
+        new_files+=("AGENTS.zh-CN.scholar.md")
+      fi
+    fi
+  fi
+
+  echo ""
+  echo "╔══════════════════════════════════════╗"
+  echo "║   Installation Preview               ║"
+  echo "╚══════════════════════════════════════╝"
+  echo ""
+
+  if [ ${#config_changes[@]} -gt 0 ]; then
+    echo "  $(bold 'Config changes:')"
+    for f in "${config_changes[@]}"; do
+      echo "    • $f"
+    done
+    echo ""
+  fi
+
+  if [ ${#new_files[@]} -gt 0 ]; then
+    echo "  $(bold 'New files to create:')" "(${#new_files[@]})"
+    local count=0
+    for f in "${new_files[@]}"; do
+      echo "    + $f"
+      count=$((count + 1))
+      if [ "$count" -ge 15 ] && [ ${#new_files[@]} -gt 15 ]; then
+        echo "    ... and $(( ${#new_files[@]} - 15 )) more"
+        break
+      fi
+    done
+    echo ""
+  fi
+
+  if [ ${#modified_files[@]} -gt 0 ]; then
+    echo "  $(bold 'Existing files to update:')" "(${#modified_files[@]})"
+    local count=0
+    for f in "${modified_files[@]}"; do
+      echo "    ~ $f"
+      count=$((count + 1))
+      if [ "$count" -ge 10 ] && [ ${#modified_files[@]} -gt 10 ]; then
+        echo "    ... and $(( ${#modified_files[@]} - 10 )) more"
+        break
+      fi
+    done
+    echo ""
+  fi
+
+  if [ ${#new_files[@]} -eq 0 ] && [ ${#modified_files[@]} -eq 0 ] && [ ${#config_changes[@]} -eq 0 ]; then
+    echo "  Nothing to install — everything is up to date."
+    echo ""
+    return 1
+  fi
+
+  echo "  Target directory: $KIMI_HOME"
+  if [ -d "$BACKUP_DIR" ]; then
+    echo "  Backup directory: $BACKUP_DIR"
+  fi
+  echo ""
+
+  local confirm=""
+  read -rp "Proceed with installation? [Y/n]: " confirm
+  if [ -n "$confirm" ] && [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+    info "Installation cancelled."
+    exit 0
+  fi
+
+  return 0
 }
 
 copy_components() {
@@ -558,6 +759,7 @@ main() {
   echo ""
 
   run_step "check_deps" check_deps
+  run_step "check_kimi_login" check_kimi_login
   run_step "load_previous_manifest" load_previous_manifest
 
   info "Source: $SRC_DIR"
@@ -567,6 +769,13 @@ main() {
   run_step "merge_kimi_config" merge_kimi_config
   run_step "merge_mcp_config" merge_mcp_config
   run_step "configure_zotero_mcp" configure_zotero_mcp
+
+  # Preview changes before copying files
+  collect_preview || {
+    info "Nothing to do."
+    exit 0
+  }
+
   run_step "copy_components" copy_components
   run_step "write_install_state" write_install_state
 
