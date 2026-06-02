@@ -497,7 +497,7 @@ if not conflicts:
 
     if choice == "n":
         print("SKIPPED")
-        raise SystemExit(0)
+        raise SystemExit(42)
 
     # Determine which Scholar hooks to add
     scholar_hooks_to_add = []
@@ -666,6 +666,12 @@ def _do_merge(target_path, template, existing, existing_hooks, scholar_hooks_to_
     target_path.write_text(text)
 PY
   local py_rc=$?
+  if [ "$py_rc" -eq 42 ]; then
+    # User chose 'n' to skip hook changes
+    SKIP_HOOKS_COPY=1
+    info "Skipping hooks merge and copy (user chose to keep existing hooks)"
+    return 0
+  fi
   if [ "$py_rc" -ne 0 ]; then
     # Fallback: if Python fails, do a conservative append-only merge
     if [ -f "$target" ]; then
@@ -849,7 +855,7 @@ collect_preview() {
 
   # Component directories
   local comp src_dir target_dir
-  for comp in skills agents hooks templates; do
+  for comp in skills agents templates; do
     src_dir="$SRC_DIR/$comp"
     target_dir="$KIMI_HOME/$comp"
     [ -d "$src_dir" ] || continue
@@ -864,6 +870,23 @@ collect_preview() {
       fi
     done < <("$FIND_CMD" "$src_dir" -type f -print0)
   done
+
+  # Hooks directory (skipped if user chose to keep existing hooks)
+  if [ "$SKIP_HOOKS_COPY" != "1" ]; then
+    comp="hooks"
+    src_dir="$SRC_DIR/$comp"
+    target_dir="$KIMI_HOME/$comp"
+    [ -d "$src_dir" ] || continue
+    while IFS= read -r -d '' src_file; do
+      local rel="${src_file#$src_dir/}"
+      local target_file="$target_dir/$rel"
+      if [ ! -e "$target_file" ]; then
+        new_files+=("$comp/$rel")
+      elif ! cmp -s "$src_file" "$target_file"; then
+        modified_files+=("$comp/$rel")
+      fi
+    done < <("$FIND_CMD" "$src_dir" -type f -print0)
+  fi
 
   # AGENTS.md
   if [ -f "$SRC_DIR/AGENTS.md" ]; then
@@ -964,7 +987,7 @@ copy_components() {
   if [ -d "$SRC_DIR/agents" ]; then
     copy_dir_safely "$SRC_DIR/agents" "$KIMI_HOME/agents"
   fi
-  if [ -d "$SRC_DIR/hooks" ]; then
+  if [ "$SKIP_HOOKS_COPY" != "1" ] && [ -d "$SRC_DIR/hooks" ]; then
     copy_dir_safely "$SRC_DIR/hooks" "$KIMI_HOME/hooks"
   fi
   if [ -f "$SRC_DIR/AGENTS.md" ]; then
