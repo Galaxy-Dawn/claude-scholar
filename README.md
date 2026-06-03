@@ -14,7 +14,7 @@
 
 > Semi-automated research assistant for academic research and software development, especially for computer science and AI researchers, adapted for [OpenCode](https://github.com/opencode-ai/opencode) across ideation, literature review, experiments, reporting, writing, and project knowledge management.
 >
-> **Branch note**: this is the **OpenCode edition** of Claude Scholar. For the Claude Code version, see the [`main` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/main). For the Codex CLI version, see the [`codex` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/codex).
+> **Branch note**: this is the **OpenCode edition** of Claude Scholar. For the Claude Code version, see the [`main` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/main). For the Codex CLI version, see the [`codex` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/codex). For the Kimi Code CLI version, see the [`kimi` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi).
 
 
 ## Recent News
