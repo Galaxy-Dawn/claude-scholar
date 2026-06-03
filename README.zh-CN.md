@@ -3,22 +3,24 @@
 
   <p>
     <a href="https://github.com/Galaxy-Dawn/claude-scholar/stargazers"><img src="https://img.shields.io/github/stars/Galaxy-Dawn/claude-scholar?style=flat-square&color=yellow" alt="Stars"/></a>
+    <a href="https://gitcode.com/Dawngammad/claude-scholar"><img src="https://gitcode.com/Dawngammad/claude-scholar/star/badge.svg" alt="GitCode Stars"/></a>
     <a href="https://github.com/Galaxy-Dawn/claude-scholar/network/members"><img src="https://img.shields.io/github/forks/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Forks"/></a>
     <img src="https://img.shields.io/github/last-commit/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Last Commit"/>
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
-    <img src="https://img.shields.io/badge/Kimi_CLI-Compatible-blue?style=flat-square" alt="Kimi Code CLI"/>
   </p>
 
   <strong>语言</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
+  <p><strong>支持平台</strong>: <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/main">Claude Code</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex">Codex CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi">Kimi Code CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode">OpenCode</a></p>
 </div>
 
-> 面向学术研究和软件开发的半自动研究助手，尤其适合计算机科学与 AI 研究者，已适配 [Kimi Code CLI](https://github.com/openai/kimi)，覆盖研究构思、文献综述、实验、结果报告、写作与项目知识库维护。
+> 面向学术研究和软件开发的半自动研究助手，尤其适合计算机科学与 AI 研究者，已适配 [Kimi Code CLI](https://github.com/MoonshotAI/kimi-code)，覆盖研究构思、文献综述、实验、结果报告、写作与项目知识库维护。
 >
-> **分支说明**：这是 Claude Scholar 的 **Kimi Code CLI 版本**。Claude Code 版本请查看 [`main` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)，OpenCode 版本请查看 [`opencode` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode)。
+> **分支说明**：这是 Claude Scholar 的 **Kimi Code CLI 版本**。Claude Code 版本请查看 [`main` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)，Codex CLI 版本请查看 [`codex` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/codex)，OpenCode 版本请查看 [`opencode` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode)。
 
 
 ## 最新动态
 
+- **2026-06-03**: **新增 Kimi Code CLI 分支到支持平台展示** — 已将 `kimi` 分支记录为 Claude Scholar 的 Kimi Code CLI 版本，并在共享平台顺序中放在 Claude Code 和 Codex CLI 之后、OpenCode 之前。
 - **2026-05-14**: **将 `expression-skill` 提升为核心表达层，把 `planning-with-files` 恢复为默认持久规划层，并继续扩展 Nature 写作栈** — 把 [`expression-skill`](./skills/expression-skill/README.md) 明确为汇报、规划、文件操作和多步骤技术任务的结论先行表达纪律；将 [`planning-with-files`](./skills/planning-with-files/SKILL.md) 重新接回默认的落盘规划与进度跟踪工作流，用 `task_plan.md` / `notes.md` 管理复杂任务；引入用于章节起草与论证构建的 [`nature-writing`](./skills/nature-writing/README.md)；将 [`nature-polishing`](./skills/nature-polishing/README.md) 刷新到上游最新 article-pattern 版本；并继续保留 [`nature-response`](./skills/nature-response/README.md) 与 [`nature-data`](./skills/nature-data/README.md) 作为 journal-writing 栈的一部分。
 - **2026-05-13**: **证据门槛研究工作流与 `Sources/Papers` 路由完成收紧** — 新增共享的 `research-contract.md`，统一 Evidence Records、claim strength 和 Claim Promotion Gate；将研究构思、Zotero 导入、文献综合、结果报告、论文写作与 rebuttal 工作流接入同一证据契约；并明确项目论文源笔记先放在 `Sources/Papers`，通过证据门槛后再进入 `Knowledge` 或 `Writing`。
 - **2026-04-25**: **Kimi Obsidian KB lifecycle 稳定化** — 修复 Kimi 项目 KB workflow 中 rename、archive、purge、sync、lint 的边界问题，并让 repo-local binding metadata 与 Kimi runtime 保持一致。
@@ -35,7 +37,7 @@
 - **2026-03-31**: **安装器与 hook-emulation 行为进一步收口** — 安装器现在会保留已有的本地 `AGENTS.md`，并把仓库版本作为 `AGENTS.scholar.md` sidecar 文件安装；同时默认模拟摘要输出进一步降噪，减少 temp files / uncommitted files 的噪声，同时保留更安全的写入守卫边界。
 - **2026-03-31**: **日文文档补齐** — 为主 README 以及 `AGENTS`、`MCP_SETUP`、`OBSIDIAN_SETUP` 补充了日文文档，使 Kimi 分支的多语言文档入口更完整。
 
-- **2026-02-25**: **Kimi Code CLI** 支持 — 新增面向 [OpenAI Kimi Code CLI](https://github.com/openai/kimi) 的 `kimi` 分支，提供 TOML 配置、Kimi 原生 skills / agents，以及 sandbox 安全机制。
+- **2026-02-25**: **Kimi Code CLI** 支持 — 新增面向 [Kimi Code CLI](https://github.com/MoonshotAI/kimi-code) 的 `kimi` 分支，提供 TOML 配置、Kimi 原生 skills / agents，以及 sandbox 安全机制。
 - **2026-02-23**: 新增 `setup.sh` 安装脚本 — 面向已有 `~/.kimi-code` 的带备份增量更新，自动备份 Kimi 配置，并以追加方式合并安装器管理的内容
 - **2026-02-21**: **OpenCode** 支持 — Claude Scholar 现已支持 [OpenCode](https://github.com/opencode-ai/opencode) 作为替代 CLI；切换到 `opencode` 分支获取兼容配置
 - **2026-02-20**: 双语文档 — 维护英文与中文入口文档，便于不同读者阅读
@@ -106,7 +108,7 @@ Claude Scholar 当前尤其适合：
 
 ### 系统要求
 
-- [Kimi Code CLI](https://github.com/openai/kimi)
+- [Kimi Code CLI](https://github.com/MoonshotAI/kimi-code)
 - Git
 - （可选）Python + [uv](https://docs.astral.sh/uv/) 用于 Python 开发
 - （可选）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) 用于文献工作流
@@ -250,6 +252,7 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 
 - **Kimi Code CLI（`kimi` 分支）** — TOML 配置、AGENTS 驱动的工作约束、以文件系统为核心的 Obsidian 工作流，以及 Kimi 专用安装文档
 - **Claude Code（`main` 分支）** — Claude Code 配置、原生 hooks，以及主线文档组织方式
+- **Codex CLI（`codex` 分支）** — Codex 配置、sandbox-aware 操作、Codex skills，以及 Codex 专用安装文档
 - **OpenCode（`opencode` 分支）** — OpenCode 专用配置与安装路径
 
 三条分支尽量共享研究工作流主线，但平台层的操作方式不同。
@@ -567,7 +570,7 @@ MIT 许可证。
 
 - **[everything-claude-code](https://github.com/anthropics/everything-claude-code)** - Claude Code CLI 综合资源
 - **[AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs)** - 研究导向的 skills 与配置模式
-- **[kimi](https://github.com/openai/kimi)** - 本分支所依赖的 Kimi Code CLI 基础能力
+- **[kimi](https://github.com/MoonshotAI/kimi-code)** - 本分支所依赖的 Kimi Code CLI 基础能力
 - **[expression-skill](https://github.com/Galaxy-Dawn/expression-skill)** - 这里复用了其公开的结论先行表达 skill，用于汇报和回应约束
 - **[nature-skills](https://github.com/Yuan1z0825/nature-skills)** - 这里统一复用了其 Nature 风格的章节起草、学术润色、审稿回复和数据可用性 skills，并保留来源引用
 

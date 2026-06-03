@@ -3,22 +3,24 @@
 
   <p>
     <a href="https://github.com/Galaxy-Dawn/claude-scholar/stargazers"><img src="https://img.shields.io/github/stars/Galaxy-Dawn/claude-scholar?style=flat-square&color=yellow" alt="Stars"/></a>
+    <a href="https://gitcode.com/Dawngammad/claude-scholar"><img src="https://gitcode.com/Dawngammad/claude-scholar/star/badge.svg" alt="GitCode Stars"/></a>
     <a href="https://github.com/Galaxy-Dawn/claude-scholar/network/members"><img src="https://img.shields.io/github/forks/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Forks"/></a>
     <img src="https://img.shields.io/github/last-commit/Galaxy-Dawn/claude-scholar?style=flat-square" alt="Last Commit"/>
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
-    <img src="https://img.shields.io/badge/Kimi_CLI-Compatible-blue?style=flat-square" alt="Kimi CLI"/>
   </p>
 
   <strong>Language</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
+  <p><strong>対応プラットフォーム</strong>: <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/main">Claude Code</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex">Codex CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi">Kimi Code CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode">OpenCode</a></p>
 </div>
 
-> 学術研究とソフトウェア開発のための半自動リサーチアシスタントであり、特にコンピュータサイエンスと AI 研究者に適しています。[Kimi CLI](https://github.com/openai/kimi) 向けに調整されており、研究構想、文献レビュー、実験、結果レポート、執筆、プロジェクト知識ベースの保守までを一つの流れで支援します。
+> 学術研究とソフトウェア開発のための半自動リサーチアシスタントであり、特にコンピュータサイエンスと AI 研究者に適しています。[Kimi Code CLI](https://github.com/MoonshotAI/kimi-code) 向けに調整されており、研究構想、文献レビュー、実験、結果レポート、執筆、プロジェクト知識ベースの保守までを一つの流れで支援します。
 >
-> **ブランチ説明**：これは Claude Scholar の **Kimi CLI 版**です。Claude Code 版は [`main` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)、OpenCode 版は [`opencode` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode) を参照してください。
+> **ブランチ説明**：これは Claude Scholar の **Kimi Code CLI 版**です。Claude Code 版は [`main` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)、Codex CLI 版は [`codex` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/codex)、OpenCode 版は [`opencode` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode) を参照してください。
 
 
 ## 最新ニュース
 
+- **2026-06-03**: **Kimi Code CLI ブランチを対応プラットフォーム表示に追加** — `kimi` ブランチを Claude Scholar の Kimi Code CLI 版として明記し、共通のプラットフォーム順序では Claude Code と Codex CLI の後、OpenCode の前に配置しました。
 - **2026-05-14**: **`expression-skill` を中核のコミュニケーション層に据え、`planning-with-files` を既定の永続 planning 層として戻し、Nature 執筆スタックも拡張** — [`expression-skill`](./skills/expression-skill/README.md) を、報告・計画・ファイル操作・多段の技術作業における結論先行の表現規律として明示しました。さらに [`planning-with-files`](./skills/planning-with-files/SKILL.md) を、複雑な作業で `task_plan.md` / `notes.md` を使う既定の on-disk planning / progress-tracking workflow として再導入しました。あわせて、章構成の起草と論証構築向けに [`nature-writing`](./skills/nature-writing/README.md) を導入し、[`nature-polishing`](./skills/nature-polishing/README.md) を上流の最新 article-pattern 版へ更新し、[`nature-response`](./skills/nature-response/README.md) と [`nature-data`](./skills/nature-data/README.md) も journal-writing スタックに維持しています。
 - **2026-05-13**: **根拠ゲート付き研究ワークフローと `Sources/Papers` ルーティングを整理** — Evidence Records、claim strength、Claim Promotion Gate を共有する `research-contract.md` を追加しました。研究アイデア出し、Zotero 取り込み、文献統合、結果レポート、論文執筆、rebuttal ワークフローを同じ根拠契約に接続し、プロジェクトの論文ソースノートはまず `Sources/Papers` に置き、根拠ゲートを通った主張だけを `Knowledge` や `Writing` へ進める方針を明確にしました。
 - **2026-04-25**: **Kimi Obsidian KB lifecycle を安定化** — Kimi の project KB workflow で rename、archive、purge、sync、lint の edge cases を修正し、repo-local binding metadata を Kimi runtime と一貫させました。
@@ -35,7 +37,7 @@
 - **2026-03-31**: **インストーラーと hook-emulation の挙動を整理** — インストーラーは既存のローカル`AGENTS.md`を保持しつつ、リポジトリ版を`AGENTS.scholar.md`として追加するようになりました。あわせて、デフォルトのエミュレーション要約出力も整理し、temp filesやuncommitted filesのノイズを抑えつつ、より安全な書き込みガードは維持しています。
 - **2026-03-31**: **日本語ドキュメントを追加** — メインREADMEに加え、`AGENTS`、`MCP_SETUP`、`OBSIDIAN_SETUP`の日本語版も追加し、Kimiブランチ全体の多言語ドキュメント導線をより充実させました。
 
-- **2026-02-25**: **Kimi CLI** サポート — [OpenAI Kimi CLI](https://github.com/openai/kimi) 向けの `kimi` 分岐を追加し、TOML 設定、Kimi ネイティブの skills / agents、sandbox 安全機構を整備しました。
+- **2026-02-25**: **Kimi Code CLI** サポート — [Kimi Code CLI](https://github.com/MoonshotAI/kimi-code) 向けの `kimi` 分岐を追加し、TOML 設定、Kimi ネイティブの skills / agents、sandbox 安全機構を整備しました。
 - **2026-02-23**: `setup.sh` インストーラー追加 — 既存 `~/.kimi-code` 向けのバックアップ付き増分更新、Kimi 設定の自動バックアップ、インストーラー管理対象の追加入力マージに対応
 - **2026-02-21**: **OpenCode** サポート — Claude Scholar は [OpenCode](https://github.com/opencode-ai/opencode) を代替 CLI としてサポート。互換設定は `opencode` 分岐で提供
 - **2026-02-20**: バイリンガル文書 — 英文と中文の入口文書を整備し、異なる読者層が読みやすいよう改善
@@ -106,7 +108,7 @@ Claude Scholar は特に次のような人に向いています。
 
 ### 前提条件
 
-- [Kimi CLI](https://github.com/openai/kimi)
+- [Kimi Code CLI](https://github.com/MoonshotAI/kimi-code)
 - Git
 - （任意）Python + [uv](https://docs.astral.sh/uv/) — Python 開発用
 - （任意）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) — 文献ワークフロー用
@@ -246,10 +248,11 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 
 ## プラットフォーム範囲
 
-この分岐は **Kimi CLI** 向けです。
+この分岐は **Kimi Code CLI** 向けです。
 
-- **Kimi CLI（`kimi` 分岐）** — TOML 設定、AGENTS 駆動の作業規律、ファイルシステム中心の Obsidian ワークフロー、Kimi 専用インストール文書
+- **Kimi Code CLI（`kimi` 分岐）** — TOML 設定、AGENTS 駆動の作業規律、ファイルシステム中心の Obsidian ワークフロー、Kimi 専用インストール文書
 - **Claude Code（`main` 分岐）** — Claude Code 設定、ネイティブ hooks、主線の文書構成
+- **Codex CLI（`codex` 分岐）** — Codex 設定、sandbox-aware な操作、Codex skills、Codex 専用インストール文書
 - **OpenCode（`opencode` 分岐）** — OpenCode 向け設定とインストールパス
 
 3 分岐は研究ワークフロー主線をできるだけ共有しますが、プラットフォーム層の操作方法は異なります。
@@ -559,7 +562,7 @@ MIT License。
 
 ## 謝辞
 
-Kimi CLI ワークフローを基盤に構築され、オープンソース研究ツール群によって継続的に強化されています。
+Kimi Code CLI ワークフローを基盤に構築され、オープンソース研究ツール群によって継続的に強化されています。
 
 ### 参考資料
 
@@ -567,7 +570,7 @@ Kimi CLI ワークフローを基盤に構築され、オープンソース研�
 
 - **[everything-claude-code](https://github.com/anthropics/everything-claude-code)** - Claude Code CLI の総合リソース
 - **[AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs)** - 研究指向の skills と設定パターン
-- **[kimi](https://github.com/openai/kimi)** - この分岐が依拠する Kimi CLI の基盤能力
+- **[kimi](https://github.com/MoonshotAI/kimi-code)** - この分岐が依拠する Kimi Code CLI の基盤能力
 - **[expression-skill](https://github.com/Galaxy-Dawn/expression-skill)** - 報告と応答の規律に使う公開の結論先行コミュニケーション skill
 - **[nature-skills](https://github.com/Yuan1z0825/nature-skills)** - Nature スタイルの章起草、学術推敲、査読返信、データ可用性 skills をここで再利用し、出典を明記
 
