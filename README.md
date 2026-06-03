@@ -14,11 +14,12 @@
 
 > Semi-automated research assistant for academic research and software development, especially for computer science and AI researchers, adapted for [Kimi Code CLI](https://github.com/MoonshotAI/kimi-code) across ideation, literature review, experiments, reporting, writing, and project knowledge management.
 >
-> **Branch note**: this is the **Kimi Code CLI edition** of Claude Scholar. For the Claude Code version, see the [`main` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/main). For the OpenCode version, see the [`opencode` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode).
+> **Branch note**: this is the **Kimi Code CLI edition** of Claude Scholar. For the Claude Code version, see the [`main` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/main). For the Codex CLI version, see the [`codex` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/codex). For the OpenCode version, see the [`opencode` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode).
 
 
 ## Recent News
 
+- **2026-06-03**: **Kimi branch support made explicit** — documented the Kimi Code CLI branch as its own supported edition, aligned the README with Kimi-native TOML configuration and AGENTS-based discipline, clarified the shared platform scope across Kimi / Claude Code / Codex / OpenCode, and removed stale Primary Workflows entries for components that are no longer present in this branch.
 - **2026-05-14**: **`expression-skill` made the communication core, `planning-with-files` restored as the default persistence layer, and the Nature writing stack expanded** — made [`expression-skill`](./skills/expression-skill/README.md) the explicit conclusion-first discipline for reporting, planning, file operations, and multi-step technical work; reintroduced [`planning-with-files`](./skills/planning-with-files/SKILL.md) as the default on-disk planning and progress-tracking workflow for complex tasks; introduced [`nature-writing`](./skills/nature-writing/README.md) for section drafting and argument construction; refreshed [`nature-polishing`](./skills/nature-polishing/README.md) to the latest upstream article-pattern release; and kept [`nature-response`](./skills/nature-response/README.md) plus [`nature-data`](./skills/nature-data/README.md) in the journal-writing stack.
 - **2026-05-13**: **Evidence-gated research workflow and `Sources/Papers` routing tightened** — added a shared `research-contract.md` for Evidence Records, claim strength, and Claim Promotion Gates; connected research ideation, Zotero ingestion, literature synthesis, results reporting, writing, and rebuttal workflows to that contract; and clarified that project paper notes live under `Sources/Papers` before promoted claims move into `Knowledge` or `Writing`.
 - **2026-04-25**: **Kimi Obsidian KB lifecycle stabilized** — fixed rename, archive, purge, sync, and lint edge cases in the Kimi project KB workflow, and made repo-local binding metadata consistent with the Kimi runtime.
@@ -159,14 +160,16 @@ Install only a small research-focused subset:
 
 ```bash
 git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.kimi-code/skills ~/.kimi-code/agents
+mkdir -p ~/.kimi-code/skills ~/.kimi-code/agents/subagents
 cp -r /tmp/claude-scholar/skills/research-ideation ~/.kimi-code/skills/
 cp -r /tmp/claude-scholar/skills/results-analysis ~/.kimi-code/skills/
 cp -r /tmp/claude-scholar/skills/results-report ~/.kimi-code/skills/
 cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.kimi-code/skills/
 cp -r /tmp/claude-scholar/skills/review-response ~/.kimi-code/skills/
-cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.kimi-code/agents/
-cp -r /tmp/claude-scholar/agents/paper-miner ~/.kimi-code/agents/
+cp /tmp/claude-scholar/agents/subagents/literature-reviewer.md ~/.kimi-code/agents/subagents/
+cp /tmp/claude-scholar/agents/subagents/literature-reviewer.yaml ~/.kimi-code/agents/subagents/
+cp /tmp/claude-scholar/agents/subagents/paper-miner.md ~/.kimi-code/agents/subagents/
+cp /tmp/claude-scholar/agents/subagents/paper-miner.yaml ~/.kimi-code/agents/subagents/
 cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
@@ -179,8 +182,10 @@ Copy only the pieces you want:
 
 ```bash
 git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+mkdir -p ~/.kimi-code/skills ~/.kimi-code/agents/subagents
 cp -r /tmp/claude-scholar/skills/<skill-name> ~/.kimi-code/skills/
-cp -r /tmp/claude-scholar/agents/<agent-name> ~/.kimi-code/agents/
+cp /tmp/claude-scholar/agents/subagents/<agent-name>.md ~/.kimi-code/agents/subagents/
+cp /tmp/claude-scholar/agents/subagents/<agent-name>.yaml ~/.kimi-code/agents/subagents/
 cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
@@ -250,6 +255,7 @@ This branch targets **Kimi Code CLI**.
 
 - **Kimi Code CLI (`kimi` branch)** — TOML config, AGENTS-based discipline, filesystem-first Obsidian workflow, and Kimi-native installation docs
 - **Claude Code (`main` branch)** — Claude Code setup, native hooks, and the main cross-platform documentation line
+- **Codex CLI (`codex` branch)** — Codex config, sandbox-aware operation, Codex skills, and Codex-oriented installation docs
 - **OpenCode (`opencode` branch)** — OpenCode-specific configuration and installation path
 
 The research workflow is intentionally similar across branches, but the operational surface differs by platform.
@@ -316,8 +322,6 @@ Maintainable ML project development for experiment code and repo hygiene.
 | Skill | `architecture-design` | Designs maintainable ML project structure when adding registrable components or new modules. |
 | Skill | `git-workflow` | Enforces safer branching, commit discipline, and collaboration habits. |
 | Skill | `bug-detective` | Systematically investigates stack traces, shell errors, and broken code paths. |
-| Skill | `git-commit` | Creates Conventional Commit messages locally. |
-| Skill | `git-push` | Stages, commits, and pushes using Conventional Commits. |
 | Agent | `code-reviewer` | Reviews changed code for correctness, maintainability, and implementation quality. |
 | Agent | `tdd-guide` | Provide focused test-driven implementation guidance when a TDD path is explicitly needed. |
 
