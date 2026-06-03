@@ -122,7 +122,7 @@ bash /tmp/claude-scholar/scripts/setup.sh
 The installer is **backup-aware and incremental-update friendly**:
 - syncs repo-managed `skills/`, `agents/`, `scripts/`, and `utils/`,
 - merges Claude Scholar sections into an existing `~/.kimi-code/config.toml` when you keep your current provider/model,
-- backs up `config.toml` and `auth.json` before overwriting,
+- backs up existing `config.toml`, `mcp.json`, and managed component files before overwriting,
 - preserves an existing `~/.kimi-code/AGENTS.md` and installs the repo-managed version as `~/.kimi-code/AGENTS.scholar.md`,
 - preserves an existing `~/.kimi-code/AGENTS.zh-CN.md` and installs the repo-managed Chinese version as `~/.kimi-code/AGENTS.zh-CN.scholar.md`,
 - preserves your existing provider/model/API key when you choose the incremental-update path,
@@ -147,9 +147,9 @@ bash scripts/uninstall.sh
 
 The installer writes:
 - `~/.kimi-code/.kimi-scholar-manifest.txt` for files managed by Kimi Scholar
-- `~/.kimi-code/.kimi-scholar-install-state` for safe uninstall metadata, including installed `AGENTS*.md` targets and added `config.toml` sections
+- `~/.kimi-code/.kimi-scholar-install-state` for safe uninstall metadata, including installed `AGENTS*.md` targets, managed paths, and MCP server ownership state
 
-The uninstaller removes only files and config sections recorded in that install state. It does not guess ownership from the current repo checkout.
+The uninstaller removes only manifest-recorded files. For `config.toml`, it removes only Scholar hook commands and Scholar default markers that match the installer template. For `mcp.json`, it uses install-state metadata to remove entries created by the installer, restore same-name entries that the installer replaced, and preserve entries that changed after install. It does not guess ownership from the current repo checkout.
 
 **Windows**: please use Git Bash or WSL to run the installer.
 

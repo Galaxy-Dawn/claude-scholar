@@ -122,7 +122,7 @@ bash /tmp/claude-scholar/scripts/setup.sh
 安装器现在支持**带备份的安全增量更新**：
 - 同步仓库托管的 `skills/`、`agents/`、`scripts/` 与 `utils/`
 - 当你选择保留现有 provider/model 时，把 Claude Scholar 所需 section 合并进现有 `~/.kimi-code/config.toml`
-- 覆盖前自动备份 `config.toml` 与 `auth.json`
+- 覆盖前自动备份已有的 `config.toml`、`mcp.json` 和托管组件文件
 - 如果已存在 `~/.kimi-code/AGENTS.md`，则保留原文件，并把仓库版本另存为 `~/.kimi-code/AGENTS.scholar.md`
 - 如果已存在 `~/.kimi-code/AGENTS.zh-CN.md`，则保留原文件，并把仓库中文版本另存为 `~/.kimi-code/AGENTS.zh-CN.scholar.md`
 - 在增量更新路径下保留现有 provider / model / API key
@@ -147,9 +147,9 @@ bash scripts/uninstall.sh
 
 安装器会写入：
 - `~/.kimi-code/.kimi-scholar-manifest.txt`：记录 Kimi Scholar 实际管理的文件
-- `~/.kimi-code/.kimi-scholar-install-state`：记录安全卸载所需的元数据，包括实际安装的 `AGENTS*.md` 目标和新增的 `config.toml` sections
+- `~/.kimi-code/.kimi-scholar-install-state`：记录安全卸载所需的元数据，包括实际安装的 `AGENTS*.md` 目标、托管路径和 MCP server 所有权状态
 
-卸载脚本只会删除 install state 中明确记录的文件和 config sections，不会根据当前 repo 工作树猜测所有权。
+卸载脚本只会删除 manifest 中明确记录的文件。对于 `config.toml`，它只会删除与安装器模板精确匹配的 Scholar hook 命令和 Scholar 默认值标记；对于 `mcp.json`，它会根据 install-state 删除安装器新增的条目、恢复被安装器覆盖的同名条目，并保留安装后被用户改过的条目，不会根据当前 repo 工作树猜测所有权。
 
 **Windows**：请使用 Git Bash / WSL 运行安装脚本。
 
