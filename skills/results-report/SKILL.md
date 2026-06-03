@@ -148,7 +148,7 @@ If the current repo is bound to an Obsidian project knowledge base:
 - link back to the relevant `Experiments/` note,
 - update the matching canonical `Results/` note when a durable conclusion is now supported,
 - append a short trace to today's `Daily/` note,
-- update `.kimi/project-memory/<project_id>.md`.
+- update `.kimi-code/project-memory/<project_id>.md`.
 
 If the repo is **not** bound:
 - write the report as a local markdown artifact in the requested output location or next to the analysis bundle,

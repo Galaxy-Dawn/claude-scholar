@@ -17,7 +17,7 @@ reason=$(echo "$JSON_INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin
 
 project_name=$(basename "$cwd")
 date_str=$(date '+%Y%m%d')
-log_dir="$cwd/.kimi/logs"
+log_dir="$cwd/.kimi-code/logs"
 
 mkdir -p "$log_dir" 2>/dev/null || true
 
@@ -41,7 +41,7 @@ fi
 
 # Detect AGENTS.md changes
 agents_changed=""
-for file in "$cwd/AGENTS.md" "$cwd/.kimi/AGENTS.md"; do
+for file in "$cwd/AGENTS.md" "$cwd/.kimi-code/AGENTS.md"; do
     if [ -f "$file" ]; then
         # Check if modified in last 10 minutes (session duration proxy)
         if find "$file" -mmin -10 2>/dev/null | grep -q .; then
@@ -58,7 +58,7 @@ fi
 
 # Check for temp files
 temp_count=0
-temp_dirs=("$cwd/plan" "$cwd/temp" "$cwd/tmp" "$cwd/.kimi/temp" "$cwd/.kimi/temp")
+temp_dirs=("$cwd/plan" "$cwd/temp" "$cwd/tmp" "$cwd/.kimi-code/temp")
 for dir in "${temp_dirs[@]}"; do
     if [ -d "$dir" ]; then
         count=$(find "$dir" -maxdepth 1 -type f 2>/dev/null | wc -l | tr -d ' ')
@@ -79,7 +79,7 @@ if git -C "$cwd" rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 # Obsidian KB reminder
-if [ -f "$cwd/.kimi/project-memory/registry.yaml" ]; then
+if [ -f "$cwd/.kimi-code/project-memory/registry.yaml" ]; then
     suggestions+="📚 Obsidian KB: Update daily note and project memory if substantial work was done\n"
 fi
 

@@ -28,16 +28,16 @@ Strong implementation-support skills expose helper scripts without loading all g
 
 Good traits:
 - SKILL.md gives a compact workflow
-- script examples use `${KIMI_HOME:-$HOME/.kimi}` for Kimi installs
+- script examples use `${KIMI_HOME:-$HOME/.kimi-code}` for Kimi installs
 - detailed design guidance is searched on demand
 - verification asks for concrete screenshots or interaction checks when relevant
 
 ## Study These Skills
 
 ```bash
-cat ~/.kimi/skills/research-ideation/SKILL.md
-cat ~/.kimi/skills/obsidian-project-kb-core/SKILL.md
-python3 ~/.kimi/skills/ui-ux-pro-max/scripts/search.py "dashboard accessibility" --domain ux
+cat ~/.kimi-code/skills/research-ideation/SKILL.md
+cat ~/.kimi-code/skills/obsidian-project-kb-core/SKILL.md
+python3 ~/.kimi-code/skills/ui-ux-pro-max/scripts/search.py "dashboard accessibility" --domain ux
 ```
 
 Use these as templates when creating or improving Kimi-native skills.

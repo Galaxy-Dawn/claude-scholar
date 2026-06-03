@@ -3,21 +3,22 @@
 # Part of skill-improver
 
 # Usage: ./backup-skill.sh <skill-path>
-# Example: ./backup-skill.sh ~/.kimi/skills/git-workflow
+# Example: ./backup-skill.sh ~/.kimi-code/skills/git-workflow
 
 set -euo pipefail
 
 # Check if path provided
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <skill-path>"
-    echo "Example: $0 ~/.kimi/skills/git-workflow"
+    echo "Example: $0 ~/.kimi-code/skills/git-workflow"
     exit 1
 fi
 
 SKILL_PATH="$1"
 SKILL_NAME=$(basename "$SKILL_PATH")
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-BACKUP_DIR="$HOME/.kimi/skills/backup/${SKILL_NAME}-${TIMESTAMP}"
+KIMI_HOME="${KIMI_HOME:-$HOME/.kimi-code}"
+BACKUP_DIR="$KIMI_HOME/skills/backup/${SKILL_NAME}-${TIMESTAMP}"
 
 # Check if skill path exists
 if [ ! -d "$SKILL_PATH" ]; then

@@ -36,7 +36,7 @@
 - ✅ Skill structure intact
 
 ## Backup
-Original files backed up to: `~/.kimi/skills/backup/example-skill-20250125-143000/`
+Original files backed up to: `~/.kimi-code/skills/backup/example-skill-20250125-143000/`
 
 ## Notes
 - All high priority changes applied successfully

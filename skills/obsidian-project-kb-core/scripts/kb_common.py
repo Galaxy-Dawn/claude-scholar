@@ -104,11 +104,11 @@ def find_repo_root(cwd: Path) -> Path:
 
 
 def binding_registry_path(repo_root: Path) -> Path:
-    return repo_root / '.claude' / 'project-memory' / 'registry.yaml'
+    return repo_root / '.kimi-code' / 'project-memory' / 'registry.yaml'
 
 
 def project_memory_path(repo_root: Path, project_id: str) -> Path:
-    return repo_root / '.claude' / 'project-memory' / f'{project_id}.md'
+    return repo_root / '.kimi-code' / 'project-memory' / f'{project_id}.md'
 
 
 def load_binding_registry(path: Path) -> dict[str, Any]:
@@ -209,7 +209,7 @@ def resolve_binding(repo_root: Path, project_id: str | None = None) -> Binding:
     registry = load_binding_registry(binding_registry_path(repo_root))
     projects = registry.get('projects') or {}
     if not projects:
-        raise SystemExit('No registered projects found in .kimi/project-memory/registry.yaml')
+        raise SystemExit('No registered projects found in .kimi-code/project-memory/registry.yaml')
     if project_id is None:
         if len(projects) == 1:
             project_id = next(iter(projects))

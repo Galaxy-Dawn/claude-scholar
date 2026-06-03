@@ -3,14 +3,14 @@
 # Part of skill-quality-reviewer
 
 # Usage: ./extract-yaml.sh <path-to-skill>
-# Example: ./extract-yaml.sh ~/.kimi/skills/git-workflow
+# Example: ./extract-yaml.sh ~/.kimi-code/skills/git-workflow
 
 set -euo pipefail
 
 # Check if path provided
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <path-to-skill>"
-    echo "Example: $0 ~/.kimi/skills/git-workflow"
+    echo "Example: $0 ~/.kimi-code/skills/git-workflow"
     exit 1
 fi
 

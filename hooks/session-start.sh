@@ -57,7 +57,7 @@ else
 fi
 
 # Obsidian KB status
-if [ -f "$cwd/.kimi/project-memory/registry.yaml" ]; then
+if [ -f "$cwd/.kimi-code/project-memory/registry.yaml" ]; then
     output+="🧠 Obsidian project KB: bound\n"
     output+="  - Suggested: kb-status, kb-sync, kb-lint skills\n\n"
 elif [ -d "$cwd/.git" ] && ([ -f "$cwd/README.md" ] || [ -d "$cwd/src" ] || [ -f "$cwd/pyproject.toml" ]); then

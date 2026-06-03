@@ -34,7 +34,7 @@ _system/
 ## Core rules
 
 - Keep all durable project knowledge inside the current `Research/{project-slug}/`.
-- Keep repo-local `.kimi/project-memory/*` only as the runtime binding layer.
+- Keep repo-local `.kimi-code/project-memory/*` only as the runtime binding layer.
 - `_system/registry.md` is the only visible project registry.
 - `02-Index.md` is a human navigation note, not a registry mirror.
 - `Maps/` is a derived-artifact area; do not generate non-essential canvases by default.

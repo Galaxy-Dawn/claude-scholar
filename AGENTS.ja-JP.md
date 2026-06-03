@@ -4,7 +4,7 @@
 
 Kimi の各 run では、まず次を読む:
 
-`~/.kimi/skills/expression-skill/SKILL.md`
+`~/.kimi-code/skills/expression-skill/SKILL.md`
 
 インストール済みの `expression-skill` を既定のコミュニケーション層として使う。
 

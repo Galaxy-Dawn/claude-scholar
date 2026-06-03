@@ -34,7 +34,7 @@ Refresh the literature canvas when:
 ## Recommended command
 
 ```bash
-python3 "${KIMI_HOME:-$HOME/.kimi}/skills/obsidian-literature-workflow/scripts/build_literature_canvas.py" --cwd "$PWD"
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/obsidian-literature-workflow/scripts/build_literature_canvas.py" --cwd "$PWD"
 ```
 
 ## Display rule

@@ -40,7 +40,7 @@ Kimi Scholar には project-scoped な Obsidian KB workflow が含まれてい�
 
 ## 既定の挙動
 
-Kimi Scholar が `.kimi/project-memory/registry.yaml` を含むリポジトリ内で実行されている場合、そのリポジトリを Obsidian プロジェクトナレッジベースにバインド済みとして扱い、既定で更新を行います。
+Kimi Scholar が `.kimi-code/project-memory/registry.yaml` を含むリポジトリ内で実行されている場合、そのリポジトリを Obsidian プロジェクトナレッジベースにバインド済みとして扱い、既定で更新を行います。
 
 まだバインドされていなくても、`.git`、`README.md`、`docs/`、`notes/`、`plan/`、`results/`、`outputs/`、`src/`、`scripts/` などから研究リポジトリらしいと判断できる場合は、自動で bootstrap します。
 
@@ -78,7 +78,7 @@ Research/{project-slug}/
 - `_system/registry.md`
 - `_system/schema.md`
 - `_system/lint-report.md`
-- `.kimi/project-memory/{project_id}.md`
+- `.kimi-code/project-memory/{project_id}.md`
 - 文献ワークフローで必要な場合の `Maps/literature.canvas`
 
 ## Repo-local binding metadata
@@ -86,7 +86,7 @@ Research/{project-slug}/
 各研究リポジトリは次を持ちます。
 
 ```text
-.kimi/project-memory/
+.kimi-code/project-memory/
   registry.yaml
   {project_id}.md
 ```
@@ -97,7 +97,7 @@ Research/{project-slug}/
 ## ノート言語
 
 生成・同期ノートの言語は次の優先順位で決まります。
-1. `.kimi/project-memory/registry.yaml` の project config
+1. `.kimi-code/project-memory/registry.yaml` の project config
 2. 環境変数 `OBSIDIAN_NOTE_LANGUAGE`
 3. 既定値 `en`
 
@@ -116,11 +116,11 @@ Kimi では Claude Code 風の slash command を前提にしません。同じ K
 
 ## バインド済み repo の最小メンテナンス面
 
-リポジトリが `.kimi/project-memory/registry.yaml` で既にバインドされている場合、Kimi Scholar は保守を保守的に行います。
+リポジトリが `.kimi-code/project-memory/registry.yaml` で既にバインドされている場合、Kimi Scholar は保守を保守的に行います。
 
 - 研究状態が変わったら `Daily/YYYY-MM-DD.md` を確認する
 - project のトップレベル状態が本当に変わったときだけ `00-Hub.md` を更新する
-- project 状態が変わったら `.kimi/project-memory/{project_id}.md` を更新する
+- project 状態が変わったら `.kimi-code/project-memory/{project_id}.md` を更新する
 - `Knowledge/`、`Experiments/`、`Results/`、`Writing/` は毎回自動で書き換えず agent-first を維持する
 
 ## オプション: Obsidian CLI のインストール

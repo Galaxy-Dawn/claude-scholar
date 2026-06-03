@@ -33,8 +33,8 @@ Usage:
 
 Options:
   --detect        Detect and show current package manager
-  --global <pm>   Set global preference (saves to ~/.kimi/package-manager.json)
-  --project <pm>  Set project preference (saves to .kimi/package-manager.json)
+  --global <pm>   Set global preference (saves to $KIMI_HOME/package-manager.json or ~/.kimi-code/package-manager.json)
+  --project <pm>  Set project preference (saves to .kimi-code/package-manager.json)
   --list          List available package managers
   --help          Show this help message
 
@@ -62,6 +62,7 @@ Examples:
 function detectAndShow() {
   const pm = getPackageManager();
   const available = getAvailablePackageManagers();
+  const availableNames = available.filter(item => item.available).map(item => item.name);
   const fromLock = detectFromLockFile();
   const fromPkg = detectFromPackageJson();
 
@@ -75,12 +76,12 @@ function detectAndShow() {
   console.log('Detection results:');
   console.log(`  From package.json: ${fromPkg || 'not specified'}`);
   console.log(`  From lock file: ${fromLock || 'not found'}`);
-  console.log(`  Environment var: ${process.env.CLAUDE_PACKAGE_MANAGER || 'not set'}`);
+  console.log(`  Environment var: ${process.env.KIMI_PACKAGE_MANAGER || process.env.CLAUDE_PACKAGE_MANAGER || 'not set'}`);
   console.log('');
 
   console.log('Available package managers:');
   for (const pmName of Object.keys(PACKAGE_MANAGERS)) {
-    const installed = available.includes(pmName);
+    const installed = availableNames.includes(pmName);
     const indicator = installed ? '✓' : '✗';
     const current = pmName === pm.name ? ' (current)' : '';
     console.log(`  ${indicator} ${pmName}${current}`);
@@ -96,13 +97,14 @@ function detectAndShow() {
 
 function listAvailable() {
   const available = getAvailablePackageManagers();
+  const availabilityByName = Object.fromEntries(available.map(item => [item.name, item.available]));
   const pm = getPackageManager();
 
   console.log('\nAvailable Package Managers:\n');
 
   for (const pmName of Object.keys(PACKAGE_MANAGERS)) {
     const config = PACKAGE_MANAGERS[pmName];
-    const installed = available.includes(pmName);
+    const installed = Boolean(availabilityByName[pmName]);
     const current = pmName === pm.name ? ' (current)' : '';
 
     console.log(`${pmName}${current}`);
@@ -122,14 +124,17 @@ function setGlobal(pmName) {
   }
 
   const available = getAvailablePackageManagers();
-  if (!available.includes(pmName)) {
+  const availableNames = available.filter(item => item.available).map(item => item.name);
+  if (!availableNames.includes(pmName)) {
     console.warn(`Warning: ${pmName} is not installed on your system`);
   }
 
   try {
-    setPreferredPackageManager(pmName);
+    if (!setPreferredPackageManager(pmName)) {
+      throw new Error('Failed to write global package manager preference');
+    }
     console.log(`\n✓ Global preference set to: ${pmName}`);
-    console.log('  Saved to: ~/.kimi/package-manager.json');
+    console.log('  Saved to: $KIMI_HOME/package-manager.json or ~/.kimi-code/package-manager.json');
     console.log('');
   } catch (err) {
     console.error(`Error: ${err.message}`);
@@ -145,9 +150,11 @@ function setProject(pmName) {
   }
 
   try {
-    setProjectPackageManager(pmName);
+    if (!setProjectPackageManager(pmName)) {
+      throw new Error('Failed to write project package manager preference');
+    }
     console.log(`\n✓ Project preference set to: ${pmName}`);
-    console.log('  Saved to: .kimi/package-manager.json');
+    console.log('  Saved to: .kimi-code/package-manager.json');
     console.log('');
   } catch (err) {
     console.error(`Error: ${err.message}`);

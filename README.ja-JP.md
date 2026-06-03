@@ -36,7 +36,7 @@
 - **2026-03-31**: **日本語ドキュメントを追加** — メインREADMEに加え、`AGENTS`、`MCP_SETUP`、`OBSIDIAN_SETUP`の日本語版も追加し、Kimiブランチ全体の多言語ドキュメント導線をより充実させました。
 
 - **2026-02-25**: **Kimi CLI** サポート — [OpenAI Kimi CLI](https://github.com/openai/kimi) 向けの `kimi` 分岐を追加し、TOML 設定、Kimi ネイティブの skills / agents、sandbox 安全機構を整備しました。
-- **2026-02-23**: `setup.sh` インストーラー追加 — 既存 `~/.kimi` 向けのバックアップ付き増分更新、Kimi 設定の自動バックアップ、インストーラー管理対象の追加入力マージに対応
+- **2026-02-23**: `setup.sh` インストーラー追加 — 既存 `~/.kimi-code` 向けのバックアップ付き増分更新、Kimi 設定の自動バックアップ、インストーラー管理対象の追加入力マージに対応
 - **2026-02-21**: **OpenCode** サポート — Claude Scholar は [OpenCode](https://github.com/opencode-ai/opencode) を代替 CLI としてサポート。互換設定は `opencode` 分岐で提供
 - **2026-02-20**: バイリンガル文書 — 英文と中文の入口文書を整備し、異なる読者層が読みやすいよう改善
 - **2026-02-15**: Zotero MCP 統合 — `/zotero-review` と `/zotero-notes` を追加し、`research-ideation` skill に Zotero ガイドを追加、`literature-reviewer` agent を Zotero MCP 対応へ強化
@@ -53,7 +53,7 @@
 |---|---|
 | [なぜ Claude Scholar なのか](#なぜ-claude-scholar-なのか) | プロジェクトの位置づけと適用シーンを素早く把握する。 |
 | [コアワークフロー](#コアワークフロー) | 研究構想から投稿までの主線を確認する。 |
-| [クイックスタート](#クイックスタート) | 既存の `~/.kimi` 環境へ安全に導入する。 |
+| [クイックスタート](#クイックスタート) | 既存の `~/.kimi-code` 環境へ安全に導入する。 |
 | [使い始めのシナリオ](#使い始めのシナリオ) | インストール後の代表的な使い始め方を見る。 |
 | [プラットフォーム範囲](#プラットフォーム範囲) | この分岐の対象範囲と他バージョンの所在を確認する。 |
 | [連携機能](#連携機能) | Zotero と Obsidian を Kimi ワークフローへどう接続するかを確認する。 |
@@ -121,14 +121,14 @@ bash /tmp/claude-scholar/scripts/setup.sh
 
 インストーラーは現在、**バックアップ付きの安全な増分更新**をサポートしています。
 - リポジトリ管理の `skills/`、`agents/`、`scripts/`、`utils/` を同期
-- 既存 provider/model を保持したい場合、Claude Scholar に必要な section を現在の `~/.kimi/config.toml` にマージ
+- 既存 provider/model を保持したい場合、Claude Scholar に必要な section を現在の `~/.kimi-code/config.toml` にマージ
 - 上書き前に `config.toml` と `auth.json` を自動バックアップ
-- `~/.kimi/AGENTS.md` が既に存在する場合は元ファイルを保持し、リポジトリ版を `~/.kimi/AGENTS.scholar.md` として保存
-- `~/.kimi/AGENTS.zh-CN.md` が既に存在する場合は元ファイルを保持し、リポジトリ版の中国語 companion を `~/.kimi/AGENTS.zh-CN.scholar.md` として保存
+- `~/.kimi-code/AGENTS.md` が既に存在する場合は元ファイルを保持し、リポジトリ版を `~/.kimi-code/AGENTS.scholar.md` として保存
+- `~/.kimi-code/AGENTS.zh-CN.md` が既に存在する場合は元ファイルを保持し、リポジトリ版の中国語 companion を `~/.kimi-code/AGENTS.zh-CN.scholar.md` として保存
 - 増分更新パスでは既存の provider / model / API key を保持
 - テンプレート内にある Zotero MCP 設定ブロックを任意で有効化可能
 
-**重要な AGENTS 説明**：すでに自分用の `~/.kimi/AGENTS.md` を持っている場合は、インストール後に `~/.kimi/AGENTS.scholar.md` と `~/.kimi/AGENTS.zh-CN.scholar.md` を確認し、必要な Claude Scholar の内容だけを自分のファイルに手動で merge してください。sidecar ファイルが自動で有効化されるとは考えないでください。
+**重要な AGENTS 説明**：すでに自分用の `~/.kimi-code/AGENTS.md` を持っている場合は、インストール後に `~/.kimi-code/AGENTS.scholar.md` と `~/.kimi-code/AGENTS.zh-CN.scholar.md` を確認し、必要な Claude Scholar の内容だけを自分のファイルに手動で merge してください。sidecar ファイルが自動で有効化されるとは考えないでください。
 
 以後の増分更新は次の通りです。
 
@@ -146,8 +146,8 @@ bash scripts/uninstall.sh
 ```
 
 インストーラーは次のファイルも書き込みます:
-- `~/.kimi/.kimi-scholar-manifest.txt`: Kimi Scholar が実際に管理するファイル一覧
-- `~/.kimi/.kimi-scholar-install-state`: 安全なアンインストールに使うメタデータ。実際にインストールされた `AGENTS*.md` の対象と、追加された `config.toml` sections を含みます
+- `~/.kimi-code/.kimi-scholar-manifest.txt`: Kimi Scholar が実際に管理するファイル一覧
+- `~/.kimi-code/.kimi-scholar-install-state`: 安全なアンインストールに使うメタデータ。実際にインストールされた `AGENTS*.md` の対象、管理パス、MCP server 所有権状態を含みます
 
 アンインストーラーは install state に記録されたファイルと config sections だけを削除し、現在のリポジトリ内容から所有権を推測しません。
 
@@ -159,19 +159,19 @@ bash scripts/uninstall.sh
 
 ```bash
 git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.kimi/skills ~/.kimi/agents
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.kimi/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.kimi/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.kimi/skills/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.kimi/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.kimi/skills/
-cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.kimi/agents/
-cp -r /tmp/claude-scholar/agents/paper-miner ~/.kimi/agents/
-cp /tmp/claude-scholar/AGENTS.md ~/.kimi/AGENTS.md
-cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi/AGENTS.zh-CN.md
+mkdir -p ~/.kimi-code/skills ~/.kimi-code/agents
+cp -r /tmp/claude-scholar/skills/research-ideation ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/results-analysis ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/results-report ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/skills/review-response ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.kimi-code/agents/
+cp -r /tmp/claude-scholar/agents/paper-miner ~/.kimi-code/agents/
+cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
+cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
 
-**インストール後**：最小化 / 手動インストールでは `config.toml` は**自動マージされません**。必要な section を setup 文書やリポジトリ設定から手動で取り込んでください。自分の `~/.kimi/AGENTS.md` がある場合も、関連する部分だけを手動で merge し、丸ごと上書きしないでください。
+**インストール後**：最小化 / 手動インストールでは `config.toml` は**自動マージされません**。必要な section を setup 文書やリポジトリ設定から手動で取り込んでください。自分の `~/.kimi-code/AGENTS.md` がある場合も、関連する部分だけを手動で merge し、丸ごと上書きしないでください。
 
 ### オプション 3：選択インストール
 
@@ -179,13 +179,13 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi/AGENTS.zh-CN.md
 
 ```bash
 git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-cp -r /tmp/claude-scholar/skills/<skill-name> ~/.kimi/skills/
-cp -r /tmp/claude-scholar/agents/<agent-name> ~/.kimi/agents/
-cp /tmp/claude-scholar/AGENTS.md ~/.kimi/AGENTS.md
-cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi/AGENTS.zh-CN.md
+cp -r /tmp/claude-scholar/skills/<skill-name> ~/.kimi-code/skills/
+cp -r /tmp/claude-scholar/agents/<agent-name> ~/.kimi-code/agents/
+cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
+cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
 
-**インストール後**：選択的 / 手動インストールでも `config.toml` は自動マージされません。既に `~/.kimi/AGENTS.md` を持っている場合も、必要な内容だけを手動で merge してください。
+**インストール後**：選択的 / 手動インストールでも `config.toml` は自動マージされません。既に `~/.kimi-code/AGENTS.md` を持っている場合も、必要な内容だけを手動で merge してください。
 
 **Kimi 利用メモ**：
 - Kimi は `/...` メニューにカスタム skill を表示しません。
@@ -365,7 +365,6 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi/AGENTS.zh-CN.md
 | Skill | `writing-anti-ai` | 機械的な表現を減らし、明瞭さ、リズム、人間的な学術トーンを改善 |
 | Skill | `latex-conference-template-organizer` | 乱雑な学会テンプレートをOverleaf対応のライティング構造に整理 |
 | Agent | `paper-miner` | 優れた論文から再利用可能なライティングパターン、構造、学会の期待値を抽出 |
-| Command | `/mine-writing-patterns` | 論文を読み込み、再利用可能なライティング知識を現在インストール済みのpaper-minerメモリに統合 |
 
 **仕組み**
 - **テンプレート準備**: 学会テンプレートをOverleaf対応構造に整理
@@ -445,15 +444,18 @@ Obsidian を、単なるメモ置き場ではなく、project-scoped な永続�
 
 `obsidian-project-memory`、`obsidian-project-bootstrap`、`obsidian-experiment-log` など旧来の Kimi 向け Obsidian skill shim は削除済みです。`obsidian-project-kb-core`、`obsidian-source-ingestion`、`obsidian-literature-workflow`、`obsidian-kb-artifacts` を直接使用してください。
 
-### Kimi セッション規律と Hook エミュレーション
+### Kimi セッション規律と Native Hooks
 
-Kimi は Claude Code のネイティブ hooks を提供しないため、この分岐では AGENTS 規律とローカル補助スクリプトで高価値な挙動を再現します。
+この分岐では Kimi Code CLI の hook 設定を使い、高価値なセッション確認と安全確認をローカル shell script に接続します。
 
 | 種類 | 名前 | 一行説明 |
 |---|---|---|
 | File | `AGENTS.md` | セッション規律、skill 評価規則、安全規則、Kimi 専用ワークフロー説明を記述する |
-| Script | `scripts/kimi_hook_emulation.py` | repo ワークフロー内で session-start、preflight、post-edit、session-end を模擬する |
-| Skill | `session-wrap-up` | セッション終了時に作業ログ、清理リマインド、締めサマリを生成する |
+| Hook | `hooks/security-guard.sh` | 危険なコマンドや sensitive file 変更の前に安全確認を行う |
+| Hook | `hooks/session-start.sh` | セッション開始時に repo 状態、skills、TODO、project context を表示する |
+| Hook | `hooks/skill-forced-eval.sh` | ユーザープロンプト送信前に必要な skill を静かに走査する |
+| Hook | `hooks/session-summary.sh` | セッション終了時に作業ログを生成する |
+| Hook | `hooks/stop-summary.sh` | stop signal 受信時に締めサマリを生成する |
 
 **進め方**
 - **セッション開始代理**：repo 状態、skills、TODO、プロジェクト文脈を確認する

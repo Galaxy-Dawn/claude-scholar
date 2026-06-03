@@ -22,5 +22,5 @@ Refresh the markdown map only when:
 ## Recommended command
 
 ```bash
-python3 "${KIMI_HOME:-$HOME/.kimi}/skills/obsidian-literature-workflow/scripts/build_literature_graph.py" --cwd "$PWD"
+python3 "${KIMI_HOME:-$HOME/.kimi-code}/skills/obsidian-literature-workflow/scripts/build_literature_graph.py" --cwd "$PWD"
 ```

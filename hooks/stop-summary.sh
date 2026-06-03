@@ -31,7 +31,7 @@ if git -C "$cwd" rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 # Temp files check
-temp_dirs=("$cwd/plan" "$cwd/temp" "$cwd/tmp" "$cwd/.kimi/temp")
+temp_dirs=("$cwd/plan" "$cwd/temp" "$cwd/tmp" "$cwd/.kimi-code/temp")
 temp_count=0
 for dir in "${temp_dirs[@]}"; do
     if [ -d "$dir" ]; then
@@ -41,11 +41,11 @@ for dir in "${temp_dirs[@]}"; do
 done
 
 if [ "$temp_count" -gt 0 ]; then
-    output+="🗑️  Temp files: $temp_count in /plan, /temp, /tmp, /.kimi/temp\n"
+    output+="🗑️  Temp files: $temp_count in /plan, /temp, /tmp, /.kimi-code/temp\n"
 fi
 
 # Obsidian KB reminder
-if [ -f "$cwd/.kimi/project-memory/registry.yaml" ]; then
+if [ -f "$cwd/.kimi-code/project-memory/registry.yaml" ]; then
     output+="📚 Obsidian KB: Remember to update daily note and project memory\n"
 fi
 

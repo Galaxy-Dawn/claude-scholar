@@ -4,7 +4,7 @@
 
 Every Kimi CLI run should first read:
 
-`~/.kimi/skills/expression-skill/SKILL.md`
+`~/.kimi-code/skills/expression-skill/SKILL.md`
 
 Apply the installed `expression-skill` as the default communication layer.
 

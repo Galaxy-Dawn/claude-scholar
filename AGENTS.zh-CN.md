@@ -4,7 +4,7 @@
 
 每次 Kimi 运行都应优先先读取：
 
-`~/.kimi/skills/expression-skill/SKILL.md`
+`~/.kimi-code/skills/expression-skill/SKILL.md`
 
 将已安装的 `expression-skill` 作为默认表达层。
 

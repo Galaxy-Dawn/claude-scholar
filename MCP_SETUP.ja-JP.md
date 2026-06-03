@@ -64,7 +64,7 @@ Claude Code v2.1.5以降の場合、`~/.claude.json`の`mcpServers`に追加。
 
 ##### Kimi CLI
 
-`~/.kimi/config.toml`に追加:
+`~/.kimi-code/config.toml`に追加:
 
 ```toml
 [mcp_servers.zotero]

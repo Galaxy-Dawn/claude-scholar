@@ -3,8 +3,8 @@
 Repo-local binding metadata remains under:
 
 ```text
-.kimi/project-memory/registry.yaml
-.kimi/project-memory/<project_id>.md
+.kimi-code/project-memory/registry.yaml
+.kimi-code/project-memory/<project_id>.md
 ```
 
 This is the runtime binding layer only.

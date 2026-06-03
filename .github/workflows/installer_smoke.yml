@@ -59,3 +59,26 @@ jobs:
           test -f skills/results-report/SKILL.md
           test -f skills/ml-paper-writing/SKILL.md
           test -f skills/publication-chart-skill/SKILL.md
+
+      - name: Verify Kimi docs and install paths stay consistent
+        run: |
+          set -euo pipefail
+          grep -Fq '~/.kimi-code/skills/expression-skill/SKILL.md' AGENTS.md
+          grep -Fq '~/.kimi-code/skills/expression-skill/SKILL.md' AGENTS.zh-CN.md
+          grep -Fq '~/.kimi-code/skills/expression-skill/SKILL.md' AGENTS.ja-JP.md
+          if rg '~/.kimi/' AGENTS*.md README*.md MCP_SETUP*.md OBSIDIAN*.md hooks scripts/setup-package-manager.js scripts/lib/*.js skills; then
+            echo "Found stale ~/.kimi/ public install path references."
+            exit 1
+          fi
+          if rg '(^|[[:space:]`])\\.kimi/' README*.md OBSIDIAN*.md hooks skills/obsidian-project-kb-core skills/results-report scripts/setup-package-manager.js scripts/lib/*.js; then
+            echo "Found stale .kimi/ project path references."
+            exit 1
+          fi
+          if rg '/mine-writing-patterns|session-wrap-up|scripts/kimi_hook_emulation.py' README*.md hooks skills; then
+            echo "Found Kimi README references to unavailable command/skill/script surfaces."
+            exit 1
+          fi
+          if git ls-files | grep -q '^templates/templates/'; then
+            echo "Found duplicate nested templates/templates tree."
+            exit 1
+          fi

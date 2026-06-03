@@ -90,7 +90,7 @@ function runCommand(cmd, options = {}) {
  */
 function getKimiConfigDir() {
   const homeDir = getHomeDir();
-  return path.join(homeDir, '.kimi');
+  return process.env.KIMI_HOME || path.join(homeDir, '.kimi-code');
 }
 
 /**

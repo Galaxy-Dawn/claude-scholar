@@ -587,6 +587,38 @@ test_uninstall_dry_run_does_not_create_backup_dir() {
   pass "uninstall dry-run does not create backup directory"
 }
 
+test_package_manager_write_failure_fails_cli() {
+  local home blocked project log
+  home="$(make_home)"
+  blocked="$home/not-a-dir"
+  log="/tmp/kimi-package-manager-write-failure.log"
+  printf 'not a directory\n' > "$blocked"
+
+  if KIMI_HOME="$blocked" node "$REPO_ROOT/scripts/setup-package-manager.js" --global pnpm >"$log" 2>&1; then
+    echo "Expected package manager setup to fail when KIMI_HOME is not a directory" >&2
+    cat "$log" >&2
+    exit 1
+  fi
+
+  grep -q "Failed to write global package manager preference" "$log"
+  ! grep -q "Global preference set to" "$log"
+
+  project="$home/project"
+  mkdir -p "$project"
+  printf '{}\n' > "$project/package.json"
+  printf 'not a directory\n' > "$project/.kimi-code"
+
+  if (cd "$project" && node "$REPO_ROOT/scripts/setup-package-manager.js" --project pnpm >"$log" 2>&1); then
+    echo "Expected package manager setup to fail when .kimi-code is not a directory" >&2
+    cat "$log" >&2
+    exit 1
+  fi
+
+  grep -q "Failed to write project package manager preference" "$log"
+  ! grep -q "Project preference set to" "$log"
+  pass "package-manager write failure fails CLI"
+}
+
 main() {
   bash -n "$SETUP_SH"
   bash -n "$UNINSTALL_SH"
@@ -616,6 +648,7 @@ main() {
   test_non_tty_setup_requires_yes
   test_setup_dry_run_does_not_create_target_dir
   test_uninstall_dry_run_does_not_create_backup_dir
+  test_package_manager_write_failure_fails_cli
 }
 
 main "$@"

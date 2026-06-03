@@ -365,7 +365,6 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 | Skill | `writing-anti-ai` | 减少机械化表述，提升清晰度、节奏和更自然的学术语气。 |
 | Skill | `latex-conference-template-organizer` | 把混乱的会议模板整理成 Overleaf-ready 写作结构。 |
 | Agent | `paper-miner` | 从高质量论文中提炼可复用的写作模式、结构和投稿经验。 |
-| Command | `/mine-writing-patterns` | 读取论文并把可复用写作知识合并进当前已安装的 paper-miner 写作记忆。 |
 
 **工作方式**
 - **模板准备**：把会议模板清理成 Overleaf-ready 结构。
@@ -445,15 +444,18 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 
 旧的 `obsidian-project-memory`、`obsidian-project-bootstrap`、`obsidian-experiment-log` 等 Kimi 时代 Obsidian skill shim 已移除。请直接使用 `obsidian-project-kb-core`、`obsidian-source-ingestion`、`obsidian-literature-workflow` 和 `obsidian-kb-artifacts`。
 
-### Kimi 会话约束与 Hook 模拟
+### Kimi 会话约束与 Native Hooks
 
-Kimi 不提供原生 Claude Code hooks，所以这个分支通过 AGENTS 工作约束和本地辅助脚本来模拟最高价值的行为。
+这个分支使用 Kimi Code CLI 的 hook 配置，把最高价值的会话检查和安全检查接到本地 shell 脚本。
 
 | 类型 | 名字 | 一句话解释 |
 |---|---|---|
 | File | `AGENTS.md` | 编码会话约束、skill 评估规则、安全规则和 Kimi 专用工作流说明。 |
-| Script | `scripts/kimi_hook_emulation.py` | 在仓库工作流内模拟 session-start、preflight、post-edit、session-end 行为。 |
-| Skill | `session-wrap-up` | 在会话结束时生成工作日志、清理提醒和收尾总结。 |
+| Hook | `hooks/security-guard.sh` | 在危险命令和敏感文件修改前做安全检查。 |
+| Hook | `hooks/session-start.sh` | 在会话开始时显示 repo 状态、skills、TODO 和项目上下文。 |
+| Hook | `hooks/skill-forced-eval.sh` | 在用户提示提交前静默扫描应使用的 skill。 |
+| Hook | `hooks/session-summary.sh` | 在会话结束时生成工作日志。 |
+| Hook | `hooks/stop-summary.sh` | 在 stop 信号出现时生成收尾摘要。 |
 
 **工作方式**
 - **会话开始代理**：检查 repo 状态、skills、TODO 和项目上下文。

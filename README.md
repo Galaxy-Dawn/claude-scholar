@@ -365,7 +365,6 @@ Systematic paper writing from template preparation to iterative drafting.
 | Skill | `writing-anti-ai` | Reduce robotic phrasing and improve clarity, rhythm, and human academic tone. |
 | Skill | `latex-conference-template-organizer` | Clean messy conference templates into an Overleaf-ready writing structure. |
 | Agent | `paper-miner` | Mine strong papers for reusable writing patterns, structure, and venue expectations. |
-| Command | `/mine-writing-patterns` | Read a paper and merge reusable writing knowledge into the active installed paper-miner writing memory. |
 
 **How it works**
 - **Template Preparation**: clean conference templates into an Overleaf-ready structure.
@@ -482,7 +481,6 @@ Kimi Code CLI supports native bash hooks via `config.toml`, so this branch uses 
 | Hook | `hooks/skill-forced-eval.sh` | Silent skill scanning against user prompts before submission. |
 | Hook | `hooks/session-summary.sh` | Generates session work log at session end. |
 | Hook | `hooks/stop-summary.sh` | Generates stop summary when the stop signal is received. |
-| Skill | `session-wrap-up` | Produces work logs, cleanup reminders, and closeout summaries at the end of a session. |
 
 **How it works**
 - **Session start**: inspect repo state, skills, TODOs, and project context.
@@ -543,7 +541,7 @@ Claude Scholar also includes a self-improvement loop for its own skills.
 - [AGENTS.md](./AGENTS.md) — lightweight Kimi core instructions
 - [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) — Chinese companion for the lightweight core instructions
 - [README.ja-JP.md](./README.ja-JP.md) — Japanese version of this README
-- [config.toml](./config.toml) — template Kimi Code CLI configuration with skills, agents, and MCP blocks
+- [config.toml](./config.toml) — template Kimi Code CLI configuration with provider, model, service, and hook blocks
 
 ## Project Rules
 

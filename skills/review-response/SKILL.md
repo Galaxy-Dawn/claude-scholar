@@ -86,7 +86,7 @@ When the rebuttal task involves:
 
 read the active installed writing memory before drafting:
 
-- `~/.kimi/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md` on Kimi installs
+- `~/.kimi-code/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md` on Kimi installs
 - equivalent installed skill-home paths on other branches
 - otherwise skip this optional memory and continue with the local review-response references
 

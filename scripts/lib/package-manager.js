@@ -55,7 +55,7 @@ const DETECTION_PRIORITY = ['pnpm', 'bun', 'yarn', 'npm'];
 function getProjectConfigPath() {
   const projectRoot = getProjectRoot();
   if (projectRoot) {
-    return path.join(projectRoot, '.kimi', 'package-manager.json');
+    return path.join(projectRoot, '.kimi-code', 'package-manager.json');
   }
   return null;
 }
@@ -73,7 +73,7 @@ function getGlobalConfigPath() {
  * @returns {string|null} 包管理器名称或 null
  */
 function detectFromEnvironment() {
-  const envPm = process.env.CLAUDE_PACKAGE_MANAGER;
+  const envPm = process.env.KIMI_PACKAGE_MANAGER || process.env.CLAUDE_PACKAGE_MANAGER;
   if (envPm && PACKAGE_MANAGERS[envPm]) {
     return envPm;
   }
