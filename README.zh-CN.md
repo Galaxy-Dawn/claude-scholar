@@ -20,7 +20,7 @@
 
 ## 最新动态
 
-- **2026-06-03**: **新增 Kimi Code CLI 分支到支持平台展示** — 已将 `kimi` 分支记录为 Claude Scholar 的 Kimi Code CLI 版本，并在共享平台顺序中放在 Claude Code 和 Codex CLI 之后、OpenCode 之前。
+- **2026-06-03**: **新增 Kimi Code CLI 分支，并感谢 Kimi 对本项目的大力支持** — 已将 `kimi` 分支作为 Claude Scholar 的 Kimi Code CLI 版本纳入支持平台；感谢 Kimi 团队对本项目的持续支持与帮助。
 - **2026-05-14**: **将 `expression-skill` 提升为核心表达层，把 `planning-with-files` 恢复为默认持久规划层，并继续扩展 Nature 写作栈** — 把 [`expression-skill`](./skills/expression-skill/README.md) 明确为汇报、规划、文件操作和多步骤技术任务的结论先行表达纪律；将 [`planning-with-files`](./skills/planning-with-files/SKILL.md) 重新接回默认的落盘规划与进度跟踪工作流，用 `task_plan.md` / `notes.md` 管理复杂任务；引入用于章节起草与论证构建的 [`nature-writing`](./skills/nature-writing/README.md)；将 [`nature-polishing`](./skills/nature-polishing/README.md) 刷新到上游最新 article-pattern 版本；并继续保留 [`nature-response`](./skills/nature-response/README.md) 与 [`nature-data`](./skills/nature-data/README.md) 作为 journal-writing 栈的一部分。
 - **2026-05-13**: **证据门槛研究工作流与 `Sources/Papers` 路由完成收紧** — 新增共享的 `research-contract.md`，统一 Evidence Records、claim strength 和 Claim Promotion Gate；将研究构思、Zotero 导入、文献综合、结果报告、论文写作与 rebuttal 工作流接入同一证据契约；并明确项目论文源笔记先放在 `Sources/Papers`，通过证据门槛后再进入 `Knowledge` 或 `Writing`。
 - **2026-04-25**: **Codex Obsidian KB lifecycle 稳定化** — 修复 Codex 项目 KB workflow 中 rename、archive、purge、sync、lint 的边界问题，并让 repo-local binding metadata 与 Codex runtime 保持一致。
