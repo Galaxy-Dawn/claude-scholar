@@ -222,6 +222,15 @@ Claude Code 插件无法自动分发 rules，需要手动安装：
 git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 
 # 用户级（所有项目生效）
+
+<p align="center">
+  <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=claude-scholar">
+    <img src="assets/atlas-cloud-logo.png" alt="Atlas Cloud" width="140" />
+  </a>
+  <br />
+  <sub><strong>Atlas Cloud</strong> Atlas Cloud provides OpenAI-compatible LLM APIs and async image/video generation APIs for scholarly agents and multimodal research workflows.</sub>
+</p>
+
 mkdir -p ~/.claude/rules
 cp /tmp/claude-scholar/rules/*.md ~/.claude/rules/
 
