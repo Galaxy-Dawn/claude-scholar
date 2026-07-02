@@ -17,6 +17,15 @@
     </picture>
   </p>
 
+  <p>
+    <sub>
+      Official Kimi links:
+      <a href="https://www.kimi.com/code?aff=claude-scholar">Kimi Code</a> ·
+      <a href="https://platform.kimi.com?aff=claude-scholar">Platform CN</a> ·
+      <a href="https://platform.kimi.ai?aff=claude-scholar">Platform Global</a>
+    </sub>
+  </p>
+
   <strong>Language</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
 </div>
 

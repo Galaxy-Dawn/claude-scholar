@@ -16,6 +16,15 @@
     </picture>
   </p>
 
+  <p>
+    <sub>
+      Official Kimi links:
+      <a href="https://www.kimi.com/code?aff=claude-scholar">Kimi Code</a> ·
+      <a href="https://platform.kimi.com?aff=claude-scholar">Platform CN</a> ·
+      <a href="https://platform.kimi.ai?aff=claude-scholar">Platform Global</a>
+    </sub>
+  </p>
+
   <strong>语言</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
   <p><strong>支持平台</strong>: <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/main">Claude Code</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex">Codex CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi">Kimi Code CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode">OpenCode</a></p>
 </div>
