@@ -40,21 +40,29 @@ uv tool install git+https://github.com/Galaxy-Dawn/zotero-mcp.git
 
 ##### Kimi CLI
 
-添加到 `~/.kimi-code/config.toml`：
+添加到 `~/.kimi-code/mcp.json`：
 
-```toml
-[mcp_servers.zotero]
-command = "zotero-mcp"
-args = ["serve"]
-enabled = true
-
-[mcp_servers.zotero.env]
-ZOTERO_API_KEY = "your-api-key"
-ZOTERO_LIBRARY_ID = "your-user-id"
-ZOTERO_LIBRARY_TYPE = "user"
-UNPAYWALL_EMAIL = "your-email@example.com"
-UNSAFE_OPERATIONS = "all"
-NO_PROXY = "localhost,127.0.0.1"
+```json
+{
+  "mcpServers": {
+    "zotero": {
+      "command": "zotero-mcp",
+      "args": ["serve"],
+      "transport": "stdio",
+      "env": {
+        "ZOTERO_LOCAL": "true",
+        "NO_PROXY": "localhost,127.0.0.1",
+        "FASTMCP_CHECK_FOR_UPDATES": "off",
+        "FASTMCP_SHOW_SERVER_BANNER": "false",
+        "ZOTERO_API_KEY": "your-api-key",
+        "ZOTERO_LIBRARY_ID": "your-user-id",
+        "ZOTERO_LIBRARY_TYPE": "user",
+        "UNPAYWALL_EMAIL": "your-email@example.com",
+        "UNSAFE_OPERATIONS": "all"
+      }
+    }
+  }
+}
 ```
 
 ##### Claude Code
@@ -73,7 +81,9 @@ NO_PROXY = "localhost,127.0.0.1"
         "ZOTERO_LIBRARY_TYPE": "user",
         "UNPAYWALL_EMAIL": "your-email@example.com",
         "UNSAFE_OPERATIONS": "all",
-        "NO_PROXY": "localhost,127.0.0.1"
+        "NO_PROXY": "localhost,127.0.0.1",
+        "FASTMCP_CHECK_FOR_UPDATES": "off",
+        "FASTMCP_SHOW_SERVER_BANNER": "false"
       }
     }
   }
@@ -105,6 +115,8 @@ export ZOTERO_LIBRARY_ID="your-user-id"
 export ZOTERO_LIBRARY_TYPE="user"
 export UNPAYWALL_EMAIL="your-email@example.com"
 export UNSAFE_OPERATIONS="all"
+export FASTMCP_CHECK_FOR_UPDATES="off"
+export FASTMCP_SHOW_SERVER_BANNER="false"
 ```
 
 #### 环境变量
@@ -117,6 +129,8 @@ export UNSAFE_OPERATIONS="all"
 | `UNPAYWALL_EMAIL` | 否 | 用于 Unpaywall PDF 搜索的邮箱 |
 | `UNSAFE_OPERATIONS` | 否 | `items`（启用 delete_items）、`all`（启用 delete_collection） |
 | `NO_PROXY` | 否 | 绕过 localhost 代理 |
+| `FASTMCP_CHECK_FOR_UPDATES` | 否 | 设为 `off`，跳过 FastMCP 启动时的更新检查 |
+| `FASTMCP_SHOW_SERVER_BANNER` | 否 | 设为 `false`，关闭 FastMCP 启动 banner |
 
 说明：
 - 最小本地配置只需要 `command = "zotero-mcp"` 和 `args = ["serve"]`。
@@ -189,4 +203,5 @@ export UNSAFE_OPERATIONS="all"
 | PDF 附加失败 | 确保已设置 `UNPAYWALL_EMAIL` |
 | 删除操作被阻止 | 设置 `UNSAFE_OPERATIONS=items` 或 `all` |
 | HTTP 错误 | 检查 `NO_PROXY` 是否包含 localhost |
+| MCP server 启动前退出 | 设置 `FASTMCP_CHECK_FOR_UPDATES=off` 和 `FASTMCP_SHOW_SERVER_BANNER=false` |
 | API 速率限制 (429) | 每批次 ≤10 篇论文，批次间添加延迟 |

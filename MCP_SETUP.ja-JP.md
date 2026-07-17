@@ -55,7 +55,10 @@ Claude Code v2.1.5以降の場合、`~/.claude.json`の`mcpServers`に追加。
         "ZOTERO_LIBRARY_ID": "your-user-id",
         "ZOTERO_LIBRARY_TYPE": "user",
         "UNPAYWALL_EMAIL": "your-email@example.com",
-        "UNSAFE_OPERATIONS": "all"
+        "UNSAFE_OPERATIONS": "all",
+        "NO_PROXY": "localhost,127.0.0.1",
+        "FASTMCP_CHECK_FOR_UPDATES": "off",
+        "FASTMCP_SHOW_SERVER_BANNER": "false"
       }
     }
   }
@@ -64,21 +67,29 @@ Claude Code v2.1.5以降の場合、`~/.claude.json`の`mcpServers`に追加。
 
 ##### Kimi CLI
 
-`~/.kimi-code/config.toml`に追加:
+`~/.kimi-code/mcp.json`に追加:
 
-```toml
-[mcp_servers.zotero]
-command = "zotero-mcp"
-args = ["serve"]
-enabled = true
-
-[mcp_servers.zotero.env]
-ZOTERO_API_KEY = "your-api-key"
-ZOTERO_LIBRARY_ID = "your-user-id"
-ZOTERO_LIBRARY_TYPE = "user"
-UNPAYWALL_EMAIL = "your-email@example.com"
-UNSAFE_OPERATIONS = "all"
-NO_PROXY = "localhost,127.0.0.1"
+```json
+{
+  "mcpServers": {
+    "zotero": {
+      "command": "zotero-mcp",
+      "args": ["serve"],
+      "transport": "stdio",
+      "env": {
+        "ZOTERO_LOCAL": "true",
+        "NO_PROXY": "localhost,127.0.0.1",
+        "FASTMCP_CHECK_FOR_UPDATES": "off",
+        "FASTMCP_SHOW_SERVER_BANNER": "false",
+        "ZOTERO_API_KEY": "your-api-key",
+        "ZOTERO_LIBRARY_ID": "your-user-id",
+        "ZOTERO_LIBRARY_TYPE": "user",
+        "UNPAYWALL_EMAIL": "your-email@example.com",
+        "UNSAFE_OPERATIONS": "all"
+      }
+    }
+  }
+}
 ```
 
 ##### OpenCode
@@ -106,6 +117,8 @@ export ZOTERO_LIBRARY_ID="your-user-id"
 export ZOTERO_LIBRARY_TYPE="user"
 export UNPAYWALL_EMAIL="your-email@example.com"
 export UNSAFE_OPERATIONS="all"
+export FASTMCP_CHECK_FOR_UPDATES="off"
+export FASTMCP_SHOW_SERVER_BANNER="false"
 ```
 
 #### 環境変数
@@ -118,6 +131,8 @@ export UNSAFE_OPERATIONS="all"
 | `UNPAYWALL_EMAIL` | 不要 | Unpaywall PDF検索用メールアドレス |
 | `UNSAFE_OPERATIONS` | 不要 | `items`（delete_items）、`all`（delete_collection） |
 | `NO_PROXY` | 不要 | localhostのプロキシをバイパス |
+| `FASTMCP_CHECK_FOR_UPDATES` | 不要 | `off`に設定するとFastMCPの起動時アップデート確認をスキップ |
+| `FASTMCP_SHOW_SERVER_BANNER` | 不要 | `false`に設定するとFastMCPの起動バナーを抑制 |
 
 注意:
 - 最小限のローカルセットアップは`command = "zotero-mcp"`と`args = ["serve"]`のみです。
@@ -191,4 +206,5 @@ export UNSAFE_OPERATIONS="all"
 | PDF添付が失敗する | `UNPAYWALL_EMAIL`が設定されているか確認 |
 | 削除操作がブロックされる | `UNSAFE_OPERATIONS=items`または`all`を設定 |
 | HTTPエラー | `NO_PROXY`にlocalhostが含まれているか確認 |
+| MCP serverが起動前に終了する | `FASTMCP_CHECK_FOR_UPDATES=off`と`FASTMCP_SHOW_SERVER_BANNER=false`を設定 |
 | APIレート制限（429） | 一度に10件以下の論文をバッチ処理し、バッチ間に遅延を追加 |

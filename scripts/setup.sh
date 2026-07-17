@@ -1222,6 +1222,8 @@ if "zotero" in data.get("mcpServers", {}):
     env.setdefault("UNSAFE_OPERATIONS", "all")
     env.setdefault("NO_PROXY", "localhost,127.0.0.1")
     env.setdefault("ZOTERO_LOCAL", "true")
+    env.setdefault("FASTMCP_CHECK_FOR_UPDATES", "off")
+    env.setdefault("FASTMCP_SHOW_SERVER_BANNER", "false")
 
 mcp_path.write_text(json.dumps(data, indent=2) + '\n')
 PY

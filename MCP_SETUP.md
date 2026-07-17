@@ -40,21 +40,29 @@ Choose your platform below:
 
 ##### Kimi Code CLI
 
-Add to your `~/.kimi-code/config.toml`:
+Add to your `~/.kimi-code/mcp.json`:
 
-```toml
-[mcp_servers.zotero]
-command = "zotero-mcp"
-args = ["serve"]
-enabled = true
-
-[mcp_servers.zotero.env]
-ZOTERO_API_KEY = "your-api-key"
-ZOTERO_LIBRARY_ID = "your-user-id"
-ZOTERO_LIBRARY_TYPE = "user"
-UNPAYWALL_EMAIL = "your-email@example.com"
-UNSAFE_OPERATIONS = "all"
-NO_PROXY = "localhost,127.0.0.1"
+```json
+{
+  "mcpServers": {
+    "zotero": {
+      "command": "zotero-mcp",
+      "args": ["serve"],
+      "transport": "stdio",
+      "env": {
+        "ZOTERO_LOCAL": "true",
+        "NO_PROXY": "localhost,127.0.0.1",
+        "FASTMCP_CHECK_FOR_UPDATES": "off",
+        "FASTMCP_SHOW_SERVER_BANNER": "false",
+        "ZOTERO_API_KEY": "your-api-key",
+        "ZOTERO_LIBRARY_ID": "your-user-id",
+        "ZOTERO_LIBRARY_TYPE": "user",
+        "UNPAYWALL_EMAIL": "your-email@example.com",
+        "UNSAFE_OPERATIONS": "all"
+      }
+    }
+  }
+}
 ```
 
 ##### Claude Code
@@ -73,7 +81,9 @@ Add to your `~/.claude/settings.json`:
         "ZOTERO_LIBRARY_TYPE": "user",
         "UNPAYWALL_EMAIL": "your-email@example.com",
         "UNSAFE_OPERATIONS": "all",
-        "NO_PROXY": "localhost,127.0.0.1"
+        "NO_PROXY": "localhost,127.0.0.1",
+        "FASTMCP_CHECK_FOR_UPDATES": "off",
+        "FASTMCP_SHOW_SERVER_BANNER": "false"
       }
     }
   }
@@ -105,6 +115,8 @@ export ZOTERO_LIBRARY_ID="your-user-id"
 export ZOTERO_LIBRARY_TYPE="user"
 export UNPAYWALL_EMAIL="your-email@example.com"
 export UNSAFE_OPERATIONS="all"
+export FASTMCP_CHECK_FOR_UPDATES="off"
+export FASTMCP_SHOW_SERVER_BANNER="false"
 ```
 
 #### Environment Variables
@@ -117,6 +129,8 @@ export UNSAFE_OPERATIONS="all"
 | `UNPAYWALL_EMAIL` | No | Email for Unpaywall PDF search |
 | `UNSAFE_OPERATIONS` | No | `items` (delete_items), `all` (delete_collection) |
 | `NO_PROXY` | No | Bypass proxy for localhost |
+| `FASTMCP_CHECK_FOR_UPDATES` | No | Set to `off` to skip FastMCP's startup update check |
+| `FASTMCP_SHOW_SERVER_BANNER` | No | Set to `false` to suppress FastMCP's startup banner |
 
 Notes:
 - The minimal local setup is just `command = "zotero-mcp"` plus `args = ["serve"]`.
@@ -189,4 +203,5 @@ If the tool responds with your collections, the setup is complete.
 | PDF attach fails | Ensure `UNPAYWALL_EMAIL` is set |
 | Delete operations blocked | Set `UNSAFE_OPERATIONS=items` or `all` |
 | HTTP errors | Check `NO_PROXY` includes localhost |
+| MCP server exits before startup | Set `FASTMCP_CHECK_FOR_UPDATES=off` and `FASTMCP_SHOW_SERVER_BANNER=false` |
 | API rate limit (429) | Batch ≤10 papers at a time, add delays between batches |

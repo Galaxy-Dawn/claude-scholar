@@ -326,6 +326,25 @@ test_fresh_mcp_json_is_removed_when_empty_on_uninstall() {
   pass "fresh mcp.json is removed when no user entries remain"
 }
 
+test_zotero_mcp_defaults_include_fastmcp_startup_guards() {
+  local home
+  home="$(make_home)"
+  write_base_config "$home"
+
+  run_setup "$home"
+  python3 - "$home/.kimi/mcp.json" <<'PY'
+import json, pathlib, sys
+
+path = pathlib.Path(sys.argv[1])
+data = json.loads(path.read_text())
+env = data["mcpServers"]["zotero"]["env"]
+
+assert env["FASTMCP_CHECK_FOR_UPDATES"] == "off"
+assert env["FASTMCP_SHOW_SERVER_BANNER"] == "false"
+PY
+  pass "zotero MCP defaults include FastMCP startup guards"
+}
+
 test_mcp_state_does_not_store_configured_secrets() {
   local home
   home="$(make_home)"
@@ -636,6 +655,7 @@ main() {
   test_existing_zotero_mcp_server_is_restored_on_uninstall
   test_fresh_mcp_json_keeps_user_added_server_on_uninstall
   test_fresh_mcp_json_is_removed_when_empty_on_uninstall
+  test_zotero_mcp_defaults_include_fastmcp_startup_guards
   test_mcp_state_does_not_store_configured_secrets
   test_invalid_existing_mcp_json_fails_safely
   test_invalid_existing_mcp_schema_fails_before_install
