@@ -9,22 +9,6 @@
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
   </p>
 
-  <p>
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg">
-      <img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg">
-    </picture>
-  </p>
-
-  <p>
-    <sub>
-      Official Kimi links:
-      <a href="https://www.kimi.com/code?aff=claude-scholar">Kimi Code</a> ·
-      <a href="https://platform.kimi.com?aff=claude-scholar">Platform CN</a> ·
-      <a href="https://platform.kimi.ai?aff=claude-scholar">Platform Global</a>
-    </sub>
-  </p>
-
   <strong>Language</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
   <p><strong>対応プラットフォーム</strong>: <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/main">Claude Code</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex">Codex CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi">Kimi Code CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode">OpenCode</a></p>
 </div>
@@ -33,6 +17,13 @@
 >
 > **ブランチ説明**：これは Claude Scholar の **Kimi Code CLI 版**です。Claude Code 版は [`main` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)、Codex CLI 版は [`codex` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/codex)、OpenCode 版は [`opencode` ブランチ](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode) を参照してください。
 
+
+## Sponsors
+
+| スポンサー | 紹介 |
+| :---: | --- |
+| <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | 本プロジェクトをご支援いただいた APIMart に感謝します！APIMart は AI 画像・動画生成に特化した低価格 API プラットフォームです。GPT-Image-2 は 1 枚 $0.006 から、1 ドルで 160 枚以上生成できます。画像と動画を 1 つの非同期 API で扱え、タスクを送信して ID を取得し、ポーリングまたはコールバックで結果を取得できます。数万枚規模のバッチもタイムアウトせず、コードを変更せずにモデルを切り替えられます。月額料金なしの従量課金制です。[こちらから登録](https://go.apimart.ai/gh-claude-scholar)してご利用ください。 |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg"><img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg" width="180"></picture> | 本プロジェクトへの Kimi チームの力強いご支援に感謝します。公式リンク：[Kimi Code](https://www.kimi.com/code?aff=claude-scholar) · [中国向けプラットフォーム](https://platform.kimi.com?aff=claude-scholar) · [グローバルプラットフォーム](https://platform.kimi.ai?aff=claude-scholar)。 |
 
 ## 最新ニュース
 

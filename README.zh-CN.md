@@ -9,22 +9,6 @@
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
   </p>
 
-  <p>
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg">
-      <img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg">
-    </picture>
-  </p>
-
-  <p>
-    <sub>
-      Official Kimi links:
-      <a href="https://www.kimi.com/code?aff=claude-scholar">Kimi Code</a> ·
-      <a href="https://platform.kimi.com?aff=claude-scholar">Platform CN</a> ·
-      <a href="https://platform.kimi.ai?aff=claude-scholar">Platform Global</a>
-    </sub>
-  </p>
-
   <strong>语言</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
   <p><strong>支持平台</strong>: <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/main">Claude Code</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex">Codex CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi">Kimi Code CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode">OpenCode</a></p>
 </div>
@@ -33,6 +17,13 @@
 >
 > **分支说明**：这是 Claude Scholar 的 **Kimi Code CLI 版本**。Claude Code 版本请查看 [`main` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/main)，Codex CLI 版本请查看 [`codex` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/codex)，OpenCode 版本请查看 [`opencode` 分支](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode)。
 
+
+## Sponsors
+
+| 赞助商 | 介绍 |
+| :---: | --- |
+| <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | 感谢 APIMart 赞助了本项目！APIMart 是专注 AI 图片/视频生成的低价 API 平台，GPT-Image-2 低至 $0.006/张，1 美元可出图 160+ 张。图片、视频一套异步 API 通吃，提交任务拿 ID、回调取结果，跑批万张不超时、换模型不改代码。按量付费、无月费，通过此[注册链接](https://go.apimart.ai/gh-claude-scholar)注册即可开用。 |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg"><img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg" width="180"></picture> | 感谢 Kimi 团队对本项目的大力支持！官方链接：[Kimi Code](https://www.kimi.com/code?aff=claude-scholar) · [中国大陆平台](https://platform.kimi.com?aff=claude-scholar) · [全球平台](https://platform.kimi.ai?aff=claude-scholar)。 |
 
 ## 最新动态
 
