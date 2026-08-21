@@ -9,22 +9,6 @@
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
   </p>
 
-  <p>
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg">
-      <img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg">
-    </picture>
-  </p>
-
-  <p>
-    <sub>
-      Official Kimi links:
-      <a href="https://www.kimi.com/code?aff=claude-scholar">Kimi Code</a> ·
-      <a href="https://platform.kimi.com?aff=claude-scholar">Platform CN</a> ·
-      <a href="https://platform.kimi.ai?aff=claude-scholar">Platform Global</a>
-    </sub>
-  </p>
-
   <strong>Language</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
   <p><strong>Supported Platforms</strong>: <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/main">Claude Code</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex">Codex CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi">Kimi Code CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode">OpenCode</a></p>
 </div>
@@ -39,6 +23,7 @@
 | Sponsor | Description |
 | :---: | --- |
 | <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | Thanks to APIMart for sponsoring this project! APIMart is a low-cost API platform for AI image & video generation — GPT-Image-2 from $0.006/image, 160+ images per dollar. One async API covers both image and video: submit a task, get an ID, fetch results via polling or callback. Batch tens of thousands of images without timeouts, switch models without changing code. Pay-as-you-go with no monthly fee — [sign up here](https://go.apimart.ai/gh-claude-scholar) to get started. |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg"><img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg" width="180"></picture> | Thanks to the Kimi team for their strong support of this project! Official links: [Kimi Code](https://www.kimi.com/code?aff=claude-scholar) · [Platform CN](https://platform.kimi.com?aff=claude-scholar) · [Platform Global](https://platform.kimi.ai?aff=claude-scholar). |
 
 ## Recent News
 
