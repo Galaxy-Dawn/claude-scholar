@@ -34,6 +34,12 @@
 
   <p><em>ブランチについて</em>: <code>main</code>ブランチはClaude Codeワークフロー用です。Codex CLIをご利用の場合は<a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex"><code>codex</code>ブランチ</a>を、Kimi Code CLIをご利用の場合は<a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi"><code>kimi</code>ブランチ</a>を、OpenCodeをご利用の場合は<a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode"><code>opencode</code>ブランチ</a>をご参照ください。</p>
 
+## Sponsors
+
+| スポンサー | 紹介 |
+| :---: | --- |
+| <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | 本プロジェクトをご支援いただいた APIMart に感謝します！APIMart は AI 画像・動画生成に特化した低価格 API プラットフォームです。GPT-Image-2 は 1 枚 $0.006 から、1 ドルで 160 枚以上生成できます。画像と動画を 1 つの非同期 API で扱え、タスクを送信して ID を取得し、ポーリングまたはコールバックで結果を取得できます。数万枚規模のバッチもタイムアウトせず、コードを変更せずにモデルを切り替えられます。月額料金なしの従量課金制です。[こちらから登録](https://go.apimart.ai/gh-claude-scholar)してご利用ください。 |
+
 ## 最新ニュース
 
 - **2026-06-03**: **Kimi Code CLI ブランチを追加し、Kimi からの力強い支援に感謝** — `kimi` ブランチを Claude Scholar の Kimi Code CLI 版として追加しました。本プロジェクトへの Kimi チームの継続的で力強い支援に感謝します。

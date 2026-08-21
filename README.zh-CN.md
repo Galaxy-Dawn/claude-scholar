@@ -35,6 +35,12 @@
 
   <p><em>分支说明</em>：<code>main</code> 分支对应 Claude Code 工作流。如果你使用 Codex CLI，请查看 <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex"><code>codex</code> 分支</a>；如果你使用 Kimi Code CLI，请查看 <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi"><code>kimi</code> 分支</a>；如果你使用 OpenCode，请查看 <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode"><code>opencode</code> 分支</a>。</p>
 
+## Sponsors
+
+| 赞助商 | 介绍 |
+| :---: | --- |
+| <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | 感谢 APIMart 赞助了本项目！APIMart 是专注 AI 图片/视频生成的低价 API 平台，GPT-Image-2 低至 $0.006/张，1 美元可出图 160+ 张。图片、视频一套异步 API 通吃，提交任务拿 ID、回调取结果，跑批万张不超时、换模型不改代码。按量付费、无月费，通过此[注册链接](https://go.apimart.ai/gh-claude-scholar)注册即可开用。 |
+
 ## 最新动态
 
 - **2026-06-03**: **新增 Kimi Code CLI 分支，并感谢 Kimi 对本项目的大力支持** — 已将 `kimi` 分支作为 Claude Scholar 的 Kimi Code CLI 版本纳入支持平台；感谢 Kimi 团队对本项目的持续支持与帮助。
