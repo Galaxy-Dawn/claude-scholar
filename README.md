@@ -34,6 +34,12 @@
 > **Branch note**: this is the **Codex CLI edition** of Claude Scholar. For the Claude Code version, see the [`main` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/main). For the Kimi Code CLI version, see the [`kimi` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi). For the OpenCode version, see the [`opencode` branch](https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode).
 
 
+## Sponsors
+
+| Sponsor | Description |
+| :---: | --- |
+| <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | Thanks to APIMart for sponsoring this project! APIMart is a low-cost API platform for AI image & video generation — GPT-Image-2 from $0.006/image, 160+ images per dollar. One async API covers both image and video: submit a task, get an ID, fetch results via polling or callback. Batch tens of thousands of images without timeouts, switch models without changing code. Pay-as-you-go with no monthly fee — [sign up here](https://go.apimart.ai/gh-claude-scholar) to get started. |
+
 ## Recent News
 
 - **2026-06-03**: **Kimi Code CLI branch added with strong support from Kimi** — added the `kimi` branch as the Kimi Code CLI edition of Claude Scholar and thank the Kimi team for their strong support of this project.
