@@ -127,30 +127,35 @@ Each stage should preserve what is known, what is uncertain, and what decision s
 
 ### Option 1: Full Installation (Recommended)
 
+**Linux / macOS**:
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 bash /tmp/claude-scholar/scripts/setup.sh
 ```
 
-**Windows**: please use Git Bash or WSL to run the installer.
+**Windows (PowerShell)**:
+```powershell
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git C:\Temp\claude-scholar
+powershell -ExecutionPolicy Bypass -File C:\Temp\claude-scholar\scripts\setup.ps1
+```
 
 The installer is **backup-aware and incremental-update friendly**:
-- updates repo-managed `skills/commands/agents/rules/hooks/scripts/CLAUDE*.md`,
-- backs up overwritten files to `~/.claude/.claude-scholar-backups/<timestamp>/`,
-- backs up `settings.json` to `settings.json.bak`,
-- preserves an existing `~/.claude/CLAUDE.md` and installs the repo-managed version as `~/.claude/CLAUDE.scholar.md`,
-- preserves an existing `~/.claude/CLAUDE.zh-CN.md` and installs the repo-managed version as `~/.claude/CLAUDE.zh-CN.scholar.md`,
+- updates repo-managed `skills/commands/agents/rules/hooks/scripts/CLAUDE*.md` directly in the plugin directory `~/.gemini/config/plugins/claude-scholar/`,
+- backs up overwritten files to `~/.gemini/config/plugins/claude-scholar/.claude-scholar-backups/<timestamp>/`,
+- backs up `mcp_config.json` to `mcp_config.json.bak`,
+- preserves an existing `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` and installs the repo-managed version as `~/.gemini/config/plugins/claude-scholar/CLAUDE.scholar.md`,
+- preserves an existing `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md` and installs the repo-managed version as `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.scholar.md`,
 - preserves your existing `env`, model/provider settings, API keys, permissions, and current `mcpServers` values,
-- adds missing hook entries instead of replacing your entire hook set.
+- merges necessary MCP servers into `~/.gemini/config/mcp_config.json` without replacing your entire set.
 
-**Important CLAUDE note**: if you already maintain your own `~/.claude/CLAUDE.md` or `~/.claude/CLAUDE.zh-CN.md`, review `~/.claude/CLAUDE.scholar.md` and `~/.claude/CLAUDE.zh-CN.scholar.md` after installation and manually merge the Claude Scholar sections you want into your own files. Do not assume the sidecar files are applied automatically.
+**Important CLAUDE note**: if you already maintain your own `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` or `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`, review the sidecar `.scholar.md` files after installation and manually merge the Claude Scholar sections you want into your own files. Do not assume the sidecar files are applied automatically.
 
 To update later:
 
 ```bash
-cd /tmp/claude-scholar
+cd /tmp/claude-scholar  # or C:\Temp\claude-scholar on Windows
 git pull --ff-only
-bash scripts/setup.sh
+bash scripts/setup.sh   # or powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
 ```
 
 To uninstall later:
@@ -161,8 +166,8 @@ bash scripts/uninstall.sh
 ```
 
 The installer now writes:
-- `~/.claude/.claude-scholar-manifest.txt` for the exact files managed by Claude Scholar
-- `~/.claude/.claude-scholar-install-state` for install ownership metadata used by safe uninstall
+- `~/.gemini/config/plugins/claude-scholar/.claude-scholar-manifest.txt` for the exact files managed by Claude Scholar
+- `~/.gemini/config/plugins/claude-scholar/.claude-scholar-install-state` for install ownership metadata used by safe uninstall
 
 The uninstaller removes only files and settings entries recorded in that install state. It does not guess ownership from the current repo checkout.
 
@@ -171,38 +176,38 @@ The uninstaller removes only files and settings entries recorded in that install
 Install only a small research-focused subset:
 
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.claude/hooks ~/.claude/skills
-cp /tmp/claude-scholar/hooks/*.js ~/.claude/hooks/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/git-workflow ~/.claude/skills/
-cp -r /tmp/claude-scholar/skills/bug-detective ~/.claude/skills/
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+mkdir -p ~/.gemini/config/plugins/claude-scholar/hooks ~/.gemini/config/plugins/claude-scholar/skills
+cp /tmp/claude-scholar/hooks/*.js ~/.gemini/config/plugins/claude-scholar/hooks/
+cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/research-ideation ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/results-analysis ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/results-report ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/review-response ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/git-workflow ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r /tmp/claude-scholar/skills/bug-detective ~/.gemini/config/plugins/claude-scholar/skills/
 ```
 
-**Post-install**: minimal/manual install does **not** auto-merge `settings.json`; copy only the hooks or MCP entries you want from `settings.json.template`. If you already have your own `~/.claude/CLAUDE.md` or `~/.claude/CLAUDE.zh-CN.md`, also merge the relevant sections from this repo's Claude files into yours instead of blindly overwriting them.
+**Post-install**: minimal/manual install does **not** auto-merge `mcp_config.json`; copy only the MCP entries you want from `settings.json.template` to `~/.gemini/config/mcp_config.json`. If you already have your own `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` or `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`, also merge the relevant sections from this repo's Claude files into yours instead of blindly overwriting them.
 
 ### Option 3: Selective Installation
 
 Copy only the parts you need:
 
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 cd /tmp/claude-scholar
 
-cp hooks/*.js ~/.claude/hooks/
-cp -r skills/latex-conference-template-organizer ~/.claude/skills/
-cp -r skills/architecture-design ~/.claude/skills/
-cp agents/paper-miner.md ~/.claude/agents/
-cp rules/coding-style.md ~/.claude/rules/
-cp rules/agents.md ~/.claude/rules/
+cp hooks/*.js ~/.gemini/config/plugins/claude-scholar/hooks/
+cp -r skills/latex-conference-template-organizer ~/.gemini/config/plugins/claude-scholar/skills/
+cp -r skills/architecture-design ~/.gemini/config/plugins/claude-scholar/skills/
+cp agents/paper-miner.md ~/.gemini/config/plugins/claude-scholar/agents/
+cp rules/coding-style.md ~/.gemini/config/plugins/claude-scholar/rules/
+cp rules/agents.md ~/.gemini/config/plugins/claude-scholar/rules/
 ```
 
-**Post-install**: selective/manual install does **not** auto-merge `settings.json`; copy only the hooks or MCP entries you actually want from `settings.json.template`. If you already have your own `~/.claude/CLAUDE.md` or `~/.claude/CLAUDE.zh-CN.md`, merge the relevant sections from this repo's Claude files into yours instead of blindly overwriting them.
+**Post-install**: selective/manual install does **not** auto-merge `mcp_config.json`; copy only the MCP entries you actually want from `settings.json.template` to `~/.gemini/config/mcp_config.json`. If you already have your own `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` or `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`, merge the relevant sections from this repo's Claude files into yours instead of blindly overwriting them.
 
 ### Option 4: Plugin Marketplace Installation
 
@@ -220,18 +225,18 @@ This auto-loads all skills, commands, agents, and hooks. During installation, yo
 Claude Code plugins cannot distribute rules automatically. Install them manually:
 
 ```bash
-git clone https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+git clone -b antigravity https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 
 # User-level (all projects)
-mkdir -p ~/.claude/rules
-cp /tmp/claude-scholar/rules/*.md ~/.claude/rules/
+mkdir -p ~/.gemini/config/plugins/claude-scholar/rules
+cp /tmp/claude-scholar/rules/*.md ~/.gemini/config/plugins/claude-scholar/rules/
 
 # Or project-level (current project only)
 mkdir -p .claude/rules
 cp /tmp/claude-scholar/rules/*.md .claude/rules/
 ```
 
-**Post-install**: plugin installation does **not** auto-load `CLAUDE.md` or configure `settings.json`; if you already have your own `~/.claude/CLAUDE.md` or `~/.claude/CLAUDE.zh-CN.md`, merge the relevant Claude Scholar sections into yours instead of assuming the plugin applies them automatically. If you need Zotero MCP or other integrations, see the [Integrations](#integrations) section for manual setup.
+**Post-install**: plugin installation does **not** auto-load `CLAUDE.md` or configure `mcp_config.json`; if you already have your own `~/.gemini/config/plugins/claude-scholar/CLAUDE.md` or `~/.gemini/config/plugins/claude-scholar/CLAUDE.zh-CN.md`, merge the relevant Claude Scholar sections into yours instead of assuming the plugin applies them automatically. If you need Zotero MCP or other integrations, see the [Integrations](#integrations) section for manual setup.
 
 ## Getting Started Scenarios
 
