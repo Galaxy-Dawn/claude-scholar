@@ -65,7 +65,7 @@
 | [Core Workflow](#core-workflow) | See the end-to-end research pipeline from ideation to publication. |
 | [Quick Start](#quick-start) | Install Claude Scholar in full, minimal, or selective mode. |
 | [Getting Started Scenarios](#getting-started-scenarios) | See a few realistic first-use scenarios after installation. |
-| [Integrations](#integrations) | Learn how Zotero and Obsidian fit into the workflow. |
+| [Integrations](#integrations) | Learn how Zotero, Obsidian, and optional X promotion fit into the workflow. |
 | [Primary Workflows](#primary-workflows) | Browse the main research and development workflows. |
 | [Supporting Workflows](#supporting-workflows) | See the background systems that strengthen the main workflow. |
 | [Documentation](#documentation) | Jump to setup docs, configuration, and templates. |
@@ -321,6 +321,17 @@ Use Obsidian when you want Claude Scholar to maintain a filesystem-first researc
 
 See [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md).
 
+### Xquik (optional)
+
+Use Xquik when `/promote` needs bounded public X research, draft analysis, or
+publishing from an approved connected account. Claude Scholar keeps retrieved
+posts outside scholarly evidence and requires a complete preview plus explicit
+approval before each write.
+
+See [MCP_SETUP.md](./MCP_SETUP.md) for client setup and
+[`xquik-promotion.md`](./skills/post-acceptance/references/xquik-promotion.md)
+for the promotion workflow.
+
 ## Primary Workflows
 
 Complete academic research lifecycle — 7 stages from idea to publication.
@@ -472,7 +483,7 @@ Conference preparation and research promotion after acceptance.
 **How it works**
 - **Presentation**: prepare talk structure and slide guidance.
 - **Poster**: organize content into poster-ready layout and hierarchy.
-- **Promotion**: generate social media, blog, or summary material for broader communication.
+- **Promotion**: verify claims, draft by platform, and optionally use Xquik for bounded X research or approved publishing.
 
 ## Supporting Workflows
 
