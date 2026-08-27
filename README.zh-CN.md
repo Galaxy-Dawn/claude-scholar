@@ -65,7 +65,7 @@
 | [快速开始](#快速开始) | 安全地安装到现有 `~/.codex` 环境。 |
 | [上手场景](#上手场景) | 查看安装完成后几种最常见的上手场景。 |
 | [平台范围](#平台范围) | 了解这个分支覆盖什么，以及其他版本在哪。 |
-| [集成能力](#集成能力) | 了解 Zotero 和 Obsidian 如何接入 Codex 工作流。 |
+| [集成能力](#集成能力) | 了解 Zotero、Obsidian 和可选 X 推广如何接入 Codex 工作流。 |
 | [主要工作流](#主要工作流) | 浏览核心研究与开发工作流。 |
 | [支撑工作流](#支撑工作流) | 查看强化主工作流的后台机制。 |
 | [文档入口](#文档入口) | 跳转到安装、配置与 setup 文档。 |
@@ -288,6 +288,15 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 
 详见 [OBSIDIAN_SETUP.zh-CN.md](./OBSIDIAN_SETUP.zh-CN.md)。
 
+### Xquik（可选）
+
+当 `post-acceptance` skill 需要检索有边界的公开 X 内容、分析帖子草稿，或通过已确认的
+连接账号发布时，可以使用 Xquik。Claude Scholar 不会把检索到的帖子直接当作学术证据；
+每次写入前都必须展示完整预览，并获得用户对该次载荷的明确确认。
+
+客户端设置见 [MCP_SETUP.zh-CN.md](./MCP_SETUP.zh-CN.md)，推广工作流见
+[`xquik-promotion.md`](./skills/post-acceptance/references/xquik-promotion.md)。
+
 ## 主要工作流
 
 完整学术研究生命周期 —— 从研究构思到发表的 7 个阶段。
@@ -427,7 +436,7 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 **工作方式**
 - **报告准备**：准备 talk 结构和演示文稿指导。
 - **海报整理**：整理海报内容层级和版式。
-- **传播内容**：生成简明的对外摘要、thread 与录用后材料。
+- **传播内容**：核验声明，按平台起草内容，并可选用 Xquik 做有边界的 X 检索或经确认的发布。
 
 ## 支撑工作流
 
