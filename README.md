@@ -65,7 +65,7 @@
 | [Quick Start](#quick-start) | Install Claude Scholar safely into an existing `~/.codex` setup. |
 | [Getting Started Scenarios](#getting-started-scenarios) | See a few realistic first-use scenarios after installation. |
 | [Platform Scope](#platform-scope) | See what this branch covers and where the other editions live. |
-| [Integrations](#integrations) | Learn how Zotero and Obsidian fit into the Codex workflow. |
+| [Integrations](#integrations) | Learn how Zotero, Obsidian, and optional X promotion fit into the Codex workflow. |
 | [Primary Workflows](#primary-workflows) | Browse the main research and development workflows. |
 | [Supporting Workflows](#supporting-workflows) | See the background systems that strengthen the main workflow. |
 | [Documentation](#documentation) | Jump to setup docs, configuration, and installation guides. |
@@ -288,6 +288,17 @@ Use Obsidian when you want Claude Scholar to maintain a filesystem-first researc
 
 See [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md).
 
+### Xquik (optional)
+
+Use Xquik when the `post-acceptance` skill needs bounded public X research,
+draft analysis, or publishing from an approved connected account. Claude
+Scholar keeps retrieved posts outside scholarly evidence and requires a
+complete preview plus explicit approval before each write.
+
+See [MCP_SETUP.md](./MCP_SETUP.md) for client setup and
+[`xquik-promotion.md`](./skills/post-acceptance/references/xquik-promotion.md)
+for the promotion workflow.
+
 ## Primary Workflows
 
 Complete academic research lifecycle — 7 stages from idea to publication.
@@ -427,7 +438,7 @@ Conference preparation and research communication after acceptance.
 **How it works**
 - **Presentation**: prepare talk structure and slide guidance.
 - **Poster**: structure poster content hierarchy and layout.
-- **Promotion**: produce concise outward-facing summaries, threads, and post-acceptance materials.
+- **Promotion**: verify claims, draft by platform, and optionally use Xquik for bounded X research or approved publishing.
 
 ## Supporting Workflows
 
