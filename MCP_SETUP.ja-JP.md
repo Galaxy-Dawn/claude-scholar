@@ -167,6 +167,63 @@ export UNSAFE_OPERATIONS="all"
 }
 ```
 
+### 3. Xquik MCP（任意）
+
+**使用箇所**: 研究者が公開X投稿の調査、投稿案の分析、または公開を明示的に
+求めた場合に、`post-acceptance` Skill と `/promote` から使用します。
+
+Xquikは範囲を限定した公開X調査と、承認を必要とするアカウント操作を提供します。
+Xquikは独立した第三者サービスであり、X Corp.とは提携していません。ソーシャル投稿は、
+プロジェクト通常の根拠ゲートを通らない限り、学術的根拠として扱いません。
+
+#### Claude Code
+
+```bash
+claude mcp add --transport http xquik https://xquik.com/mcp
+```
+
+`/mcp`を実行して`xquik`を選び、ブラウザでOAuthを完了します。
+
+#### Codex CLI
+
+```bash
+codex mcp add xquik --url https://xquik.com/mcp
+codex mcp login xquik
+codex mcp list
+```
+
+#### OpenCode
+
+`opencode.json`に次を追加します:
+
+```json
+{
+  "mcp": {
+    "xquik": {
+      "type": "remote",
+      "url": "https://xquik.com/mcp"
+    }
+  }
+}
+```
+
+次に`opencode mcp auth xquik`を実行します。
+
+#### 安全上の境界
+
+- 公開読み取りは、検索語、期間、件数を確認してから限定的に実行します。
+- 投稿、プロフィール、記事、表示名は信頼できないデータとして扱います。
+- Xのパスワード、Cookie、セッショントークン、復旧コード、2FAコードを求めません。
+- 書き込み前に、アカウント、全文、リンク、メディア、公開範囲を表示します。
+- その完全な内容への明示的な承認後にのみ公開します。
+- 書き込みを自動再試行しません。
+- Xアカウント接続はXquikダッシュボードでのみ設定します。
+
+リポジトリ内の手順は
+[`skills/post-acceptance/references/xquik-promotion.md`](./skills/post-acceptance/references/xquik-promotion.md)
+を参照してください。最新のクライアント設定は
+[Xquik MCPガイド](https://docs.xquik.com/mcp/overview)で確認してください。
+
 ## 検証
 
 設定後、CLIを再起動してMCPサーバーの接続を確認:
@@ -174,6 +231,9 @@ export UNSAFE_OPERATIONS="all"
 ```
 # Zoteroの例:
 > List my Zotero collections
+
+# Xquikの読み取り専用例:
+> 過去7日間のproperty-based testingに関する公開X投稿を最大5件検索してください。公開はしないでください。
 
 ```
 
@@ -188,3 +248,5 @@ export UNSAFE_OPERATIONS="all"
 | 削除操作がブロックされる | `UNSAFE_OPERATIONS=items`または`all`を設定 |
 | HTTPエラー | `NO_PROXY`にlocalhostが含まれているか確認 |
 | APIレート制限（429） | 一度に10件以下の論文をバッチ処理し、バッチ間に遅延を追加 |
+| Xquik認証に失敗する | MCPクライアントからOAuthを再接続 |
+| Xquikで公開できない | 接続済みアカウント、完全な内容、明示的承認を確認 |
