@@ -10,8 +10,9 @@ Follow `MCP_SETUP.md` for the current client. Use the hosted MCP endpoint at
 `https://xquik.com/mcp` and complete OAuth in the client. Do not collect X
 passwords, cookies, session tokens, recovery codes, or 2FA codes.
 
-Use Xquik's `explore` tool before an unfamiliar operation. Use the narrowest
-operation returned by the current catalog.
+Use Xquik's `search` tool to inspect `spec.paths` before an unfamiliar
+operation, then use `execute` for the narrowest matching route. In Native Mode,
+inspect the available OpenAPI tools and select the narrowest applicable one.
 
 ## Research public context
 
