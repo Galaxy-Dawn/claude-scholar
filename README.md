@@ -10,22 +10,6 @@
   </p>
 
 
-  <p>
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg">
-      <img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg">
-    </picture>
-  </p>
-
-  <p>
-    <sub>
-      Official Kimi links:
-      <a href="https://www.kimi.com/code?aff=claude-scholar">Kimi Code</a> ·
-      <a href="https://platform.kimi.com?aff=claude-scholar">Platform CN</a> ·
-      <a href="https://platform.kimi.ai?aff=claude-scholar">Platform Global</a>
-    </sub>
-  </p>
-
   <strong>Language</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
   <p><strong>Supported Platforms</strong>: <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/main">Claude Code</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex">Codex CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi">Kimi Code CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode">OpenCode</a></p>
 
@@ -35,6 +19,13 @@
 
   <p><em>Branch note</em>: the <code>main</code> branch is the Claude Code workflow. If you use Codex CLI, please see the <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex"><code>codex</code> branch</a>. If you use Kimi Code CLI, please see the <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi"><code>kimi</code> branch</a>. If you use OpenCode, please see the <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode"><code>opencode</code> branch</a>.</p>
 
+
+## Sponsors
+
+| Sponsor | Description |
+| :---: | --- |
+| <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | Thanks to APIMart for sponsoring this project! APIMart is a low-cost API platform for AI image & video generation — GPT-Image-2 from $0.006/image, 160+ images per dollar. One async API covers both image and video: submit a task, get an ID, fetch results via polling or callback. Batch tens of thousands of images without timeouts, switch models without changing code. Pay-as-you-go with no monthly fee — [sign up here](https://go.apimart.ai/gh-claude-scholar) to get started. |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg"><img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg" width="180"></picture> | Thanks to the Kimi team for their strong support of this project! Official links: [Kimi Code](https://www.kimi.com/code?aff=claude-scholar) · [Platform CN](https://platform.kimi.com?aff=claude-scholar) · [Platform Global](https://platform.kimi.ai?aff=claude-scholar). |
 
 ## Recent News
 
@@ -74,7 +65,7 @@
 | [Core Workflow](#core-workflow) | See the end-to-end research pipeline from ideation to publication. |
 | [Quick Start](#quick-start) | Install Claude Scholar in full, minimal, or selective mode. |
 | [Getting Started Scenarios](#getting-started-scenarios) | See a few realistic first-use scenarios after installation. |
-| [Integrations](#integrations) | Learn how Zotero and Obsidian fit into the workflow. |
+| [Integrations](#integrations) | Learn how Zotero, Obsidian, and optional X promotion fit into the workflow. |
 | [Primary Workflows](#primary-workflows) | Browse the main research and development workflows. |
 | [Supporting Workflows](#supporting-workflows) | See the background systems that strengthen the main workflow. |
 | [Documentation](#documentation) | Jump to setup docs, configuration, and templates. |
@@ -330,6 +321,17 @@ Use Obsidian when you want Claude Scholar to maintain a filesystem-first researc
 
 See [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md).
 
+### Xquik (optional)
+
+Use Xquik when `/promote` needs bounded public X research, draft analysis, or
+publishing from an approved connected account. Claude Scholar keeps retrieved
+posts outside scholarly evidence and requires a complete preview plus explicit
+approval before each write.
+
+See [MCP_SETUP.md](./MCP_SETUP.md) for client setup and
+[`xquik-promotion.md`](./skills/post-acceptance/references/xquik-promotion.md)
+for the promotion workflow.
+
 ## Primary Workflows
 
 Complete academic research lifecycle — 7 stages from idea to publication.
@@ -481,7 +483,7 @@ Conference preparation and research promotion after acceptance.
 **How it works**
 - **Presentation**: prepare talk structure and slide guidance.
 - **Poster**: organize content into poster-ready layout and hierarchy.
-- **Promotion**: generate social media, blog, or summary material for broader communication.
+- **Promotion**: verify claims, draft by platform, and optionally use Xquik for bounded X research or approved publishing.
 
 ## Supporting Workflows
 

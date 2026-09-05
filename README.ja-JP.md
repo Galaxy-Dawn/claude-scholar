@@ -9,22 +9,6 @@
     <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
   </p>
 
-  <p>
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg">
-      <img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg">
-    </picture>
-  </p>
-
-  <p>
-    <sub>
-      Official Kimi links:
-      <a href="https://www.kimi.com/code?aff=claude-scholar">Kimi Code</a> ·
-      <a href="https://platform.kimi.com?aff=claude-scholar">Platform CN</a> ·
-      <a href="https://platform.kimi.ai?aff=claude-scholar">Platform Global</a>
-    </sub>
-  </p>
-
   <strong>言語</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
   <p><strong>対応プラットフォーム</strong>: <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/main">Claude Code</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex">Codex CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi">Kimi Code CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode">OpenCode</a></p>
 
@@ -33,6 +17,13 @@
 > 学術研究とソフトウェア開発のための半自動リサーチアシスタント。特にコンピュータサイエンスおよびAI研究者向け。[Claude Code](https://github.com/anthropics/claude-code)、[Codex CLI](https://github.com/openai/codex)、[Kimi Code CLI](https://github.com/MoonshotAI/kimi-code)、[OpenCode](https://github.com/opencode-ai/opencode)をサポートし、文献レビュー、コーディング、実験、レポート作成、論文執筆、プロジェクトナレッジ管理に対応。
 
   <p><em>ブランチについて</em>: <code>main</code>ブランチはClaude Codeワークフロー用です。Codex CLIをご利用の場合は<a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex"><code>codex</code>ブランチ</a>を、Kimi Code CLIをご利用の場合は<a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi"><code>kimi</code>ブランチ</a>を、OpenCodeをご利用の場合は<a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode"><code>opencode</code>ブランチ</a>をご参照ください。</p>
+
+## Sponsors
+
+| スポンサー | 紹介 |
+| :---: | --- |
+| <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | 本プロジェクトをご支援いただいた APIMart に感謝します！APIMart は AI 画像・動画生成に特化した低価格 API プラットフォームです。GPT-Image-2 は 1 枚 $0.006 から、1 ドルで 160 枚以上生成できます。画像と動画を 1 つの非同期 API で扱え、タスクを送信して ID を取得し、ポーリングまたはコールバックで結果を取得できます。数万枚規模のバッチもタイムアウトせず、コードを変更せずにモデルを切り替えられます。月額料金なしの従量課金制です。[こちらから登録](https://go.apimart.ai/gh-claude-scholar)してご利用ください。 |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg"><img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg" width="180"></picture> | 本プロジェクトへの Kimi チームの力強いご支援に感謝します。公式リンク：[Kimi Code](https://www.kimi.com/code?aff=claude-scholar) · [中国向けプラットフォーム](https://platform.kimi.com?aff=claude-scholar) · [グローバルプラットフォーム](https://platform.kimi.ai?aff=claude-scholar)。 |
 
 ## 最新ニュース
 
@@ -72,7 +63,7 @@
 | [コアワークフロー](#コアワークフロー) | アイデア創出から出版までのエンドツーエンド研究パイプライン |
 | [クイックスタート](#クイックスタート) | フル、ミニマル、選択的、プラグインマーケットプレイス経由のインストール |
 | [使い始めのシナリオ](#使い始めのシナリオ) | インストール後の代表的な使い始め方を見る |
-| [連携ツール](#連携ツール) | ZoteroとObsidianのワークフロー統合 |
+| [連携ツール](#連携ツール) | Zotero、Obsidian、任意のXプロモーション連携 |
 | [主要ワークフロー](#主要ワークフロー) | 研究・開発の主要ワークフロー一覧 |
 | [サポートワークフロー](#サポートワークフロー) | 主要ワークフローを支えるバックグラウンドシステム |
 | [ドキュメント](#ドキュメント) | セットアップ、設定、テンプレートへのリンク |
@@ -324,6 +315,15 @@ Claude Scholarは以下のプラットフォームをサポートしています
 
 詳細は [OBSIDIAN_SETUP.ja-JP.md](./OBSIDIAN_SETUP.ja-JP.md) を参照。
 
+### Xquik（任意）
+
+`/promote`で範囲を限定した公開X投稿の調査、投稿案の分析、または承認済みの接続アカウント
+からの公開が必要な場合にXquikを使用できます。Claude Scholarは取得した投稿を学術的根拠と
+分離し、書き込み前に完全なプレビューと、その内容に対する明示的な承認を求めます。
+
+クライアント設定は [MCP_SETUP.ja-JP.md](./MCP_SETUP.ja-JP.md)、プロモーション手順は
+[`xquik-promotion.md`](./skills/post-acceptance/references/xquik-promotion.md) を参照してください。
+
 ## 主要ワークフロー
 
 アイデアから出版まで — 7段階の学術研究ライフサイクル。
@@ -474,7 +474,7 @@ Claude Scholarは以下のプラットフォームをサポートしています
 **仕組み**
 - **プレゼンテーション**: 発表構成とスライドガイダンスを準備
 - **ポスター**: コンテンツをポスター用レイアウトと階層に整理
-- **プロモーション**: ソーシャルメディア、ブログ、サマリー素材を生成
+- **プロモーション**: 主張を検証し、媒体別に草稿を作成し、必要に応じてXquikで限定的なX調査または承認済み公開を実行
 
 ## サポートワークフロー
 

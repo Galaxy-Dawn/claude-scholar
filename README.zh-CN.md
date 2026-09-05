@@ -10,22 +10,6 @@
   </p>
 
 
-  <p>
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg">
-      <img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg">
-    </picture>
-  </p>
-
-  <p>
-    <sub>
-      Official Kimi links:
-      <a href="https://www.kimi.com/code?aff=claude-scholar">Kimi Code</a> ·
-      <a href="https://platform.kimi.com?aff=claude-scholar">Platform CN</a> ·
-      <a href="https://platform.kimi.ai?aff=claude-scholar">Platform Global</a>
-    </sub>
-  </p>
-
   <strong>语言</strong>: <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja-JP.md">日本語</a>
   <p><strong>支持平台</strong>: <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/main">Claude Code</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex">Codex CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi">Kimi Code CLI</a> | <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode">OpenCode</a></p>
 
@@ -34,6 +18,13 @@
 > 面向学术研究和软件开发的半自动研究助手，尤其适合计算机科学与 AI 研究者。支持 [Claude Code](https://github.com/anthropics/claude-code)、[Codex CLI](https://github.com/openai/codex)、[Kimi Code CLI](https://github.com/MoonshotAI/kimi-code) 和 [OpenCode](https://github.com/opencode-ai/opencode)，覆盖文献管理、编码、实验分析、结果报告、写作与项目知识库维护。
 
   <p><em>分支说明</em>：<code>main</code> 分支对应 Claude Code 工作流。如果你使用 Codex CLI，请查看 <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/codex"><code>codex</code> 分支</a>；如果你使用 Kimi Code CLI，请查看 <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/kimi"><code>kimi</code> 分支</a>；如果你使用 OpenCode，请查看 <a href="https://github.com/Galaxy-Dawn/claude-scholar/tree/opencode"><code>opencode</code> 分支</a>。</p>
+
+## Sponsors
+
+| 赞助商 | 介绍 |
+| :---: | --- |
+| <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | 感谢 APIMart 赞助了本项目！APIMart 是专注 AI 图片/视频生成的低价 API 平台，GPT-Image-2 低至 $0.006/张，1 美元可出图 160+ 张。图片、视频一套异步 API 通吃，提交任务拿 ID、回调取结果，跑批万张不超时、换模型不改代码。按量付费、无月费，通过此[注册链接](https://go.apimart.ai/gh-claude-scholar)注册即可开用。 |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg"><img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg" width="180"></picture> | 感谢 Kimi 团队对本项目的大力支持！官方链接：[Kimi Code](https://www.kimi.com/code?aff=claude-scholar) · [中国大陆平台](https://platform.kimi.com?aff=claude-scholar) · [全球平台](https://platform.kimi.ai?aff=claude-scholar)。 |
 
 ## 最新动态
 
@@ -73,7 +64,7 @@
 | [核心工作流](#核心工作流) | 查看从研究构思到发表的主链路。 |
 | [快速开始](#快速开始) | 选择完整、最小或选择性安装方式。 |
 | [上手场景](#上手场景) | 查看安装完成后几种最常见的上手场景。 |
-| [集成能力](#集成能力) | 了解 Zotero 和 Obsidian 如何接入工作流。 |
+| [集成能力](#集成能力) | 了解 Zotero、Obsidian 和可选 X 推广如何接入工作流。 |
 | [主要工作流](#主要工作流) | 查看核心研究与开发工作流。 |
 | [支撑工作流](#支撑工作流) | 查看支撑主工作流的后台机制。 |
 | [文档入口](#文档入口) | 快速跳转到 setup、配置和模板文档。 |
@@ -326,6 +317,15 @@ Claude Scholar 目前面向以下 CLI 工作流：
 
 详见 [OBSIDIAN_SETUP.zh-CN.md](./OBSIDIAN_SETUP.zh-CN.md)。
 
+### Xquik（可选）
+
+当 `/promote` 需要检索有边界的公开 X 内容、分析帖子草稿，或通过已确认的连接账号发布时，
+可以使用 Xquik。Claude Scholar 不会把检索到的帖子直接当作学术证据；每次写入前都必须
+展示完整预览，并获得用户对该次载荷的明确确认。
+
+客户端设置见 [MCP_SETUP.zh-CN.md](./MCP_SETUP.zh-CN.md)，推广工作流见
+[`xquik-promotion.md`](./skills/post-acceptance/references/xquik-promotion.md)。
+
 ## 主要工作流
 
 完整学术研究生命周期 —— 从研究构思到发表的 7 个阶段。
@@ -477,7 +477,7 @@ Claude Scholar 目前面向以下 CLI 工作流：
 **工作方式**
 - **报告准备**：准备报告结构和演示文稿指导。
 - **海报整理**：整理海报内容层级和版式。
-- **传播内容**：生成社交媒体、博客或简明研究摘要。
+- **传播内容**：核验声明，按平台起草内容，并可选用 Xquik 做有边界的 X 检索或经确认的发布。
 
 ## 支撑工作流
 

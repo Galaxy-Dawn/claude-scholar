@@ -29,6 +29,9 @@ test_roundtrip_empty_home() {
   test -f "$home/.claude/.claude-scholar-manifest.txt"
   test -f "$home/.claude/.claude-scholar-install-state"
   test -f "$home/.claude/CLAUDE.md"
+  test -f "$home/.claude/commands/promote.md"
+  test -f "$home/.claude/skills/post-acceptance/references/xquik-promotion.md"
+  ! grep -q 'generate-promotion.py' "$home/.claude/commands/promote.md"
 
   run_uninstall "$home"
 

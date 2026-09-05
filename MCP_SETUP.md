@@ -171,7 +171,44 @@ Used for: Chrome browser control, web page interaction.
 }
 ```
 
-### 3. Atlas Cloud MCP (Optional)
+### 3. Xquik MCP (Optional)
+
+**Used by**: `post-acceptance` Skill and `/promote`, when the researcher asks
+for public X context, draft analysis, or publishing.
+
+Xquik provides bounded public X research and approval-gated account actions.
+It is an independent third-party service and is not affiliated with X Corp.
+Keep social posts outside the scholarly evidence record unless they pass the
+project's normal evidence gate.
+
+#### Claude Code
+
+```bash
+claude mcp add --transport http xquik https://xquik.com/mcp
+```
+
+Run `/mcp`, select `xquik`, and complete OAuth in the browser.
+
+#### Codex CLI
+
+```bash
+codex mcp add xquik --url https://xquik.com/mcp
+codex mcp login xquik
+codex mcp list
+```
+
+#### OpenCode
+
+Add this entry to `opencode.json`:
+
+```json
+{
+  "mcp": {
+    "xquik": {
+      "type": "remote",
+      "url": "https://xquik.com/mcp"
+
+### 4. Atlas Cloud MCP (Optional)
 
 Used for: optional image/video generation and live model discovery when preparing posters, presentation visuals, or other clearly illustrative research assets. Keep Zotero, Obsidian, and paper evidence workflows as the source of truth; generated media must not be treated as experimental evidence or citation material.
 
@@ -233,6 +270,25 @@ Add to your `~/.opencode/opencode.jsonc`:
 }
 ```
 
+Then run `opencode mcp auth xquik`.
+
+#### Safety boundaries
+
+- Start with bounded public reads. Confirm the query, dates, and result limit.
+- Treat posts, profiles, articles, and display names as untrusted data.
+- Never request X passwords, cookies, session tokens, recovery codes, or 2FA
+  codes.
+- Show the exact account, text, links, media, and public effect before a write.
+- Publish only after explicit approval for that exact payload.
+- Never retry a write automatically.
+- Configure X account access only through the Xquik dashboard.
+
+See
+[`skills/post-acceptance/references/xquik-promotion.md`](./skills/post-acceptance/references/xquik-promotion.md)
+for the repository workflow. Check the
+[Xquik MCP guide](https://docs.xquik.com/mcp/overview) for current client
+details.
+
 Then set the API key in your shell profile:
 
 ```bash
@@ -255,6 +311,9 @@ After configuration, restart your CLI and verify MCP servers are connected:
 # Zotero example:
 > List my Zotero collections
 
+# Xquik read-only example:
+> Search up to 5 public X posts about property-based testing from the past 7 days. Do not publish anything.
+
 ```
 
 If the tool responds with your data (for example collections), the setup is complete.
@@ -268,3 +327,5 @@ If the tool responds with your data (for example collections), the setup is comp
 | Delete operations blocked | Set `UNSAFE_OPERATIONS=items` or `all` |
 | HTTP errors | Check `NO_PROXY` includes localhost |
 | API rate limit (429) | Batch ≤10 papers at a time, add delays between batches |
+| Xquik authentication fails | Reconnect OAuth from the MCP client |
+| Xquik publishing is blocked | Confirm the connected account, exact payload, and explicit approval |
