@@ -207,6 +207,64 @@ Add this entry to `opencode.json`:
     "xquik": {
       "type": "remote",
       "url": "https://xquik.com/mcp"
+
+### 4. Atlas Cloud MCP (Optional)
+
+Used for: optional image/video generation and live model discovery when preparing posters, presentation visuals, or other clearly illustrative research assets. Keep Zotero, Obsidian, and paper evidence workflows as the source of truth; generated media must not be treated as experimental evidence or citation material.
+
+#### Installation
+
+Atlas Cloud MCP runs through `npx`:
+
+```bash
+npx -y atlascloud-mcp
+```
+
+#### Configuration
+
+##### Claude Code
+
+Add to your `~/.claude.json` or `~/.claude/settings.json` under `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "atlascloud": {
+      "command": "npx",
+      "args": ["-y", "atlascloud-mcp"],
+      "env": {
+        "ATLASCLOUD_API_KEY": "your-atlascloud-api-key"
+      }
+    }
+  }
+}
+```
+
+##### Codex CLI
+
+Add to your `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.atlascloud]
+command = "npx"
+args = ["-y", "atlascloud-mcp"]
+enabled = true
+
+[mcp_servers.atlascloud.env]
+ATLASCLOUD_API_KEY = "your-atlascloud-api-key"
+```
+
+##### OpenCode
+
+Add to your `~/.opencode/opencode.jsonc`:
+
+```jsonc
+{
+  "mcp": {
+    "atlascloud": {
+      "type": "local",
+      "command": ["npx", "-y", "atlascloud-mcp"],
+      "enabled": true
     }
   }
 }
@@ -230,6 +288,20 @@ See
 for the repository workflow. Check the
 [Xquik MCP guide](https://docs.xquik.com/mcp/overview) for current client
 details.
+
+Then set the API key in your shell profile:
+
+```bash
+export ATLASCLOUD_API_KEY="your-atlascloud-api-key"
+```
+
+#### Usage Guardrails
+
+- Call `atlas_list_models` or `atlas_search_docs` before choosing a model. Model IDs and schemas change.
+- Call `atlas_get_model_info` before submitting image or video generation so the request body uses the current schema.
+- Show the selected model, prompt, request body, and expected cost to the user before submitting a generation task.
+- Do not retry generation POST requests automatically; a retry can create a second billable task.
+- Use generated outputs only as illustrative assets for slides, posters, or communication drafts unless the user explicitly supplies a valid research workflow for them.
 
 ## Verification
 
