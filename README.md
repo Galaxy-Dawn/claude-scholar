@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/galaxy-dawn-claude-scholar-badge.png)](https://mseep.ai/app/galaxy-dawn-claude-scholar)
+
 <div align="center">
   <img src="LOGO.png" alt="Claude Scholar Logo" width="100%"/>
 
