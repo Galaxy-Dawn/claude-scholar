@@ -77,6 +77,7 @@ remove_managed_files() {
   local rel
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
+    [ "$rel" = "skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md" ] && continue
     case "$rel" in
       .*|*..*|/*) continue ;;
     esac

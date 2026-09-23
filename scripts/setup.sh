@@ -412,6 +412,18 @@ copy_file_safely() {
 
   ensure_parent_dir "$target_file"
 
+  # Mined writing knowledge is user data, not an installer-managed skill file.
+  if [ "$target_file" = "$CODEX_HOME/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md" ]; then
+    if [ -e "$target_file" ] || [ -L "$target_file" ]; then
+      [ -f "$target_file" ] || [ -L "$target_file" ] || error "Writing memory path is not a file: $target_file"
+      SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+      return 0
+    fi
+    cp -p "$src_file" "$target_file" || error "Failed to initialize writing memory at $target_file"
+    UPDATED_COUNT=$((UPDATED_COUNT + 1))
+    return 0
+  fi
+
   if [ -f "$target_file" ] && cmp -s "$src_file" "$target_file"; then
     if should_adopt_existing_path "$target_file"; then
       record_managed_path "$target_file"
@@ -448,6 +460,9 @@ copy_dir_safely() {
   while IFS= read -r -d '' src_file; do
     local rel="${src_file#$src_dir/}"
     local target_file="$target_dir/$rel"
+    if [ "$target_dir" = "$CODEX_HOME/agents" ] && [[ "$rel" == */config.toml ]]; then
+      continue
+    fi
     copy_file_safely "$src_file" "$target_file"
   done < <("$FIND_CMD" "$src_dir" -type f -print0)
 }
@@ -716,11 +731,19 @@ generate_fresh_config() {
   local template="$1"
   local target="$2"
   local sections=""
+  local built_in=0
+  [ "$PROVIDER_NAME" = "openai" ] && built_in=1
 
+  # Codex owns the built-in "openai" provider. Defining it again makes the
+  # entire configuration invalid on current Codex versions.
   sed -e "s|__MODEL__|$MODEL|g" \
       -e "s|__PROVIDER_NAME__|$PROVIDER_NAME|g" \
       -e "s|__PROVIDER_URL__|$PROVIDER_URL|g" \
-      "$template" > "$target" || error "Failed to render config.toml from template"
+      "$template" | awk -v built_in="$built_in" '
+        /^\[model_providers\.openai\]$/ && built_in == 1 { skip = 1; next }
+        /^\[/ { skip = 0 }
+        !skip { print }
+      ' > "$target" || error "Failed to render config.toml from template"
   CONFIG_CREATED=1
   CONFIG_SHA256="$(file_sha256 "$target")"
   sections="$(
@@ -736,6 +759,31 @@ generate_fresh_config() {
   )" || error "Failed to collect config metadata"
   write_config_meta true "$sections"
   info "Generated config.toml (model=$MODEL, provider=$PROVIDER_NAME)"
+}
+
+remove_legacy_agent_sections() {
+  local target="$1"
+  python3 - "$target" <<'PY'
+import pathlib
+import re
+import sys
+
+path = pathlib.Path(sys.argv[1])
+text = path.read_text()
+names = {"paper-miner", "literature-reviewer", "kaggle-miner", "code-reviewer", "rebuttal-writer", "tdd-guide"}
+
+def keep(match):
+    name, body = match.group(1), match.group(2)
+    entries = [line.strip() for line in body.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+    expected = f'config_file = "~/.codex/agents/{name}/config.toml"'
+    if name in names and expected in entries and all(line.startswith("description = ") or line == expected for line in entries):
+        return ""
+    return match.group(0)
+
+updated = re.sub(r"(?m)^\[agents\.([a-z-]+)\]\n(.*?)(?=^\[|\Z)", keep, text, flags=re.S)
+if updated != text:
+    path.write_text(re.sub(r"\n{3,}", "\n\n", updated).rstrip() + "\n")
+PY
 }
 
 merge_scholar_config() {
@@ -818,6 +866,7 @@ generate_config() {
   if [ "$SKIP_PROVIDER" = true ]; then
     local added
     added=$(merge_scholar_config "$target" "$template") || error "Failed to merge Scholar config sections"
+    remove_legacy_agent_sections "$target" || error "Failed to migrate legacy Codex agent sections"
     write_config_meta false "$added"
     CONFIG_SHA256="$(file_sha256 "$target")"
     if [ -n "$added" ]; then
@@ -828,6 +877,22 @@ generate_config() {
   else
     generate_fresh_config "$template" "$target"
   fi
+}
+
+cleanup_legacy_agent_config_files() {
+  local name target source
+  for name in paper-miner literature-reviewer kaggle-miner code-reviewer rebuttal-writer tdd-guide; do
+    target="$CODEX_HOME/agents/$name/config.toml"
+    source="$SRC_DIR/agents/$name/config.toml"
+    [ -f "$target" ] || continue
+    if was_previously_managed "$target" || { [ -f "$source" ] && cmp -s "$source" "$target"; }; then
+      backup_path "$target"
+      rm -f "$target" || error "Failed to retire legacy agent config: $target"
+      info "Retired legacy agent config: agents/$name/config.toml"
+    else
+      warn "Keeping customized legacy agent config at $target; remove it manually if Codex reports a duplicate role"
+    fi
+  done
 }
 
 write_auth() {
@@ -874,6 +939,7 @@ copy_components() {
   fi
   if [ -d "$SRC_DIR/agents" ]; then
     copy_dir_safely "$SRC_DIR/agents" "$CODEX_HOME/agents"
+    cleanup_legacy_agent_config_files
   fi
   if [ -f "$SRC_DIR/AGENTS.md" ]; then
     install_agents_md "$SRC_DIR/AGENTS.md"

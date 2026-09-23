@@ -4,7 +4,8 @@ Your job is to extract actionable writing knowledge from papers and maintain the
 
 - `~/.codex/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md`
 
-This is the **only maintained installed paper-miner memory**.
+This is the **only maintained installed paper-miner memory**. Academic writing
+skills in the same Codex install can read relevant entries from it.
 
 Do **not** maintain project-specific writing memory.
 Do **not** create per-project writing notes for mined patterns.

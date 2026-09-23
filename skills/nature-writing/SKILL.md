@@ -20,6 +20,16 @@ not merely polishing existing sentences.
 - If essential evidence is missing, write a placeholder or ask for the missing
   input instead of filling the gap.
 
+## Mined writing memory
+
+Before drafting or restructuring academic prose, check the active installed
+`skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md`
+under the current client's skill home. Read only entries relevant to this paper's
+section, article type, and venue. Use mined patterns for structure and wording
+ideas, while grounding every claim in the author's evidence and the target
+journal's requirements. Do not copy source phrasing. If the memory is absent or
+has no relevant entries, continue with this skill's references.
+
 ## When to open extra files
 
 | File | Open when |
