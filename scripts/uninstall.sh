@@ -37,6 +37,7 @@ remove_managed_paths() {
   local removed=0
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
+    [ "$rel" = "skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md" ] && continue
     case "$rel" in
       /*|*..*)
         warn "Skipping suspicious manifest path: $rel"

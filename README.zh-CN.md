@@ -384,6 +384,10 @@ Claude Scholar 目前面向以下 CLI 工作流：
 | Agent | `paper-miner` | 从高质量论文中提炼可复用的写作模式、结构和投稿经验。 |
 | Command | `/mine-writing-patterns` | 读取论文并把可复用写作知识合并进当前已安装的 paper-miner 写作记忆。 |
 
+蒸馏结果由 `ml-paper-writing`、Nature 写作与润色，以及审稿回复 Skill 共享。
+重复运行 `scripts/setup.sh` 会保留已写入的记忆，卸载时也不会删除。
+如果手动用 `cp -r` 更新 Skill，请先备份这份记忆。
+
 **工作方式**
 - **模板准备**：把会议模板清理成 Overleaf-ready 结构。
 - **期刊风格润色**：在需要时加强段落逻辑、hedging 和 section moves，使表达更接近 Nature 风格。
