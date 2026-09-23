@@ -168,14 +168,16 @@ bash scripts/uninstall.sh
 
 ```bash
 git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.kimi-code/skills ~/.kimi-code/agents
+mkdir -p ~/.kimi-code/skills ~/.kimi-code/agents/subagents
 cp -r /tmp/claude-scholar/skills/research-ideation ~/.kimi-code/skills/
 cp -r /tmp/claude-scholar/skills/results-analysis ~/.kimi-code/skills/
 cp -r /tmp/claude-scholar/skills/results-report ~/.kimi-code/skills/
 cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.kimi-code/skills/
 cp -r /tmp/claude-scholar/skills/review-response ~/.kimi-code/skills/
-cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.kimi-code/agents/
-cp -r /tmp/claude-scholar/agents/paper-miner ~/.kimi-code/agents/
+cp /tmp/claude-scholar/agents/subagents/literature-reviewer.md ~/.kimi-code/agents/subagents/
+cp /tmp/claude-scholar/agents/subagents/literature-reviewer.yaml ~/.kimi-code/agents/subagents/
+cp /tmp/claude-scholar/agents/subagents/paper-miner.md ~/.kimi-code/agents/subagents/
+cp /tmp/claude-scholar/agents/subagents/paper-miner.yaml ~/.kimi-code/agents/subagents/
 cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
@@ -188,8 +190,10 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 
 ```bash
 git clone -b kimi https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
+mkdir -p ~/.kimi-code/skills ~/.kimi-code/agents/subagents
 cp -r /tmp/claude-scholar/skills/<skill-name> ~/.kimi-code/skills/
-cp -r /tmp/claude-scholar/agents/<agent-name> ~/.kimi-code/agents/
+cp /tmp/claude-scholar/agents/subagents/<agent-name>.md ~/.kimi-code/agents/subagents/
+cp /tmp/claude-scholar/agents/subagents/<agent-name>.yaml ~/.kimi-code/agents/subagents/
 cp /tmp/claude-scholar/AGENTS.md ~/.kimi-code/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 ```
@@ -375,6 +379,11 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 | Skill | `writing-anti-ai` | 機械的な表現を減らし、明瞭さ、リズム、人間的な学術トーンを改善 |
 | Skill | `latex-conference-template-organizer` | 乱雑な学会テンプレートをOverleaf対応のライティング構造に整理 |
 | Agent | `paper-miner` | 優れた論文から再利用可能なライティングパターン、構造、学会の期待値を抽出 |
+
+`paper-miner` に論文の書き方を分析させ、インストール済みの共有メモリに保存します。
+関連する知識は `ml-paper-writing`、Nature 系の執筆・推敲、査読対応の Skill
+から利用できます。`scripts/setup.sh` を再実行しても保持され、
+アンインストールでは削除されません。手動で `cp -r` 更新する場合は先にバックアップしてください。
 
 **仕組み**
 - **テンプレート準備**: 学会テンプレートをOverleaf対応構造に整理

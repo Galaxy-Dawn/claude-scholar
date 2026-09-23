@@ -380,6 +380,7 @@ collect_targets_to_remove() {
   local rel
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
+    [ "$rel" = "skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md" ] && continue
     case "$rel" in
       .*|*..*|/*|*\\*|*\$*|*~*) continue ;;
     esac

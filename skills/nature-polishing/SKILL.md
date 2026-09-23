@@ -26,6 +26,16 @@ the curated article-pattern reference. The wording layer should come from
 - If the draft is Chinese or structurally rough, reconstruct the logic first and the prose second.
 - Avoid em dashes in polished output by default. Prefer commas, parentheses, or full stops. Use colons sparingly unless the user explicitly asks to preserve dash-based punctuation or wants a colon-led style.
 
+## Mined writing memory
+
+For academic prose, check the active installed
+`skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md`
+under the current client's skill home. Use only source-attributed entries that
+fit the section and venue, alongside this skill's curated references. Treat them
+as optional style and structure examples. Preserve the author's claims and
+evidence, follow current journal instructions, and do not copy source phrasing.
+If the memory has no relevant entries, continue without it.
+
 ## When to open extra files
 
 These files are reference support. Use them after the section's rhetorical job is clear.

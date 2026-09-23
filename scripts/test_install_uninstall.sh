@@ -46,15 +46,36 @@ test_roundtrip_existing_config() {
   test -f "$home/.kimi/.kimi-scholar-install-state"
   test -f "$home/.kimi/AGENTS.md"
   test -f "$home/.kimi/skills/research-ideation/references/research-contract.md"
+  test -f "$home/.kimi/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   grep -Fxq "skills/research-ideation/references/research-contract.md" "$home/.kimi/.kimi-scholar-manifest.txt"
 
   run_uninstall "$home"
   test ! -f "$home/.kimi/.kimi-scholar-manifest.txt"
   test ! -f "$home/.kimi/.kimi-scholar-install-state"
   test -f "$home/.kimi/config.toml"
+  test -f "$home/.kimi/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   ! grep -q '\[agents\.' "$home/.kimi/config.toml"
   ! grep -q '\[mcp_servers\.zotero' "$home/.kimi/config.toml"
   pass "roundtrip with existing config"
+}
+
+test_writing_memory_survives_update_and_legacy_uninstall() {
+  local home memory
+  home="$(make_home)"
+  write_base_config "$home"
+  run_setup "$home"
+  memory="$home/.kimi/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
+  printf '\n### Kept example\n**Source:** Test paper\n' >> "$memory"
+
+  run_setup "$home"
+  grep -Fq '### Kept example' "$memory"
+  ! grep -Fxq 'skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md' "$home/.kimi/.kimi-scholar-manifest.txt"
+
+  # Older manifests may still claim ownership of the file.
+  printf '%s\n' 'skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md' >> "$home/.kimi/.kimi-scholar-manifest.txt"
+  run_uninstall "$home"
+  grep -Fq '### Kept example' "$memory"
+  pass "mined writing memory survives update and legacy uninstall"
 }
 
 test_preserve_existing_mcp_section() {
@@ -642,6 +663,7 @@ main() {
   bash -n "$SETUP_SH"
   bash -n "$UNINSTALL_SH"
   test_roundtrip_existing_config
+  test_writing_memory_survives_update_and_legacy_uninstall
   test_preserve_existing_mcp_section
   test_manifest_missing_skips_safely
   test_identical_preexisting_file_is_not_owned

@@ -378,6 +378,11 @@ Systematic paper writing from template preparation to iterative drafting.
 | Skill | `latex-conference-template-organizer` | Clean messy conference templates into an Overleaf-ready writing structure. |
 | Agent | `paper-miner` | Mine strong papers for reusable writing patterns, structure, and venue expectations. |
 
+Ask `paper-miner` to mine a paper into the installed writing memory. The result
+is shared by `ml-paper-writing`, Nature writing and polishing, and reviewer-response
+skills. Re-running `scripts/setup.sh` preserves the active memory, and uninstall
+leaves it in place. Back up that file before updating skills with a manual `cp -r`.
+
 **How it works**
 - **Template Preparation**: clean conference templates into an Overleaf-ready structure.
 - **Journal-Style Polishing**: tighten paragraph logic, hedging, and section moves for Nature-leaning prose when needed.
