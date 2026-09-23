@@ -32,7 +32,7 @@ Use this command when you want to:
 - learn reusable writing patterns from a strong paper,
 - study how a venue frames introductions, methods, results, or rebuttals,
 - mine phrasing and structure signals before drafting,
-- enrich the writing memory that powers `ml-paper-writing` and `review-response`.
+- enrich the writing memory shared by academic writing and response skills.
 
 ## Usage
 
@@ -122,8 +122,7 @@ The final response should follow the `paper-miner` standardized output format:
 
 ## Related integrations
 
-- `ml-paper-writing` reads this active installed memory before drafting or revising sections.
-- `review-response` reads this active installed memory when tone, phrasing, and rebuttal structure matter.
+- Academic writing and response skills read relevant entries from this active installed memory when structure, phrasing, or venue style matters.
 - `paper-miner` is the agent that performs the actual mining work.
 
 ## Success criteria

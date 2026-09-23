@@ -11,6 +11,13 @@ tags: [Writing, AI, Anti-AI, Humanizer]
 
 Remove AI-generated writing patterns from text to make it sound natural and human-written. Supports both English and Chinese.
 
+When editing academic prose, check the active installed
+`skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md`
+under the current client's skill home for relevant source-attributed writing
+examples. Use it only to guide natural structure and rhythm. Keep the author's
+meaning, evidence, and target venue constraints intact. If the memory is absent
+or irrelevant, continue with this skill's own pattern references.
+
 ## Overview
 
 This skill identifies and eliminates predictable AI writing patterns from prose, based on [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), maintained by WikiProject AI Cleanup.

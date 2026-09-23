@@ -44,6 +44,7 @@ test_created_config_roundtrip() {
   assert_file_exists "$home/.opencode-scholar-install-state"
   assert_file_exists "$home/skills/research-ideation/references/research-contract.md"
   assert_file_exists "$home/skills/post-acceptance/references/xquik-promotion.md"
+  assert_file_exists "$home/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   assert_file_exists "$home/commands/promote.md"
   assert_not_contains "$home/commands/promote.md" "generate-promotion.py"
   grep -Fxq "skills/research-ideation/references/research-contract.md" "$home/.opencode-scholar-manifest.txt" || fail "research contract missing from manifest"
@@ -54,7 +55,26 @@ test_created_config_roundtrip() {
   assert_file_missing "$home/opencode.jsonc"
   assert_file_missing "$home/.opencode-scholar-manifest.txt"
   assert_file_missing "$home/.opencode-scholar-install-state"
+  assert_file_exists "$home/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   pass "created opencode.jsonc is removed when unchanged"
+}
+
+test_writing_memory_survives_update_and_legacy_uninstall() {
+  local home="$TEST_ROOT/writing-memory"
+  local memory="$home/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
+  mkdir -p "$home"
+  run_setup "$home"
+  printf '\n### Kept example\n**Source:** Test paper\n' >> "$memory"
+
+  run_setup "$home"
+  assert_contains "$memory" '### Kept example'
+  assert_not_contains "$home/.opencode-scholar-manifest.txt" 'skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md'
+
+  # Older manifests may still claim ownership of the file.
+  printf '%s\n' 'skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md' >> "$home/.opencode-scholar-manifest.txt"
+  run_uninstall "$home"
+  assert_contains "$memory" '### Kept example'
+  pass "mined writing memory survives update and legacy uninstall"
 }
 
 test_existing_config_preserves_user_entries() {
@@ -180,6 +200,7 @@ main() {
   bash -n "$SETUP"
   bash -n "$UNINSTALL"
   test_created_config_roundtrip
+  test_writing_memory_survives_update_and_legacy_uninstall
   test_existing_config_preserves_user_entries
   test_manifest_missing_fails_safely
   test_identical_preexisting_file_not_owned

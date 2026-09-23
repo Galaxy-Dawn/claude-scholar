@@ -389,6 +389,11 @@ Systematic academic writing from structure setup to draft refinement.
 | Agent | `paper-miner` | Mine strong papers for reusable writing patterns, structure, and venue expectations. |
 | Command | `/mine-writing-patterns` | Read a paper and merge reusable writing knowledge into the active installed paper-miner writing memory. |
 
+The mined memory is shared by `ml-paper-writing`, Nature writing and polishing,
+and reviewer-response skills. Re-running `scripts/setup.sh` preserves the active
+memory, and uninstall leaves it in place. Back up that file before updating
+skills with a manual `cp -r`.
+
 **How it works**
 - **Template Preparation**: clean conference templates into an Overleaf-ready structure.
 - **Journal-Style Polishing**: tighten paragraph logic, hedging, and section moves for Nature-leaning prose when needed.
