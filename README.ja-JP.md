@@ -174,8 +174,11 @@ cp -r /tmp/claude-scholar/skills/results-analysis ~/.codex/skills/
 cp -r /tmp/claude-scholar/skills/results-report ~/.codex/skills/
 cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.codex/skills/
 cp -r /tmp/claude-scholar/skills/review-response ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.codex/agents/
-cp -r /tmp/claude-scholar/agents/paper-miner ~/.codex/agents/
+mkdir -p ~/.codex/agents/literature-reviewer ~/.codex/agents/paper-miner
+cp /tmp/claude-scholar/agents/literature-reviewer/AGENTS.md ~/.codex/agents/literature-reviewer/
+cp /tmp/claude-scholar/agents/paper-miner/AGENTS.md ~/.codex/agents/paper-miner/
+cp /tmp/claude-scholar/agents/literature-reviewer.toml ~/.codex/agents/
+cp /tmp/claude-scholar/agents/paper-miner.toml ~/.codex/agents/
 cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 ```
@@ -189,7 +192,9 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 ```bash
 git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 cp -r /tmp/claude-scholar/skills/<skill-name> ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/<agent-name> ~/.codex/agents/
+mkdir -p ~/.codex/agents/<agent-name>
+cp /tmp/claude-scholar/agents/<agent-name>/AGENTS.md ~/.codex/agents/<agent-name>/
+cp /tmp/claude-scholar/agents/<agent-name>.toml ~/.codex/agents/
 cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 ```
@@ -383,7 +388,15 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 | Skill | `writing-anti-ai` | 機械的な表現を減らし、明瞭さ、リズム、人間的な学術トーンを改善 |
 | Skill | `latex-conference-template-organizer` | 乱雑な学会テンプレートをOverleaf対応のライティング構造に整理 |
 | Agent | `paper-miner` | 優れた論文から再利用可能なライティングパターン、構造、学会の期待値を抽出 |
-| Command | `/mine-writing-patterns` | 論文を読み込み、再利用可能なライティング知識を現在インストール済みのpaper-minerメモリに統合 |
+| 対話での依頼 | `paper-minerでこの論文の書き方を分析してください` | Codexにagentの起動と共有ライティングメモリの更新を依頼する |
+
+Codex には Claude Code の `/mine-writing-patterns` スラッシュコマンドは
+インストールされません。インストーラーは現在の Codex が認識する独立した
+agent 設定を `~/.codex/agents/*.toml` に配置します。インストール後は新しい
+会話を開始してください。蒸留した知識は Nature 系と `ml-paper-writing` の
+両方の Skill から利用できます。
+`scripts/setup.sh` を再実行してもメモリは保持されます。手動で
+`ml-paper-writing` を `cp -r` 更新する前にはバックアップしてください。
 
 **仕組み**
 - **テンプレート準備**: 学会テンプレートをOverleaf対応構造に整理

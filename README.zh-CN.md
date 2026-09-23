@@ -174,8 +174,11 @@ cp -r /tmp/claude-scholar/skills/results-analysis ~/.codex/skills/
 cp -r /tmp/claude-scholar/skills/results-report ~/.codex/skills/
 cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.codex/skills/
 cp -r /tmp/claude-scholar/skills/review-response ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.codex/agents/
-cp -r /tmp/claude-scholar/agents/paper-miner ~/.codex/agents/
+mkdir -p ~/.codex/agents/literature-reviewer ~/.codex/agents/paper-miner
+cp /tmp/claude-scholar/agents/literature-reviewer/AGENTS.md ~/.codex/agents/literature-reviewer/
+cp /tmp/claude-scholar/agents/paper-miner/AGENTS.md ~/.codex/agents/paper-miner/
+cp /tmp/claude-scholar/agents/literature-reviewer.toml ~/.codex/agents/
+cp /tmp/claude-scholar/agents/paper-miner.toml ~/.codex/agents/
 cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 ```
@@ -189,7 +192,9 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 ```bash
 git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 cp -r /tmp/claude-scholar/skills/<skill-name> ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/<agent-name> ~/.codex/agents/
+mkdir -p ~/.codex/agents/<agent-name>
+cp /tmp/claude-scholar/agents/<agent-name>/AGENTS.md ~/.codex/agents/<agent-name>/
+cp /tmp/claude-scholar/agents/<agent-name>.toml ~/.codex/agents/
 cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 ```
@@ -383,7 +388,14 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 | Skill | `writing-anti-ai` | 减少机械化表述，提升清晰度、节奏和更自然的学术语气。 |
 | Skill | `latex-conference-template-organizer` | 把混乱的会议模板整理成 Overleaf-ready 写作结构。 |
 | Agent | `paper-miner` | 从高质量论文中提炼可复用的写作模式、结构和投稿经验。 |
-| Command | `/mine-writing-patterns` | 读取论文并把可复用写作知识合并进当前已安装的 paper-miner 写作记忆。 |
+| 对话请求 | `请用 paper-miner 提炼这篇论文的写作模式` | 请 Codex 调用该 agent，并更新安装目录中的共享写作记忆。 |
+
+Codex 不会安装 Claude Code 的 `/mine-writing-patterns` 斜杠命令。
+安装器会把独立的 agent 配置放在 `~/.codex/agents/*.toml`。
+安装后开启新对话，让 Codex 重新发现这些 agent。蒸馏的写作记忆也可供
+Nature 写作系列 Skill 和 `ml-paper-writing` 使用。
+重复运行 `scripts/setup.sh` 会保留这份记忆。手动用 `cp -r` 更新
+`ml-paper-writing` 前，请先备份它。
 
 **工作方式**
 - **模板准备**：把会议模板清理成 Overleaf-ready 结构。

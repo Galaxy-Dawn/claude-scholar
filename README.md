@@ -174,8 +174,11 @@ cp -r /tmp/claude-scholar/skills/results-analysis ~/.codex/skills/
 cp -r /tmp/claude-scholar/skills/results-report ~/.codex/skills/
 cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.codex/skills/
 cp -r /tmp/claude-scholar/skills/review-response ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/literature-reviewer ~/.codex/agents/
-cp -r /tmp/claude-scholar/agents/paper-miner ~/.codex/agents/
+mkdir -p ~/.codex/agents/literature-reviewer ~/.codex/agents/paper-miner
+cp /tmp/claude-scholar/agents/literature-reviewer/AGENTS.md ~/.codex/agents/literature-reviewer/
+cp /tmp/claude-scholar/agents/paper-miner/AGENTS.md ~/.codex/agents/paper-miner/
+cp /tmp/claude-scholar/agents/literature-reviewer.toml ~/.codex/agents/
+cp /tmp/claude-scholar/agents/paper-miner.toml ~/.codex/agents/
 cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 ```
@@ -189,7 +192,9 @@ Copy only the pieces you want:
 ```bash
 git clone -b codex https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
 cp -r /tmp/claude-scholar/skills/<skill-name> ~/.codex/skills/
-cp -r /tmp/claude-scholar/agents/<agent-name> ~/.codex/agents/
+mkdir -p ~/.codex/agents/<agent-name>
+cp /tmp/claude-scholar/agents/<agent-name>/AGENTS.md ~/.codex/agents/<agent-name>/
+cp /tmp/claude-scholar/agents/<agent-name>.toml ~/.codex/agents/
 cp /tmp/claude-scholar/AGENTS.md ~/.codex/AGENTS.md
 cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 ```
@@ -385,7 +390,15 @@ Systematic paper writing from template preparation to iterative drafting.
 | Skill | `writing-anti-ai` | Reduce robotic phrasing and improve clarity, rhythm, and human academic tone. |
 | Skill | `latex-conference-template-organizer` | Clean messy conference templates into an Overleaf-ready writing structure. |
 | Agent | `paper-miner` | Mine strong papers for reusable writing patterns, structure, and venue expectations. |
-| Command | `/mine-writing-patterns` | Read a paper and merge reusable writing knowledge into the active installed paper-miner writing memory. |
+| Prompt | `Use paper-miner to mine writing patterns from this paper` | Ask Codex to delegate to the agent and update the shared installed writing memory. |
+
+Codex does not install the Claude Code `/mine-writing-patterns` slash command.
+The installer places standalone agent files in `~/.codex/agents/*.toml`, as
+required by current Codex releases. Start a new session after installation so
+Codex can discover them. The mined memory is available to the Nature writing
+skills as well as `ml-paper-writing`.
+Re-running `scripts/setup.sh` preserves this memory. Back it up before a manual
+`cp -r` update of `ml-paper-writing`.
 
 **How it works**
 - **Template Preparation**: clean conference templates into an Overleaf-ready structure.

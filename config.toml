@@ -7,7 +7,6 @@
 model = "__MODEL__"
 model_provider = "__PROVIDER_NAME__"
 model_reasoning_effort = "medium"
-disable_response_storage = true
 
 [model_providers.__PROVIDER_NAME__]
 name = "__PROVIDER_NAME__"
@@ -42,33 +41,5 @@ UNPAYWALL_EMAIL = "your-email@example.com"
 UNSAFE_OPERATIONS = "all"
 
 # ============================================================
-# Agents
+# Agents are installed as standalone agents/*.toml files.
 # ============================================================
-
-# --- Research Workflow ---
-
-[agents.literature-reviewer]
-description = "Literature search, classification, and trend analysis with Zotero MCP integration"
-config_file = "~/.codex/agents/literature-reviewer/config.toml"
-
-[agents.rebuttal-writer]
-description = "Systematic rebuttal writing with tone optimization"
-config_file = "~/.codex/agents/rebuttal-writer/config.toml"
-
-[agents.paper-miner]
-description = "Extract writing knowledge from successful papers"
-config_file = "~/.codex/agents/paper-miner/config.toml"
-
-[agents.kaggle-miner]
-description = "Extract engineering practices from Kaggle solutions"
-config_file = "~/.codex/agents/kaggle-miner/config.toml"
-
-# --- Development Workflow ---
-
-[agents.code-reviewer]
-description = "Expert code review for quality, security, and maintainability"
-config_file = "~/.codex/agents/code-reviewer/config.toml"
-
-[agents.tdd-guide]
-description = "Test-driven development workflow guidance"
-config_file = "~/.codex/agents/tdd-guide/config.toml"
