@@ -315,7 +315,8 @@ For detailed literature research guidance:
 
 ## Knowledge Base: Paper-Miner Installed Writing Memory
 
-This skill consumes the **active installed writing memory** maintained by `paper-miner`:
+This skill shares the **active installed writing memory** maintained by `paper-miner`
+with the Nature writing, polishing, response, and other academic writing skills:
 
 - `references/knowledge/paper-miner-writing-memory.md`
 
@@ -349,7 +350,7 @@ Extracts reusable writing signals
 ↓
 Updates paper-miner-writing-memory.md
 ↓
-ml-paper-writing reuses that memory later
+Relevant academic writing skills reuse that memory later
 ```
 
 ### When to use this memory
@@ -372,8 +373,8 @@ When drafting or revising with `ml-paper-writing`, read this memory **before** w
 - venue-facing polishing.
 
 Use this read order:
-1. `references/knowledge/paper-miner-writing-memory.md`
-2. repo-local evidence and experiment artifacts
+1. repo-local evidence and experiment artifacts
+2. `references/knowledge/paper-miner-writing-memory.md`, when relevant entries exist
 3. cited papers or notes if needed
 4. venue template and formatting constraints
 

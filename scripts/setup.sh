@@ -548,6 +548,22 @@ copy_file_safely() {
 
   ensure_parent_dir "$target_file"
 
+  # Mined writing knowledge is user data, not an installer-managed skill file.
+  if [ "$target_file" = "$KIMI_HOME/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md" ]; then
+    if [ -e "$target_file" ] || [ -L "$target_file" ]; then
+      [ -f "$target_file" ] || [ -L "$target_file" ] || error "Writing memory path is not a file: $target_file"
+      SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+      return 0
+    fi
+    if [ "$DRY_RUN" = "1" ]; then
+      UPDATED_COUNT=$((UPDATED_COUNT + 1))
+      return 0
+    fi
+    cp -p "$src_file" "$target_file" || error "Failed to initialize writing memory at $target_file"
+    UPDATED_COUNT=$((UPDATED_COUNT + 1))
+    return 0
+  fi
+
   # Unchanged + previously managed → just re-record, skip copy
   if [ -f "$target_file" ] && cmp -s "$src_file" "$target_file"; then
     if was_previously_managed "$target_file"; then

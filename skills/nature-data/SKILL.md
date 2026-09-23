@@ -18,6 +18,13 @@ flags.
 The governing policy layer is Springer Nature / Nature Portfolio data policy. The implementation
 layer is FAIR data practice and DataCite-style citation metadata.
 
+For academic wording only, the active installed
+`skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md`
+under the current client's skill home may offer relevant phrasing examples.
+Use it only when it contains source-attributed availability language. Journal
+policy and the author's actual data-access facts take precedence. If the memory
+is absent or irrelevant, continue without it.
+
 ## Chinese-user operating mode
 
 When the user writes in Chinese, provides a Chinese manuscript note, or asks for "中文对应",
