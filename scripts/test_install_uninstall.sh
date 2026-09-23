@@ -31,6 +31,7 @@ test_roundtrip_empty_home() {
   test -f "$home/.claude/CLAUDE.md"
   test -f "$home/.claude/commands/promote.md"
   test -f "$home/.claude/skills/post-acceptance/references/xquik-promotion.md"
+  test -f "$home/.claude/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   ! grep -q 'generate-promotion.py' "$home/.claude/commands/promote.md"
 
   run_uninstall "$home"
@@ -38,10 +39,29 @@ test_roundtrip_empty_home() {
   test ! -f "$home/.claude/.claude-scholar-manifest.txt"
   test ! -f "$home/.claude/.claude-scholar-install-state"
   test ! -f "$home/.claude/settings.json"
+  test -f "$home/.claude/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   if [ -d "$home/.claude" ]; then
-    ! find "$home/.claude"/{skills,commands,agents,rules,hooks,scripts} -type f 2>/dev/null | grep -q .
+    ! find "$home/.claude"/{skills,commands,agents,rules,hooks,scripts} -type f ! -path "$home/.claude/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md" 2>/dev/null | grep -q .
   fi
   pass "roundtrip on empty home"
+}
+
+test_writing_memory_survives_update_and_legacy_uninstall() {
+  local home memory
+  home="$(make_home)"
+  run_setup "$home"
+  memory="$home/.claude/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
+  printf '\n### Kept example\n**Source:** Test paper\n' >> "$memory"
+
+  run_setup "$home"
+  grep -Fq '### Kept example' "$memory"
+  ! grep -Fxq 'skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md' "$home/.claude/.claude-scholar-manifest.txt"
+
+  # Older manifests may still claim ownership of the file.
+  printf '%s\n' 'skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md' >> "$home/.claude/.claude-scholar-manifest.txt"
+  run_uninstall "$home"
+  grep -Fq '### Kept example' "$memory"
+  pass "mined writing memory survives update and legacy uninstall"
 }
 
 test_preserve_preexisting_settings_keys() {
@@ -233,6 +253,7 @@ main() {
   bash -n "$SETUP_SH"
   bash -n "$UNINSTALL_SH"
   test_roundtrip_empty_home
+  test_writing_memory_survives_update_and_legacy_uninstall
   test_preserve_preexisting_settings_keys
   test_manifest_missing_fails_safe
   test_state_records_direct_claude_targets

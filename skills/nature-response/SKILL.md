@@ -30,6 +30,15 @@ justified scientific response, or unresolved author action.
 - When a reviewer misunderstood the manuscript, first consider whether the manuscript presentation caused the misunderstanding.
 - Treat rebuttal letters as potentially public review artifacts; write with professional tone and traceability.
 
+## Mined writing memory
+
+For response structure or tone, check the active installed
+`skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md`
+under the current client's skill home. Read only relevant rebuttal and venue
+entries. Reviewer comments, manuscript changes, and journal instructions remain
+the source of truth. Do not borrow claims or copy source phrasing. If the memory
+is absent or has no relevant entries, continue with this skill's references.
+
 ## Accepted inputs
 
 The skill may receive:
