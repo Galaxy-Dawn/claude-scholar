@@ -419,6 +419,10 @@ Claude Scholarは以下のプラットフォームをサポートしています
 | Agent | `paper-miner` | 優れた論文から再利用可能なライティングパターン、構造、学会の期待値を抽出 |
 | Command | `/mine-writing-patterns` | 論文を読み込み、再利用可能なライティング知識を現在インストール済みのpaper-minerメモリに統合 |
 
+抽出した知識は `ml-paper-writing`、Nature 系の執筆・推敲、査読対応の
+Skill で共有されます。`scripts/setup.sh` を再実行しても保持され、
+アンインストールでは削除されません。手動で `cp -r` 更新する場合は先にバックアップしてください。
+
 **仕組み**
 - **テンプレート準備**: 学会テンプレートをOverleaf対応構造に整理
 - **ジャーナル寄りの推敲**: 必要に応じて段落ロジック、hedging、section moves を整え、Nature寄りの文体へ近づける

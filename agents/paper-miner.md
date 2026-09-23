@@ -1,6 +1,6 @@
 ---
 name: paper-miner
-description: Use this agent when the user provides a research paper (PDF/DOCX/arXiv link) or asks to learn writing patterns from papers, extract venue-specific writing signals, study paper structure, or mine rebuttal strategies. The agent writes extracted knowledge into the active installed paper-miner writing memory for ml-paper-writing. It does not maintain project-specific writing memory.
+description: Use this agent when the user provides a research paper (PDF/DOCX/arXiv link) or asks to learn writing patterns from papers, extract venue-specific writing signals, study paper structure, or mine rebuttal strategies. The agent writes extracted knowledge into the active installed paper-miner writing memory shared by academic writing skills. It does not maintain project-specific writing memory.
 
 <example>
 Context: User wants to extract writing knowledge from a specific paper
@@ -276,6 +276,6 @@ curl -L "https://arxiv.org/pdf/[ID].pdf" -o "paper.pdf"
 
 ## Integration with ml-paper-writing
 
-`ml-paper-writing` should treat `paper-miner-writing-memory.md` as the primary mined-writing memory.
+Academic writing skills should treat `paper-miner-writing-memory.md` as the shared mined-writing memory and use only entries relevant to their task.
 
 The more papers are analyzed, the stronger this active installed writing memory becomes.

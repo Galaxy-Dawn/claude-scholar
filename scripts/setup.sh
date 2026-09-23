@@ -409,6 +409,18 @@ copy_file_safely() {
 
   mkdir -p "$(dirname "$target_file")"
 
+  # Mined writing knowledge is user data, not an installer-managed skill file.
+  if [ "$target_file" = "$CLAUDE_DIR/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md" ]; then
+    if [ -e "$target_file" ] || [ -L "$target_file" ]; then
+      [ -f "$target_file" ] || [ -L "$target_file" ] || error "Writing memory path is not a file: $target_file"
+      SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+      return 0
+    fi
+    cp -p "$src_file" "$target_file"
+    UPDATED_COUNT=$((UPDATED_COUNT + 1))
+    return 0
+  fi
+
   if [ -f "$target_file" ] && cmp -s "$src_file" "$target_file"; then
     if should_adopt_existing_path "$target_file"; then
       record_managed_path "$target_file"
