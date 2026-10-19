@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/security-guard.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/security-guard.js\"",
             "timeout": 5
           }
         ]
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/session-summary.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-summary.js\"",
             "timeout": 15
           }
         ]
@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.js\"",
             "timeout": 10
           }
         ]
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/stop-summary.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-summary.js\"",
             "timeout": 10
           }
         ]
@@ -55,7 +55,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/skill-forced-eval.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/skill-forced-eval.js\"",
             "timeout": 10
           }
         ]
