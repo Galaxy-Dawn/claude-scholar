@@ -6,6 +6,7 @@
  * Two-tier security: Block (exit 2) | Confirm (exit 0 + ask user)
  */
 
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const common = require('./hook-common');
@@ -31,6 +32,28 @@ let confirmLabel = '';
 function isPathInside(basePath, targetPath) {
   const relative = path.relative(basePath, targetPath);
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+// Canonicalize a path before containment checks: expands Windows 8.3 short names
+// (C:\Users\JOHNDO~1 -> C:\Users\John Doe) and resolves symlinks/junctions, so a
+// link inside home that points elsewhere is judged by where it really leads.
+// A path that doesn't exist yet (Write creating a file) is canonicalized through
+// its nearest existing ancestor.
+function canonicalPath(p) {
+  let current = path.resolve(p);
+  const rest = [];
+  for (;;) {
+    try {
+      return path.join(fs.realpathSync.native(current), ...rest);
+    } catch {
+      const parent = path.dirname(current);
+      if (parent === current) {
+        return path.resolve(p);
+      }
+      rest.unshift(path.basename(current));
+      current = parent;
+    }
+  }
 }
 
 // === Bash command security check ===
@@ -86,9 +109,9 @@ if (toolName === 'Bash') {
 // === File write security check ===
 } else if (toolName === 'Write' || toolName === 'Edit') {
   const filePath = input.tool_input?.file_path || '';
-  const homeDir = os.homedir();
-  const repoRoot = common.getRepoRoot(cwd);
-  const resolved = path.resolve(cwd, filePath);
+  const homeDir = canonicalPath(os.homedir());
+  const repoRoot = canonicalPath(common.getRepoRoot(cwd));
+  const resolved = canonicalPath(path.resolve(cwd, filePath));
 
   // Tier 1: Block — system paths
   const sensitivePaths = [
