@@ -22,6 +22,7 @@
 
 | スポンサー | 紹介 |
 | :---: | --- |
+| <a href="https://ofox.ai/ja?utm_source=github&utm_medium=sponsorship&utm_content=claude-scholar"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/ofox-logo-withai-dark.svg"><img src="assets/ofox-logo-withai.svg" alt="OfoxAI" width="180"></picture></a> | [OfoxAI：文献読解・実験コード・論文執筆のためのモデル API](https://ofox.ai/ja?utm_source=github&utm_medium=sponsorship&utm_content=claude-scholar): 1つの API キーで Claude、GPT、Gemini、DeepSeek などのテキストモデルを利用し、文献読解、実験コードの作成、論文の推敲に活用できます。研究発表用の素材には、画像・動画・音声モデルも用途に応じて選べます。 |
 | <a href="https://go.apimart.ai/gh-claude-scholar"><img src="assets/APIMart.png" alt="APIMart" width="180"></a> | 本プロジェクトをご支援いただいた APIMart に感謝します！APIMart は AI 画像・動画生成に特化した低価格 API プラットフォームです。GPT-Image-2 は 1 枚 $0.006 から、1 ドルで 160 枚以上生成できます。画像と動画を 1 つの非同期 API で扱え、タスクを送信して ID を取得し、ポーリングまたはコールバックで結果を取得できます。数万枚規模のバッチもタイムアウトせず、コードを変更せずにモデルを切り替えられます。月額料金なしの従量課金制です。[こちらから登録](https://go.apimart.ai/gh-claude-scholar)してご利用ください。 |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="assets/kimi-open-source-friends-dark.svg"><img alt="Kimi Open Source Friends" src="assets/kimi-open-source-friends-light.svg" width="180"></picture> | 本プロジェクトへの Kimi チームの力強いご支援に感謝します。公式リンク：[Kimi Code](https://www.kimi.ai/code?aff=claude-scholar) · [中国向けプラットフォーム](https://platform.kimi.com?aff=claude-scholar) · [グローバルプラットフォーム](https://platform.kimi.ai?aff=claude-scholar)。 |
 
