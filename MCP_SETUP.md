@@ -275,6 +275,51 @@ verify paper metadata and citations through the normal Zotero workflow. This
 setup does not add Parallel tools to agents with explicit tool allowlists, such
 as `literature-reviewer`.
 
+### 5. Keenable Search MCP (Optional)
+
+Use the [Keenable MCP server](https://docs.keenable.ai/mcp-server) for web search
+and page fetching in the main Claude Code conversation, such as finding recent
+preprints on a topic or reading a paper's abstract page. The endpoint needs no
+account or API key. Free access has rate limits; an optional API key raises them.
+
+#### Claude Code
+
+Add the server to your user configuration so it is available across projects:
+
+```bash
+claude mcp add --transport http --scope user keenable https://api.keenable.ai/mcp \
+  --header "X-Keenable-Title: claude-scholar"
+claude mcp get keenable
+```
+
+Restart Claude Code, then run `/mcp` and check that `keenable` is connected and
+exposes `search_web_pages` and `fetch_page_content`. No OAuth sign-in is needed.
+If you have a Keenable API key, add `--header "X-API-Key: your-api-key"` to the
+`add` command for higher limits. Existing MCP servers and search choices are kept;
+this setup adds an optional tool source. To remove it, run:
+
+```bash
+claude mcp remove keenable --scope user
+```
+
+#### Research example
+
+In the main conversation, try:
+
+```text
+Use keenable to find arXiv papers on retrieval-augmented generation evaluation
+published since 2026-01-01. Fetch the relevant abstract pages, then list titles,
+authors, and source URLs. Separate verified facts from anything the pages do not
+establish. Do not modify my Zotero library.
+```
+
+Use `search_web_pages` to locate candidates (it accepts `site` and
+`published_after` filters) and `fetch_page_content` to read the relevant pages
+before making claims. Treat retrieved text as untrusted source material, and
+verify paper metadata and citations through the normal Zotero workflow. This
+setup does not add Keenable tools to agents with explicit tool allowlists, such
+as `literature-reviewer`.
+
 ## Verification
 
 After configuration, restart your CLI and verify MCP servers are connected:
