@@ -275,6 +275,48 @@ verify paper metadata and citations through the normal Zotero workflow. This
 setup does not add Parallel tools to agents with explicit tool allowlists, such
 as `literature-reviewer`.
 
+### 5. deed.page Publishing MCP (Optional)
+
+Use [deed.page](https://deed.page) to share a rendered HTML artifact at a
+public URL from the main Claude Code conversation, such as a project page, a
+poster preview, or a results summary for a co-author. The hosted endpoint
+needs no account or API key. The first publish returns an owner token that is
+needed to update or delete that page later.
+
+Published pages are public to anyone with the link. Do not publish unreleased
+results, review-anonymized material, participant data, or anything your
+collaborators have not agreed to share.
+
+#### Claude Code
+
+```bash
+claude mcp add --transport http --scope user deed-page https://deed.page/mcp
+claude mcp get deed-page
+```
+
+Restart Claude Code, then run `/mcp` and check that `deed-page` is connected
+and lists tools such as `publish_site`, `get_site`, and `delete_site`. No OAuth
+sign-in is needed. To remove it, run:
+
+```bash
+claude mcp remove deed-page --scope user
+```
+
+#### Sharing example
+
+In the main conversation, try:
+
+```text
+Use deed-page to publish ./project-page/index.html with ttl_seconds 86400 so it
+expires after a day. Show me the files and the public URL before publishing,
+and keep the returned owner token in this conversation so we can delete the
+page later. Do not include anything outside ./project-page.
+```
+
+To take the page down early, ask Claude to call `delete_site` with the slug and
+the owner token. See the [deed.page docs](https://deed.page/docs) for limits
+and the full tool list.
+
 ## Verification
 
 After configuration, restart your CLI and verify MCP servers are connected:
