@@ -146,6 +146,8 @@ The installer is **backup-aware and incremental-update friendly**:
 
 **Important CLAUDE note**: if you already maintain your own `~/.claude/CLAUDE.md` or `~/.claude/CLAUDE.zh-CN.md`, review `~/.claude/CLAUDE.scholar.md` and `~/.claude/CLAUDE.zh-CN.scholar.md` after installation and manually merge the Claude Scholar sections you want into your own files. Do not assume the sidecar files are applied automatically.
 
+**Updating older manual hook configurations**: if your `settings.json` contains Scholar hook commands using `execSync`, replace those five `command` values with the matching entries in [`settings.json.template`](settings.json.template). The current launchers support home paths containing spaces and preserve hook exit codes, including security-guard exit code 2. Setup appends missing hooks; rerunning it does not remove the old commands. Preserve unrelated hooks.
+
 To update later:
 
 ```bash

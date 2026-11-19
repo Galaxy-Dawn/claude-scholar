@@ -29,6 +29,7 @@ test_roundtrip_empty_home() {
   test -f "$home/.claude/.claude-scholar-manifest.txt"
   test -f "$home/.claude/.claude-scholar-install-state"
   test -f "$home/.claude/CLAUDE.md"
+  node "$REPO_ROOT/scripts/test_settings_hooks.js" "$home/.claude/settings.json"
   test -f "$home/.claude/commands/promote.md"
   test -f "$home/.claude/skills/post-acceptance/references/xquik-promotion.md"
   test -f "$home/.claude/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"

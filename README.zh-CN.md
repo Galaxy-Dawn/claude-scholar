@@ -145,6 +145,8 @@ bash /tmp/claude-scholar/scripts/setup.sh
 
 **重要 CLAUDE 说明**：如果你原来就有自己的 `~/.claude/CLAUDE.md` 或 `~/.claude/CLAUDE.zh-CN.md`，安装后请查看 `~/.claude/CLAUDE.scholar.md` 和 `~/.claude/CLAUDE.zh-CN.scholar.md`，并将其中你需要的 Claude Scholar 内容按需合并到你自己的文件里；不要假设这些旁路文件会自动生效。
 
+**更新旧版手动 hooks 配置**：如果你的 `settings.json` 中还有使用 `execSync` 的 Scholar hook 命令，请将这五个 `command` 值替换为 [`settings.json.template`](settings.json.template) 中对应的命令。当前命令支持含空格的用户目录，并保留 hook 的退出码，包括 security-guard 用于阻止操作的退出码 2。安装器只追加缺失 hooks，重新运行不会移除旧命令；请保留其他自定义 hooks。
+
 以后做增量更新时：
 
 ```bash
