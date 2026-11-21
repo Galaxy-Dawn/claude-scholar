@@ -120,7 +120,7 @@ Claude Scholar は特に次のような人に向いています。
 - （任意）Python + [uv](https://docs.astral.sh/uv/) — Python 開発用
 - （任意）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) — 文献ワークフロー用
 - （任意）[Obsidian](https://obsidian.md/) — プロジェクト知識ベース用
-- （任意）[Granola](./MCP_SETUP.ja-JP.md#granola-の会議ノートオプション) — 会議を振り返り、決定事項と次の作業を Obsidian に保存
+- （任意）[Granola](#granola) — 会議を振り返り、決定事項と次の作業を Obsidian に保存
 
 ### オプション 1：フルインストール（推奨）
 
@@ -293,6 +293,15 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 - `Writing/` と `Daily/` を管理する
 
 詳しくは [OBSIDIAN_SETUP.ja-JP.md](./OBSIDIAN_SETUP.ja-JP.md) を参照してください。
+
+### Granola
+
+1. **初回の設定。** フルインストールには `granola-meeting-ingest` が含まれます。Codex から Granola に接続して認証し、研究プロジェクトに Obsidian の保管庫を紐付けます。設定済みの接続と保管庫をそのまま使えます。[Granola の接続](./MCP_SETUP.ja-JP.md#granola-の会議ノートオプション) · [保管庫の設定](./OBSIDIAN_SETUP.ja-JP.md)
+2. **会議を記録する。** Granola で記録を開始し、終了後にノートができたことを確認します。会議、インタビュー、講演のノートがすでにあれば、そのまま使えます。[Granola での記録方法](https://docs.granola.ai/help-center/taking-notes/transcription)
+3. **取り込みを依頼する。** 紐付けたプロジェクトで、ノートのリンクを添えて「この Granola の会議をプロジェクトの Obsidian に保存して」と Codex に伝えます。会議名と日付でも指定できます。複数の候補がある場合は、どの会議かを確認します。本文はコネクターが読み取ります。
+4. **ノートを開く。** Codex が内容に沿ったタイトルを付け、要約、決定事項、今後の作業をまとめて保存し、パスを返します。プロジェクトの `02-Index.md` からも開けます。同じ会議を再度取り込んでも、手で加えた編集は残ります。
+
+保存先は `Sources/Interviews/Granola-<YY-MM-DD>-<題名>-<会議 UUID>.md` です。コネクターが使えない場合は、ローカルに書き出したノートと会議 UUID を渡します。[取り込み手順とノートの例](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
 
 ### Xquik（任意）
 

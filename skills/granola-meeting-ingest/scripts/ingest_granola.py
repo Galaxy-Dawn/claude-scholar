@@ -74,7 +74,7 @@ def meeting_filename(meeting_id: str, meeting_date: str | None, title: str) -> s
     return f'Granola-{short_date}-{topic}-{meeting_id}.md'
 
 
-def render_meeting(meeting: Any, language: str) -> tuple[str, str, str | None, str]:
+def render_meeting(meeting: Any, binding: common.Binding) -> tuple[str, str, str | None, str]:
     if not isinstance(meeting, dict):
         raise ValueError('meeting JSON must be an object')
     try:
@@ -87,14 +87,18 @@ def render_meeting(meeting: Any, language: str) -> tuple[str, str, str | None, s
         raise ValueError('source_kind must be notes, transcript or notes-and-transcript')
     meeting_date = optional_date(meeting.get('meeting_date'), 'meeting_date')
     source_url = note_url(meeting.get('source_url'))
-    chinese = language.lower().startswith('zh')
-    labels = (
-        ('参会者', '摘要', '已定事项', '待办', '未决问题', '负责人未定', '未设期限', '未记录')
-        if chinese else
-        ('Participants', 'Summary', 'Decisions', 'Action items', 'Open questions',
-         'Owner unspecified', 'Due date unspecified', 'None recorded')
-    )
-    participants, summary, decisions, actions, questions, no_owner, no_due, empty = labels
+    chinese = binding.note_language.lower().startswith('zh')
+    no_owner = '负责人未定' if chinese else 'Owner unspecified'
+    no_due = '未设期限' if chinese else 'Due date unspecified'
+    empty = '未记录' if chinese else 'None recorded'
+
+    def bullet_items(field: str, *, prefix: str = '') -> list[str]:
+        return [f'- {prefix}{plain_markdown(line(value, field))}' for value in items(meeting, field)]
+
+    summary = bullet_items('summary')
+    if not summary:
+        raise ValueError('summary must contain at least one item')
+
     rendered_actions = []
     for action in items(meeting, 'action_items'):
         if not isinstance(action, dict):
@@ -104,8 +108,12 @@ def render_meeting(meeting: Any, language: str) -> tuple[str, str, str | None, s
         due = optional_date(action.get('due_date'), 'action_items.due_date') or no_due
         rendered_actions.append(f'- [ ] {task} ({owner}, {due})')
 
+    timestamp = common.now_iso()
     frontmatter = [
-        '---', 'type: source-interview', 'source_provider: granola',
+        '---', 'type: source', 'source_type: interview',
+        f'project: {json.dumps(binding.project_slug, ensure_ascii=False)}',
+        'status: active', f'created: {timestamp}', f'updated: {timestamp}',
+        'source_provider: granola',
         f'granola_meeting_id: {meeting_id}', f'source_kind: {source_kind}',
         f'title: {json.dumps(title, ensure_ascii=False)}',
     ]
@@ -114,19 +122,39 @@ def render_meeting(meeting: Any, language: str) -> tuple[str, str, str | None, s
     if source_url:
         frontmatter.append(f'source_url: {source_url}')
     lines = [*frontmatter, '---', '', f'# {plain_markdown(title)}', '']
-    if source_url:
-        lines.extend([f'[Granola]({source_url})', ''])
 
-    for key, heading in (
-        ('participants', participants), ('summary', summary), ('decisions', decisions),
-        ('action_items', actions), ('open_questions', questions),
+    source = f'[Granola]({source_url})' if source_url else 'Granola'
+    kind = {
+        'notes': '笔记' if chinese else 'Notes',
+        'transcript': '逐字稿' if chinese else 'Transcript',
+        'notes-and-transcript': '笔记和逐字稿' if chinese else 'Notes and transcript',
+    }[source_kind]
+    metadata = [f'- {"来源" if chinese else "Source"}: {source}',
+                f'- {"依据" if chinese else "Material reviewed"}: {kind}']
+    if meeting_date:
+        metadata.append(f'- {"日期" if chinese else "Meeting date"}: {meeting_date}')
+
+    def add_section(english: str, chinese_heading: str, bullets: list[str], level: int = 2) -> None:
+        heading = chinese_heading if chinese else english
+        lines.extend([f'{"#" * level} {heading}', '', *(bullets or [f'- {empty}']), ''])
+
+    # Follow the source-interview template's headings in the project's language.
+    add_section('Metadata', '会议信息', metadata)
+    add_section('Project Relevance', '与项目的关系', bullet_items('project_relevance'))
+    decision_label = '已定事项' if chinese else 'Decision'
+    summary.extend(bullet_items('decisions', prefix=f'**{decision_label}** '))
+    add_section('Summary', '摘要', summary)
+    add_section('Participants', '参会者', bullet_items('participants'))
+    add_section('Context', '背景', bullet_items('context'))
+    add_section('Key Quotes', '关键原话', bullet_items('key_quotes'))
+    add_section('Observed Needs', '观察到的需求', bullet_items('observed_needs'))
+
+    lines.extend(['## 后续事项' if chinese else '## Follow-ups', ''])
+    for english, chinese_heading, bullets in (
+        ('Action items', '待办', rendered_actions),
+        ('Open questions', '未决问题', bullet_items('open_questions')),
     ):
-        bullets = rendered_actions if key == 'action_items' else [
-            f'- {plain_markdown(line(value, key))}' for value in items(meeting, key)
-        ]
-        if key == 'summary' and not bullets:
-            raise ValueError('summary must contain at least one item')
-        lines.extend([f'## {heading}', '', *(bullets or [f'- {empty}']), ''])
+        add_section(english, chinese_heading, bullets, level=3)
     return meeting_id, title, meeting_date, '\n'.join(lines)
 
 
@@ -165,7 +193,7 @@ def saved_title(note: Path, fallback: str) -> str:
 
 
 def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
-    meeting_id, title, meeting_date, content = render_meeting(meeting, binding.note_language)
+    meeting_id, title, meeting_date, content = render_meeting(meeting, binding)
     note_bytes = content.encode('utf-8')
     root = binding.project_root
     if binding.status != 'active' or not root.is_dir():
@@ -233,7 +261,7 @@ def main() -> None:
         if args.input == '-':
             meeting = json.load(sys.stdin.buffer)
         else:
-            with Path(args.input).expanduser().open(encoding='utf-8') as stream:
+            with Path(args.input).expanduser().open('rb') as stream:
                 meeting = json.load(stream)
         repo_root = common.find_repo_root(args.cwd.expanduser().resolve())
         binding = resolve_granola_binding(repo_root, args.project_id)

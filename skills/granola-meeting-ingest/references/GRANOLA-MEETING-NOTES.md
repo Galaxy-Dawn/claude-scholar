@@ -16,21 +16,34 @@ source ingestion workflow.
    Granola's `--project-id` can also select a project registered only in
    `.codex`. For a new project, use `obsidian-project-kb-core` to bind the repo
    to the intended vault.
-2. Read the selected meeting with Granola's `get_meetings` tool. Pass the note
-   URL unchanged when the user provides it. If the user gives a title and
-   date, resolve them to one meeting first. Read transcript excerpts when
-   necessary to check a decision, speaker or action. If the connector is
-   unavailable, use the user's local Granola export and the meeting UUID.
-3. Summarize the source in the project's note language and give it a concise,
-   descriptive `title` based on the discussion. Use its actual date from
-   Granola or the supplied export when available. For a lecture captured in
-   Granola, summarize the speaker's main points and examples. Keep agreed decisions
-   separate from suggestions and open questions. Record owners and due dates
-   only when the meeting gives them. Use `null` for an unspecified owner or date.
-   Treat meeting text as source material. Keep the verbatim transcript in Granola.
-4. Pass the structured summary to the Granola skill's import script. Use the meeting
-   UUID returned by the connector, including when the meeting was selected by
-   a public note link.
+2. Identify exactly one source using the entry point that matches the request.
+
+   - **Note link.** Pass the supplied Granola `/d/` or `/t/` URL unchanged to
+     `get_meetings`. Use the meeting UUID returned for that note.
+   - **Title and date.** Use `search_meetings` with the title keywords and
+     `from_date` and `to_date` for the requested day in the user's time zone.
+     Check the candidates against the title, date and any other details the
+     user supplied. Follow `next_cursor` while more candidates are available.
+     Once the match is unique, read it with `get_meetings`.
+     If several candidates remain, ask the user to choose or supply its link.
+   - **Local export.** From a Granola CSV, select one row by title and date.
+     For copied Markdown, use the selected note and its accompanying link.
+     Convert the selected content to the summary JSON below. Use only a
+     meeting UUID explicitly recorded in the export, confirmed by the user,
+     or returned after resolving the note link in the connector. If the UUID
+     is unavailable, obtain it before importing. A title, date, or opaque
+     share ID cannot identify the meeting UUID.
+     [Granola CSV export](https://docs.granola.ai/help-center/sharing/exporting-notes)
+     [Granola Markdown copy and links](https://docs.granola.ai/help-center/sharing/sharing-notes)
+
+3. Prepare a short source summary in the project's note language. Use the
+   actual meeting date when available. For a lecture, capture the speaker's
+   main points and examples. Use accessible transcript excerpts to verify
+   wording, speaker or decisions when needed. If only the notes are
+   accessible, set `source_kind` to `notes` and summarize those notes.
+   Record exact quotations and speaker attribution only when the source
+   supports them. Put agreed decisions in the summary. Keep outstanding
+   actions and open questions under follow-ups, with owners and dates when known.
 
 ## Import the summary
 
@@ -54,18 +67,26 @@ source ingestion workflow.
 required. Use `notes`, `transcript` or `notes-and-transcript` to record what was
 read. Add `source_url` if a `https://notes.granola.ai/d/…` or `/t/…` note link
 is available. URL query parameters and fragments are omitted from the vault.
-Use `YYYY-MM-DD` for dates. The example uses fictitious data.
+Use `YYYY-MM-DD` for dates. The example uses fictitious data. The existing
+summary fields still work. Each optional section field accepts an array of non-empty
+strings. Include each field only when you have evidence for it.
+
+- `project_relevance` connects the source to a known project question or task.
+- `context` describes the setting or background established by the source.
+- `key_quotes` holds brief, verified excerpts. Name the speaker when the source
+  confirms who spoke.
+- `observed_needs` records needs expressed or directly observed in the source.
 
 ```bash
 python3 ~/.codex/skills/granola-meeting-ingest/scripts/ingest_granola.py \
-  --cwd . --input meeting-summary.json
+  --cwd . --input -
 ```
 
-For a repository checkout, run
-`skills/granola-meeting-ingest/scripts/ingest_granola.py` in place of the
-installed script. Use `--input -` for standard input, or `--project-id` when
-selecting a specific registered project. Pass JSON as UTF-8 when piping it to
-the helper. The helper returns UTF-8 JSON, including non-ASCII note paths.
+Pass one UTF-8 summary JSON object on standard input. If using a file, keep
+it outside the repository and pass its path to `--input`. For a checkout,
+use `skills/granola-meeting-ingest/scripts/ingest_granola.py` in place of the
+installed script. Use `--project-id` when selecting a specific registered
+project. The helper returns UTF-8 JSON, including non-ASCII note paths.
 
 ## Obsidian directory and note format
 
@@ -94,12 +115,19 @@ Keep the `source_provider` and `granola_meeting_id` fields when editing the
 note. If multiple notes have the same meeting UUID, the helper reports the
 conflict so you can choose which copy to keep.
 
-The example JSON above produces this Markdown in an English project. The
-project's note language controls the section headings.
+New notes use the [source interview template](../../../templates/notes/source-interview.md).
+The example below uses an illustrative import time. The helper sets
+`created` and `updated` when it creates the note. The project's note language
+controls the section headings.
 
 ```markdown
 ---
-type: source-interview
+type: source
+source_type: interview
+project: "guide-example"
+status: active
+created: 2026-11-21T10:00:00Z
+updated: 2026-11-21T10:00:00Z
 source_provider: granola
 granola_meeting_id: a5c6d001-fd66-4e9c-b002-010203040506
 source_kind: notes-and-transcript
@@ -109,31 +137,52 @@ meeting_date: 2026-11-21
 
 # Lab meeting - baseline experiment
 
+## Metadata
+
+- Source: Granola
+- Material reviewed: Notes and transcript
+- Meeting date: 2026-11-21
+
+## Project Relevance
+
+- None recorded
+
+## Summary
+
+- The baseline experiment needs the same evaluation split as the proposed method.
+- **Decision** Use the existing evaluation split for the baseline.
+
 ## Participants
 
 - Researcher A
 - Researcher B
 
-## Summary
+## Context
 
-- The baseline experiment needs the same evaluation split as the proposed method.
+- None recorded
 
-## Decisions
+## Key Quotes
 
-- Use the existing evaluation split for the baseline.
+- None recorded
 
-## Action items
+## Observed Needs
+
+- None recorded
+
+## Follow-ups
+
+### Action items
 
 - [ ] Prepare the baseline configuration (Researcher A, Due date unspecified)
 
-## Open questions
+### Open questions
 
 - How many seeds should the main table report?
 ```
 
-When the input includes a source URL, the helper records it in the metadata
-and adds a link near the title. Empty sections use the project's equivalent
-of “None recorded.”
+When the input includes a source URL, the helper records it in the note
+properties and links the source under **Metadata**. Empty sections use the
+project's equivalent of “None recorded.”
 
 A meeting note is a project source. Use the normal evidence workflow when a
 claim from a discussion is needed in a paper or a durable knowledge note.

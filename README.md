@@ -120,7 +120,7 @@ It can still help in other research settings, but its current workflow design is
 - (Optional) Python + [uv](https://docs.astral.sh/uv/) for Python development
 - (Optional) [Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) for literature workflows
 - (Optional) [Obsidian](https://obsidian.md/) for project knowledge-base workflows
-- (Optional) [Granola](./MCP_SETUP.md#granola-meeting-notes-optional) to review a meeting and save its decisions and action items in Obsidian
+- (Optional) [Granola](#granola) to review a meeting and save its decisions and action items in Obsidian
 
 ### Option 1: Full Installation (Recommended)
 
@@ -293,6 +293,15 @@ Use Obsidian when you want Claude Scholar to maintain a filesystem-first researc
 - `Daily/`
 
 See [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md).
+
+### Granola
+
+1. **Set up once.** The full installation includes `granola-meeting-ingest`. Connect your Granola account in Codex and bind the research project to its Obsidian vault. You can reuse an existing connection and binding. [Connect Granola](./MCP_SETUP.md#granola-meeting-notes-optional) · [Bind an Obsidian project](./OBSIDIAN_SETUP.md)
+2. **Capture the meeting.** Start taking notes in Granola and let it finish the note. An existing Granola note from a meeting, interview or talk also works. [Recording in Granola](https://docs.granola.ai/help-center/taking-notes/transcription)
+3. **Ask Codex to import it.** In the bound project, say “Save this Granola meeting to this project's Obsidian vault” and include the note link. A meeting title and date also work. Codex asks which meeting you meant if several match. The connector reads the note for you.
+4. **Open the result.** Codex chooses a title from the discussion, saves a source note with its summary, decisions and follow-ups, and returns the path. You can also find the note in `02-Index.md`. Importing the same meeting again preserves your edits.
+
+Notes use `Sources/Interviews/Granola-<YY-MM-DD>-<topic>-<meeting UUID>.md`. Without a connector, supply a local Granola export and its meeting UUID. See the [import guide and example note](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md).
 
 ### Xquik (optional)
 

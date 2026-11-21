@@ -14,6 +14,8 @@ use [Obsidian Source Ingestion](../obsidian-source-ingestion/SKILL.md).
 2. Read the selected meeting through the user's Granola connector or local
    export. Choose a short title from the content. For a talk, summarize the
    speaker's main points. Record decisions and actions only when the source provides them.
+   If transcript access is unavailable, briefly summarize the accessible notes with
+   `source_kind: notes` and include quotations or speaker attribution only when verified.
 3. Run this skill's `scripts/ingest_granola.py` to write the Markdown note
    under `Sources/Interviews/Granola-<YY-MM-DD>-<topic>-<meeting UUID>.md`
    and refresh the project index. This step also registers the source.

@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -71,17 +72,34 @@ class GranolaIngestTest(unittest.TestCase):
     def test_import_writes_note_registry_and_index(self) -> None:
         # Exercise the file input as well as the stdin route used by the skill.
         payload = self.repo / 'meeting-summary.json'
-        payload.write_text(json.dumps(self.meeting(), ensure_ascii=False), encoding='utf-8')
+        fixture = self.meeting(
+            project_relevance=['帮助复核验证集。'],
+            context=['组会上讨论了实验安排。'],
+            key_quotes=['研究员 A：“用现有验证集。”'],
+            observed_needs=['对齐种子列表。'],
+        )
+        payload.write_text(json.dumps(fixture, ensure_ascii=False), encoding='utf-8')
         result = json.loads(self.run_cli(GRANOLA_HELPER, '--input', str(payload)).stdout)
         self.assertEqual(result, {
             'status': 'created', 'project_id': 'granola-demo', 'note': self.note.relative_to(self.root).as_posix(),
         })
         note = self.note.read_text(encoding='utf-8')
+        self.assertIn('type: source\nsource_type: interview\nproject: "granola-demo"\nstatus: active\n', note)
         self.assertIn(f'granola_meeting_id: {MEETING_ID}', note)
         self.assertIn(f'https://notes.granola.ai/d/{MEETING_ID}', note)
         self.assertNotIn('temporary=fixture', note)
         self.assertNotIn('#preview', note)
-        self.assertIn('## 已定事项\n\n- 使用现有验证集。', note)
+        self.assertEqual(re.findall(r'^## (.+)$', note, flags=re.MULTILINE), [
+            '会议信息', '与项目的关系', '摘要', '参会者', '背景', '关键原话', '观察到的需求', '后续事项',
+        ])
+        self.assertIn('## 与项目的关系\n\n- 帮助复核验证集。', note)
+        self.assertIn('## 背景\n\n- 组会上讨论了实验安排。', note)
+        self.assertIn('## 关键原话\n\n- 研究员 A：“用现有验证集。”', note)
+        self.assertIn('## 观察到的需求\n\n- 对齐种子列表。', note)
+        summary = note.split('## 摘要\n', 1)[1].split('\n## 参会者', 1)[0]
+        follow_ups = note.split('## 后续事项\n', 1)[1]
+        self.assertIn('- **已定事项** 使用现有验证集。', summary)
+        self.assertNotIn('已定事项', follow_ups)
         self.assertIn('- [ ] 补跑 baseline (研究员 A, 2026-11-28)', note)
         self.assertIn('- [ ] 核对种子列表 (负责人未定, 未设期限)', note)
         self.assertIn('## 未决问题', note)
@@ -103,7 +121,19 @@ class GranolaIngestTest(unittest.TestCase):
         expected_name = f'Granola-26-11-21-Lab-meeting-baseline-experiment-{MEETING_ID}.md'
         self.assertEqual(result['note'], 'Sources/Interviews/' + expected_name)
         saved = Path(binding['project_root']) / result['note']
-        self.assertEqual(saved.read_text(encoding='utf-8'), examples['markdown'])
+        note = saved.read_text(encoding='utf-8')
+        timestamp_pattern = r'^(created|updated): (.+)$'
+        timestamps = dict(re.findall(timestamp_pattern, note, flags=re.MULTILINE))
+        self.assertEqual(set(timestamps), {'created', 'updated'})
+        self.assertEqual(timestamps['created'], timestamps['updated'])
+        self.assertIsNotNone(datetime.fromisoformat(timestamps['created'].replace('Z', '+00:00')).tzinfo)
+        self.assertEqual(
+            re.sub(timestamp_pattern, r'\1: <timestamp>', note, flags=re.MULTILINE),
+            re.sub(timestamp_pattern, r'\1: <timestamp>', examples['markdown'], flags=re.MULTILINE),
+        )
+        template = (SKILLS.parent / 'templates/notes/source-interview.md').read_text(encoding='utf-8')
+        self.assertEqual(re.findall(r'^## (.+)$', note, flags=re.MULTILINE),
+                         re.findall(r'^## (.+)$', template, flags=re.MULTILINE))
 
     def test_legacy_note_and_an_ordinary_interview_share_the_folder(self) -> None:
         legacy = self.note.parent / f'granola-{MEETING_ID}.md'
@@ -152,8 +182,8 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertIn(link, self.index.read_text(encoding='utf-8'))
         content = path.read_text(encoding='utf-8')
         self.assertIn(f'title: {json.dumps(topic, ensure_ascii=False)}', content)
-        self.assertIn('## 已定事项\n\n- 未记录', content)
-        self.assertIn('## 待办\n\n- 未记录', content)
+        self.assertNotIn('**已定事项**', content)
+        self.assertIn('### 待办\n\n- 未记录', content)
 
     def test_utf8_json_pipes_on_a_legacy_windows_code_page(self) -> None:
         payload = json.dumps(self.meeting(), ensure_ascii=False)
@@ -165,6 +195,19 @@ class GranolaIngestTest(unittest.TestCase):
                                        '--dest', renamed).stdout)
             self.assertEqual((moved['from'], moved['to']), (saved['note'], renamed))
             self.assertEqual(self.ingest()['note'], renamed)
+
+    def test_utf8_bom_meeting_file_and_stdin_resolve_the_same_note(self) -> None:
+        payload = '\ufeff' + json.dumps(self.meeting(source_kind='notes'), ensure_ascii=False)
+        source = self.repo.parent / 'bom-meeting.json'
+        source.write_bytes(payload.encode('utf-8'))
+        created = json.loads(self.run_cli(GRANOLA_HELPER, '--input', str(source)).stdout)
+        self.assertEqual(created['status'], 'created')
+        note = self.root / created['note']
+        before = note.read_bytes()
+        retry = json.loads(self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=payload).stdout)
+        self.assertEqual((retry['status'], retry['note']), ('existing', created['note']))
+        self.assertEqual(note.read_bytes(), before)
+        self.assertIn('source_kind: notes', before.decode('utf-8'))
 
     def test_retry_preserves_edits_and_repairs_registry(self) -> None:
         title = 'Pilot "A" \\ branch'
@@ -361,14 +404,27 @@ class GranolaIngestTest(unittest.TestCase):
         self.note = self.root / self.ingest(title='Custom folder meeting')['note']
         moved = 'Sources/Meetings/team-review.md'
         self.kb('note-lifecycle', '--mode', 'rename', '--note', self.note.relative_to(self.root).as_posix(), '--dest', moved)
+        legacy = self.root / 'Sources/Fieldwork/previous-meeting.md'
+        legacy.parent.mkdir()
+        legacy.write_text(
+            f'---\ntype: source-interview\nsource_provider: granola\n'
+            f'granola_meeting_id: {SECOND_ID}\ntitle: "Previous fieldwork"\n---\n\nResearcher annotations.\n',
+            encoding='utf-8',
+        )
+        legacy_before = legacy.read_bytes()
         self.registry.unlink()
         result = self.ingest()
         self.assertEqual((result['status'], result['note']), ('existing', moved))
-        link = '[[Sources/Meetings/team-review]]'
-        self.assertIn(link, self.index.read_text(encoding='utf-8'))
-        row = next(row for row in self.registry.read_text(encoding='utf-8').splitlines() if link in row)
-        self.assertIn('| interview | Custom folder meeting |', row)
-        self.assertIn('| Granola |', row)
+        registry = self.registry.read_text(encoding='utf-8').splitlines()
+        index = self.index.read_text(encoding='utf-8')
+        for link, title in (('[[Sources/Meetings/team-review]]', 'Custom folder meeting'),
+                            ('[[Sources/Fieldwork/previous-meeting]]', 'Previous fieldwork')):
+            self.assertIn(link, index)
+            row = next(row for row in registry if link in row)
+            self.assertIn(f'| interview | {title} |', row)
+            self.assertIn('| Granola |', row)
+        self.assertEqual(self.ingest(meeting_id=SECOND_ID)['status'], 'existing')
+        self.assertEqual(legacy.read_bytes(), legacy_before)
 
     def test_concurrent_imports_keep_both_meetings_and_deduplicate(self) -> None:
         with ThreadPoolExecutor(max_workers=3) as executor:

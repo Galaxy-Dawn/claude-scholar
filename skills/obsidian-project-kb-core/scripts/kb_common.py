@@ -660,10 +660,15 @@ def imported_source_metadata(project_root: Path, relative: str) -> dict[str, str
     if path.suffix != '.md' or path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(project_root.resolve()):
         return {}
     try:
-        fields = read_frontmatter_fields(path, 'type', 'source_provider', 'title')
+        fields = read_frontmatter_fields(path, 'type', 'source_type', 'source_provider', 'title')
     except OSError:
         return {}
-    if not fields.get('type', '').startswith('source-') or not fields.get('source_provider', '').strip():
+    note_type = fields.get('type', '')
+    if note_type.startswith('source-'):
+        fields['source_type'] = note_type.removeprefix('source-')
+    elif note_type != 'source':
+        return {}
+    if not fields.get('source_type') or not fields.get('source_provider', '').strip():
         return {}
     return fields
 
@@ -685,7 +690,7 @@ def registry_add_or_update(
     payload = section_and_row_for_relpath(rel_path)
     if payload is None and rel_path.replace('\\', '/').startswith('Sources/'):
         metadata = imported_source_metadata(project_root, rel_path)
-        source_type = metadata.get('type', '').removeprefix('source-')
+        source_type = metadata.get('source_type')
         if source_type in SOURCE_TYPES.values():
             payload = section_and_row_for_relpath(rel_path, imported_source_type=source_type)
     if payload is None:
