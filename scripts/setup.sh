@@ -260,6 +260,7 @@ merge_settings() {
   CLAUDE_PREVIOUS_INSTALL_STATE="$STATE_FILE" node <<'NODE'
 const fs = require('fs');
 const { createHash } = require('crypto');
+const { isDeepStrictEqual } = require('util');
 
 const targetPath = process.env.CLAUDE_SETTINGS_TARGET;
 const templatePath = process.env.CLAUDE_SETTINGS_TEMPLATE;
@@ -314,10 +315,6 @@ function mergeMissing(existingValue, templateValue, pathParts, addedPaths) {
   return output;
 }
 
-function hookSignature(hook) {
-  return JSON.stringify({ type: hook?.type || '', command: hook?.command || '', timeout: hook?.timeout ?? null });
-}
-
 function hookRecord(event, matcher, hook) {
   return { event, matcher, type: hook.type || '', command: hook.command || '', timeout: hook.timeout ?? null };
 }
@@ -332,7 +329,7 @@ function hasStockHookFields(hook) {
 }
 
 // SHA-256 fingerprints of the five stock launchers in the previous manual settings template.
-// Only inspect them as configuration data. A customized launcher belongs to the user.
+// Match the command as data, independently of user-supplied hook options.
 const legacyLaunchers = {
   PreToolUse: '461b19c2871c56b7305e4ed0846e52992c1ebc3cb9675cc54ada23a9162530d8',
   SessionEnd: '57af87c9030aebe9506e5f45686ed588a4fec01ff69dcbc9a206bc94ba987f14',
@@ -341,10 +338,10 @@ const legacyLaunchers = {
   UserPromptSubmit: '6e18addc8ce01341c895dd82390b470a37ff665a783d50b3e2af31901db89a9c',
 };
 
-function isStockLegacyLauncher(event, old, replacement) {
-  return hasStockHookFields(old) && old.type === replacement.type && old.timeout === replacement.timeout &&
-    typeof old.command === 'string' &&
-    createHash('sha256').update(old.command).digest('hex') === legacyLaunchers[event];
+function isKnownLauncher(event, item, hook) {
+  if (item?.type !== hook.type || typeof item.command !== 'string') return false;
+  return item.command === hook.command ||
+    createHash('sha256').update(item.command).digest('hex') === legacyLaunchers[event];
 }
 
 function mergeHooks(existingHooks, templateHooks) {
@@ -368,26 +365,36 @@ function mergeHooks(existingHooks, templateHooks) {
       }
 
       for (const hook of templateMatcher.hooks || []) {
-        const signature = hookSignature(hook);
         const record = hookRecord(eventName, matchValue, hook);
-        const present = matching.flatMap((matcher) => matcher.hooks)
-          .filter((item) => hookSignature(item) === signature);
-        let placed = present.length > 0;
-        for (const matcher of matching) {
-          matcher.hooks = matcher.hooks.flatMap((old) => {
-            if (!isStockLegacyLauncher(eventName, old, hook)) return [old];
-            if (placed) {
-              prunableMatchers.add(matcher);
-              return [];
-            }
-            placed = true;
-            return [clone(hook)];
-          });
+        const launchers = matching.flatMap((matcher) => matcher.hooks)
+          .filter((item) => isKnownLauncher(eventName, item, hook));
+        if (launchers.length === 0) {
+          matching[0].hooks.push(clone(hook));
+          addedHooks.push(record);
+          continue;
         }
-        if (!placed) matching[0].hooks.push(clone(hook));
-        if (present.length === 0 || (
-          present.some(hasStockHookFields) && previousHookRecords.has(JSON.stringify(record))
-        )) addedHooks.push(record);
+
+        // Keep each user-configured variant in its original position. Otherwise
+        // prefer an existing current launcher over the equivalent legacy one.
+        const customized = launchers.filter((item) => !hasStockHookFields(item) || item.timeout !== hook.timeout);
+        const current = launchers.find((item) => item.command === hook.command);
+        const preferred = customized.length ? customized : [current || launchers[0]];
+        const redundant = new Set(launchers);
+        const retained = [];
+        for (const item of preferred) {
+          item.command = hook.command;
+          if (retained.some((other) => isDeepStrictEqual(other, item))) continue;
+          retained.push(item);
+          redundant.delete(item);
+        }
+        for (const matcher of matching) {
+          const remaining = matcher.hooks.filter((item) => !redundant.has(item));
+          if (remaining.length !== matcher.hooks.length) prunableMatchers.add(matcher);
+          matcher.hooks = remaining;
+        }
+        if (!customized.length && (!current || previousHookRecords.has(JSON.stringify(record)))) {
+          addedHooks.push(record);
+        }
       }
     }
     output[eventName] = existingMatchers.filter((matcher) =>

@@ -146,7 +146,7 @@ The installer is **backup-aware and incremental-update friendly**:
 
 **Important CLAUDE note**: if you already maintain your own `~/.claude/CLAUDE.md` or `~/.claude/CLAUDE.zh-CN.md`, review `~/.claude/CLAUDE.scholar.md` and `~/.claude/CLAUDE.zh-CN.scholar.md` after installation and manually merge the Claude Scholar sections you want into your own files. Do not assume the sidecar files are applied automatically.
 
-**Updating older manual hook configurations**: rerun the installer to back up `settings.json` and replace the five stock Scholar launchers with the corresponding entries in [`settings.json.template`](settings.json.template). The current launchers support home paths with spaces and preserve hook exit codes. Setup preserves custom hook entries. Review any customized legacy Scholar launchers against the template, especially if you use selective installation.
+**Updating older manual hook configurations**: rerun the installer to back up `settings.json` and update the five stock Scholar launchers. For a matching event and matcher, setup replaces the old command in place and preserves options such as `async` and `timeout`. Hooks with different commands or matchers keep their settings. The current launchers support home paths with spaces and preserve hook exit codes. For a selective installation, compare your launchers with [`settings.json.template`](settings.json.template).
 
 To update later:
 

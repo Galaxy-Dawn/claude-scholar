@@ -69,9 +69,10 @@ test_preserve_preexisting_settings_keys() {
   local home
   home="$(make_home)"
   mkdir -p "$home/.claude"
-  python3 - "$home/.claude/settings.json" <<'PY'
+  python3 - "$home/.claude/settings.json" "$REPO_ROOT/scripts/test-fixtures/manual-hooks-v1.json" <<'PY'
 import json, sys
 path = sys.argv[1]
+legacy = json.load(open(sys.argv[2], encoding="utf-8"))["PreToolUse"][0]
 data = {
     "mcpServers": {
         "zotero": {
@@ -82,13 +83,14 @@ data = {
         "superpowers@claude-plugins-official": False
     },
     "hooks": {
+        "PreToolUse": [{**legacy, "matcher": "Read"}],
         "Stop": [
             {
                 "matcher": "*",
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "echo user-hook",
+                        "command": "echo .claude/hooks/stop-summary.js",
                         "timeout": 3
                     }
                 ]
@@ -102,9 +104,16 @@ with open(path, "w", encoding="utf-8") as f:
 PY
 
   run_setup "$home"
+  python3 - "$home/.claude/settings.json" <<'PY'
+import json, sys
+hooks = json.load(open(sys.argv[1], encoding="utf-8"))["hooks"]
+stop = hooks["Stop"][0]["hooks"]
+assert len(stop) == 2 and stop[0]["command"] == "echo .claude/hooks/stop-summary.js", stop
+assert [m["matcher"] for m in hooks["PreToolUse"]] == ["Read", "Bash|Write|Edit"]
+PY
   run_uninstall "$home"
 
-  python3 - "$home/.claude/settings.json" <<'PY'
+  python3 - "$home/.claude/settings.json" "$REPO_ROOT/scripts/test-fixtures/manual-hooks-v1.json" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
 assert data["mcpServers"]["zotero"]["command"] == "custom-zotero"
@@ -112,7 +121,9 @@ assert "args" not in data["mcpServers"]["zotero"]
 assert "env" not in data["mcpServers"]["zotero"]
 assert data["enabledPlugins"]["superpowers@claude-plugins-official"] is False
 hooks = data["hooks"]["Stop"][0]["hooks"]
-assert len(hooks) == 1 and hooks[0]["command"] == "echo user-hook"
+assert len(hooks) == 1 and hooks[0]["command"] == "echo .claude/hooks/stop-summary.js"
+legacy = json.load(open(sys.argv[2], encoding="utf-8"))["PreToolUse"][0]
+assert data["hooks"]["PreToolUse"] == [{**legacy, "matcher": "Read"}]
 PY
   pass "preserve pre-existing settings entries with overlapping keys"
 }
@@ -130,9 +141,13 @@ root, target = map(Path, sys.argv[1:])
 legacy = json.loads((root / "scripts/test-fixtures/manual-hooks-v1.json").read_text())
 current = json.loads((root / "settings.json.template").read_text())["hooks"]
 legacy["SessionEnd"].append(current["SessionEnd"][0])
+legacy["SessionStart"][0]["hooks"][0]["async"] = True
 legacy["PreToolUse"].append({"matcher": "Read", "hooks": []})
-custom = {**legacy["Stop"][0]["hooks"][0], "timeout": 33}
-legacy["Stop"][0]["hooks"].append(custom)
+stop = legacy["Stop"][0]["hooks"][0]
+legacy["Stop"][0]["hooks"].extend([{**stop, "timeout": 33}, {**stop, "async": False, "statusMessage": "Saving"}])
+current_stop = current["Stop"][0]["hooks"][0]
+same_options = {"statusMessage": "Saving", "async": False, **current_stop}
+legacy["Stop"].append({"matcher": "*", "hooks": [current_stop, same_options]})
 target.write_text(json.dumps({"hooks": legacy, "model": "user-model"}))
 PY
 
@@ -140,7 +155,9 @@ PY
   warnings="$(run_setup "$home" 2>&1)"
   [[ "$warnings" == *"Ignoring unreadable previous Claude Scholar install state"* ]]
   test -f "$home/.claude/settings.json.bak"
+  cp "$home/.claude/settings.json" "$home/settings-after-upgrade.json"
   run_setup "$home"
+  cmp "$home/settings-after-upgrade.json" "$home/.claude/settings.json"
   python3 - "$REPO_ROOT" "$home/.claude" <<'PY'
 import json, sys
 from pathlib import Path
@@ -149,19 +166,16 @@ root, config_dir = map(Path, sys.argv[1:])
 settings = json.loads((config_dir / "settings.json").read_text())
 state = json.loads((config_dir / ".claude-scholar-install-state").read_text())
 current = json.loads((root / "settings.json.template").read_text())["hooks"]
-legacy = json.loads((root / "scripts/test-fixtures/manual-hooks-v1.json").read_text())
 assert settings["model"] == "user-model"
-for event, expected in current.items():
-    empty_matchers = [m for m in settings["hooks"][event] if not m["hooks"]]
-    expected_empty = [{"matcher": "Read", "hooks": []}] if event == "PreToolUse" else []
-    assert empty_matchers == expected_empty, event
-    active = [h for m in settings["hooks"][event] for h in m["hooks"]]
-    old = legacy[event][0]["hooks"][0]
-    assert active.count(expected[0]["hooks"][0]) == 1, event
-    assert old not in active, event
-assert len(state["settings"]["addedHooks"]) == 4
-custom = {**legacy["Stop"][0]["hooks"][0], "timeout": 33}
-assert custom in settings["hooks"]["Stop"][0]["hooks"]
+stop = current["Stop"][0]["hooks"][0]
+current["Stop"][0]["hooks"] = [{**stop, "timeout": 33}, {**stop, "async": False, "statusMessage": "Saving"}]
+current["SessionStart"][0]["hooks"][0]["async"] = True
+current["PreToolUse"].append({"matcher": "Read", "hooks": []})
+assert settings["hooks"] == current, settings["hooks"]
+owned = state["settings"]["addedHooks"]
+assert sorted((h["event"], h["matcher"]) for h in owned) == [
+    ("PreToolUse", "Bash|Write|Edit"), ("UserPromptSubmit", "*")
+]
 PY
 
   run_uninstall "$home"
@@ -172,12 +186,14 @@ from pathlib import Path
 root, target = map(Path, sys.argv[1:])
 settings = json.loads(target.read_text())
 current = json.loads((root / "settings.json.template").read_text())["hooks"]
-legacy = json.loads((root / "scripts/test-fixtures/manual-hooks-v1.json").read_text())
 assert settings["model"] == "user-model"
+stop = current["Stop"][0]["hooks"][0]
+current["SessionStart"][0]["hooks"][0]["async"] = True
 assert settings["hooks"] == {
     "PreToolUse": [{"matcher": "Read", "hooks": []}],
     "SessionEnd": current["SessionEnd"],
-    "Stop": [{"matcher": "*", "hooks": [{**legacy["Stop"][0]["hooks"][0], "timeout": 33}]}],
+    "SessionStart": current["SessionStart"],
+    "Stop": [{"matcher": "*", "hooks": [{**stop, "timeout": 33}, {**stop, "async": False, "statusMessage": "Saving"}]}],
 }
 PY
   pass "upgrade replaces stock manual Hooks, is repeatable, and preserves user Hooks"
@@ -195,6 +211,7 @@ from pathlib import Path
 settings = Path(sys.argv[1])
 data = json.loads(settings.read_text())
 data["hooks"]["SessionStart"][0]["hooks"][0]["async"] = True
+data["hooks"]["Stop"][0]["hooks"][0]["timeout"] = 41
 settings.write_text(json.dumps(data))
 PY
 
@@ -204,7 +221,7 @@ PY
 import json, sys
 
 state = json.load(open(sys.argv[1], encoding="utf-8"))
-assert all(hook["event"] != "SessionStart" for hook in state["settings"]["addedHooks"])
+assert all(hook["event"] not in {"SessionStart", "Stop"} for hook in state["settings"]["addedHooks"])
 PY
     fi
 
@@ -214,9 +231,10 @@ import json, sys
 from pathlib import Path
 
 root, settings = map(Path, sys.argv[1:])
-expected = json.loads((root / "settings.json.template").read_text())["hooks"]["SessionStart"]
-expected[0]["hooks"][0]["async"] = True
-assert json.loads(settings.read_text())["hooks"] == {"SessionStart": expected}
+current = json.loads((root / "settings.json.template").read_text())["hooks"]
+current["SessionStart"][0]["hooks"][0]["async"] = True
+current["Stop"][0]["hooks"][0]["timeout"] = 41
+assert json.loads(settings.read_text())["hooks"] == {event: current[event] for event in ("SessionStart", "Stop")}
 PY
   done
   pass "uninstall preserves customized installed Hooks with or without reinstall"
