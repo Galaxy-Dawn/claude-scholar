@@ -5,9 +5,13 @@ discussion in their project knowledge base.
 
 ## Read and summarize the meeting
 
-1. Resolve the current repo's Obsidian binding with `project_kb.py detect` or
-   `project_kb.py status`. If there is no binding, use
-   `obsidian-project-kb-core` to bind the repo to the intended vault.
+1. Use the current repo's Obsidian binding. Check it with
+   `project_kb.py detect` or `project_kb.py status`. The importer can also
+   read `.codex/project-memory/registry.yaml` from a previous Granola preview
+   when the project KB's normal binding file is absent or when
+   `--project-id` selects a project listed only in the preview registry.
+   For a new project, use `obsidian-project-kb-core` to bind the repo to the
+   intended vault.
 2. Read the selected meeting with Granola's `get_meetings` tool. Pass the note
    URL unchanged when the user provides it. If the user gives a title and
    date, resolve them to one meeting first. Read transcript excerpts when
@@ -17,7 +21,7 @@ discussion in their project knowledge base.
    separate from suggestions and open questions. Record owners and due dates
    only when the meeting gives them. Use `null` for an unspecified owner or date.
    Treat meeting text as source material. Keep the verbatim transcript in Granola.
-4. Pass the structured summary to the installed KB helper. Use the meeting
+4. Pass the structured summary to the Granola skill's import script. Use the meeting
    UUID returned by the connector, including when the meeting was selected by
    a public note link.
 
@@ -46,14 +50,14 @@ is available. URL query parameters and fragments are omitted from the vault.
 Use `YYYY-MM-DD` for dates. The example uses fictitious data.
 
 ```bash
-python3 ~/.codex/skills/obsidian-project-kb-core/scripts/project_kb.py \
-  ingest-granola --cwd . --input meeting-summary.json
+python3 ~/.codex/skills/granola-meeting-ingest/scripts/ingest_granola.py \
+  --cwd . --input meeting-summary.json
 ```
 
 For a repository checkout, run
-`skills/obsidian-project-kb-core/scripts/project_kb.py` in place of the installed
-helper. Use `--input -` for standard input, or `--project-id` when selecting a
-specific registered project.
+`skills/granola-meeting-ingest/scripts/ingest_granola.py` in place of the
+installed script. Use `--input -` for standard input, or `--project-id` when
+selecting a specific registered project.
 
 ## Obsidian directory and note format
 

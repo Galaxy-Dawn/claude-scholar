@@ -10,7 +10,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 
-HELPER = Path(__file__).resolve().parents[1] / 'skills/obsidian-project-kb-core/scripts/project_kb.py'
+SKILLS = Path(__file__).resolve().parents[1] / 'skills'
+KB_HELPER = SKILLS / 'obsidian-project-kb-core/scripts/project_kb.py'
+GRANOLA_HELPER = SKILLS / 'granola-meeting-ingest/scripts/ingest_granola.py'
 MEETING_ID = 'a5c6d001-fd66-4e9c-b002-010203040506'
 SECOND_ID = 'a5c6d001-fd66-4e9c-b002-010203040507'
 
@@ -30,11 +32,14 @@ class GranolaIngestTest(unittest.TestCase):
         self.registry = self.root / '_system/registry.md'
         self.index = self.root / '02-Index.md'
 
-    def kb(self, action: str, *args: str, stdin: str | None = None, check: bool = True) -> subprocess.CompletedProcess:
+    def run_cli(self, script: Path, *args: str, stdin: str | None = None, check: bool = True) -> subprocess.CompletedProcess:
         return subprocess.run(
-            [sys.executable, '-B', str(HELPER), action, '--cwd', str(self.repo), *args],
+            [sys.executable, '-B', str(script), *args, '--cwd', str(self.repo)],
             input=stdin, capture_output=True, text=True, encoding='utf-8', check=check,
         )
+
+    def kb(self, action: str, *args: str) -> subprocess.CompletedProcess:
+        return self.run_cli(KB_HELPER, action, *args)
 
     def meeting(self, **updates: object) -> dict:
         return {
@@ -54,15 +59,16 @@ class GranolaIngestTest(unittest.TestCase):
             **updates,
         }
 
-    def ingest(self, **updates: object) -> dict:
-        response = self.kb('ingest-granola', '--input', '-', stdin=json.dumps(self.meeting(**updates)))
+    def ingest(self, *, project_id: str | None = None, **updates: object) -> dict:
+        selection = ('--project-id', project_id) if project_id is not None else ()
+        response = self.run_cli(GRANOLA_HELPER, '--input', '-', *selection, stdin=json.dumps(self.meeting(**updates)))
         return json.loads(response.stdout)
 
     def test_import_writes_note_registry_and_index(self) -> None:
         # Exercise the file input as well as the stdin route used by the skill.
         payload = self.repo / 'meeting-summary.json'
         payload.write_text(json.dumps(self.meeting(), ensure_ascii=False), encoding='utf-8')
-        result = json.loads(self.kb('ingest-granola', '--input', str(payload)).stdout)
+        result = json.loads(self.run_cli(GRANOLA_HELPER, '--input', str(payload)).stdout)
         self.assertEqual(result, {
             'status': 'created', 'project_id': 'granola-demo', 'note': self.note.relative_to(self.root).as_posix(),
         })
@@ -96,6 +102,32 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertIn(f'| {title} |', self.registry.read_text(encoding='utf-8'))
         self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 1)
 
+    def test_retry_restores_paper_and_canvas_links_when_registry_is_missing_or_empty(self) -> None:
+        paper = self.root / 'Sources/Papers/existing-paper.md'
+        canvas = self.root / 'Maps/literature.canvas'
+        paper.write_text('# Existing research paper\n', encoding='utf-8')
+        canvas.write_text('{"nodes": [], "edges": []}\n', encoding='utf-8')
+        self.kb('sync')
+        self.ingest()
+        before = {path: path.read_bytes() for path in (paper, canvas, self.note)}
+        links = (
+            '[[Sources/Papers/existing-paper]]', '[[Maps/literature.canvas]]',
+            f'[[Sources/Interviews/{self.note.stem}]]',
+        )
+        for missing in (True, False):
+            with self.subTest(registry='missing' if missing else 'empty'):
+                if missing:
+                    self.registry.unlink()
+                else:
+                    self.registry.write_bytes(b'')
+                self.assertEqual(self.ingest()['status'], 'existing')
+                self.assertEqual({path: path.read_bytes() for path in before}, before)
+                registry = self.registry.read_text(encoding='utf-8')
+                index = self.index.read_text(encoding='utf-8')
+                for link in links:
+                    self.assertIn(link, registry)
+                    self.assertIn(link, index)
+
     def test_retry_validates_the_saved_title_before_updating_derived_files(self) -> None:
         self.ingest(title='Fixture original')
         original = self.note.read_text(encoding='utf-8')
@@ -111,7 +143,7 @@ class GranolaIngestTest(unittest.TestCase):
                 registry_before = self.registry.read_bytes()
                 index_before = self.index.read_bytes()
                 if normalized is None:
-                    retry = self.kb('ingest-granola', '--input', '-', stdin=json.dumps(self.meeting()), check=False)
+                    retry = self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=json.dumps(self.meeting()), check=False)
                     self.assertNotEqual(retry.returncode, 0)
                     self.assertIn('existing note title must be valid UTF-8', retry.stderr)
                     self.assertEqual(self.registry.read_bytes(), registry_before)
@@ -161,14 +193,14 @@ class GranolaIngestTest(unittest.TestCase):
             {'action_items': [{'task': 'Continue', 'due_date': '2026-02-30'}]},
         ):
             with self.subTest(override=override):
-                failed = self.kb('ingest-granola', '--input', '-', stdin=json.dumps(self.meeting(**override)), check=False)
+                failed = self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=json.dumps(self.meeting(**override)), check=False)
                 self.assertNotEqual(failed.returncode, 0)
                 self.assertIn('Granola import failed:', failed.stderr)
                 self.assertFalse(self.note.exists())
 
     def test_invalid_unicode_leaves_note_available_for_retry(self) -> None:
         payload = json.dumps(self.meeting(summary=['A lone surrogate: \ud800']))
-        failed = self.kb('ingest-granola', '--input', '-', stdin=payload, check=False)
+        failed = self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=payload, check=False)
         self.assertNotEqual(failed.returncode, 0)
         self.assertIn('Granola import failed:', failed.stderr)
         self.assertFalse(self.note.exists())
@@ -176,19 +208,93 @@ class GranolaIngestTest(unittest.TestCase):
 
     def test_import_does_not_overwrite_unrelated_notes(self) -> None:
         self.note.write_text('# Existing note\n', encoding='utf-8')
-        failed = self.kb('ingest-granola', '--input', '-', stdin=json.dumps(self.meeting()), check=False)
+        failed = self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=json.dumps(self.meeting()), check=False)
         self.assertNotEqual(failed.returncode, 0)
         self.assertEqual(self.note.read_text(encoding='utf-8'), '# Existing note\n')
 
-    def test_binding_uses_codex_and_accepts_the_legacy_location(self) -> None:
-        binding_file = self.repo / '.codex/project-memory/registry.yaml'
-        self.assertTrue(binding_file.is_file())
-        self.assertTrue(binding_file.with_name('granola-demo.md').is_file())
-        legacy_file = self.repo / '.claude/project-memory/registry.yaml'
-        legacy_file.parent.mkdir(parents=True)
-        binding_file.rename(legacy_file)
+    def test_reads_preview_binding_without_moving_or_rewriting_it(self) -> None:
+        binding = self.repo / '.claude/project-memory/registry.yaml'
+        self.assertTrue(binding.with_name('granola-demo.md').is_file())
+        preview = self.repo / '.codex/project-memory/registry.yaml'
+        preview.parent.mkdir(parents=True)
+        binding.rename(preview)
+        before = preview.read_bytes()
         self.assertEqual(self.ingest()['status'], 'created')
-        self.assertFalse(binding_file.exists())
+        self.assertFalse(binding.exists())
+        self.assertEqual(preview.read_bytes(), before)
+
+    def test_existing_binding_has_priority_and_specific_preview_project_can_be_selected(self) -> None:
+        other_project = self.vault / 'Research/another-project'
+        other_project.mkdir()
+        preview = self.repo / '.codex/project-memory/registry.yaml'
+        preview.parent.mkdir(parents=True)
+        preview_binding = {'vault_root': str(other_project)}
+        preview.write_text(json.dumps({'projects': {
+            'another-project': preview_binding, 'granola-demo': preview_binding,
+        }}), encoding='utf-8')
+        binding = self.repo / '.claude/project-memory/registry.yaml'
+        before = {path: path.read_bytes() for path in (binding, preview)}
+        self.assertEqual(self.ingest()['project_id'], 'granola-demo')
+        self.assertTrue(self.note.is_file())
+        self.assertEqual(self.ingest(project_id='granola-demo')['status'], 'existing')
+        self.assertEqual(list(other_project.iterdir()), [])
+        selected = self.ingest(project_id='another-project')
+        self.assertEqual(selected['project_id'], 'another-project')
+        self.assertTrue((other_project / selected['note']).is_file())
+        self.assertEqual({path: path.read_bytes() for path in before}, before)
+
+    def test_import_keeps_existing_paper_canvas_and_curated_index(self) -> None:
+        paper = self.root / 'Sources/Papers/existing-paper.md'
+        canvas = self.root / 'Maps/literature.canvas'
+        paper.write_text('# Existing research paper\n', encoding='utf-8')
+        canvas.write_text('{"nodes": [], "edges": []}\n', encoding='utf-8')
+        self.kb('sync')
+        registry = self.registry.read_text(encoding='utf-8')
+        self.assertIn('| Existing Paper |', registry)
+        title = r'Existing \| Paper \\\| --- Draft'
+        registry = registry.replace('| Existing Paper |', f'| {title} |', 1)
+        registry = registry.replace('|---|---|---|---|---|---|---|', '|:---|---|---|---|---|---|---:|', 1)
+        paper_row = next(row for row in registry.splitlines() if f'| {title} |' in row)
+        prefix, updated = paper_row.rsplit(' | paper | ', 1)
+        origin = r'Paper library\\'
+        registry = registry.replace(paper_row, f'{prefix} | {origin}| {updated}', 1)
+        self.registry.write_text(registry, encoding='utf-8')
+        curated = 'My curated navigation for the existing project.'
+        content = self.index.read_text(encoding='utf-8')
+        self.index.write_text(content.replace('## Curated Index\n', f'## Curated Index\n\n{curated}\n', 1), encoding='utf-8')
+        before = {path: path.read_bytes() for path in (paper, canvas)}
+
+        self.assertEqual(self.ingest()['status'], 'created')
+        self.assertEqual({path: path.read_bytes() for path in before}, before)
+        self.assertIn(f'{prefix} | {origin} | {updated}', self.registry.read_text(encoding='utf-8'))
+        index = self.index.read_text(encoding='utf-8')
+        self.assertIn(curated, index)
+        self.assertIn('[[Sources/Papers/existing-paper]]', index)
+        self.assertIn('[[Maps/literature.canvas]]', index)
+        self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 2)
+
+    def test_import_preserves_literal_aliased_links_in_both_index_formats(self) -> None:
+        paper = self.root / 'Sources/Papers/existing-paper.md'
+        paper.write_text('# Existing research paper\n', encoding='utf-8')
+        self.kb('sync')
+        link = '[[Sources/Papers/existing-paper]]'
+        aliased = r'[[Sources/Papers/existing-paper\|Formula \lambda and \1]]'
+        registry = self.registry.read_text(encoding='utf-8')
+        self.assertIn(link, registry)
+        self.registry.write_text(registry.replace(link, aliased, 1), encoding='utf-8')
+
+        marked = self.index.read_text(encoding='utf-8')
+        older = '# Index\n\n## Curated Index\n\n- Keep this entry.\n\n## Auto Index\n\n- Stale automatic entry.\n'
+        for layout, original, status in (('marked', marked, 'created'), ('older', older, 'existing')):
+            with self.subTest(layout=layout):
+                self.index.write_text(original, encoding='utf-8')
+                self.assertEqual(self.ingest()['status'], status)
+                refreshed = self.index.read_text(encoding='utf-8')
+                self.assertIn(f'- {aliased}\n', refreshed)
+                self.assertIn(f'- [[Sources/Interviews/{self.note.stem}]]\n', refreshed)
+                if layout == 'older':
+                    self.assertIn('- Keep this entry.\n', refreshed)
+                    self.assertNotIn('- Stale automatic entry.\n', refreshed)
 
 
 if __name__ == '__main__':

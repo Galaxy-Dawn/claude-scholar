@@ -43,8 +43,8 @@ test_roundtrip_existing_config() {
   test -f "$home/.codex/skills/post-acceptance/references/xquik-promotion.md"
   test -f "$home/.codex/skills/granola-meeting-ingest/SKILL.md"
   test -f "$home/.codex/skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md"
-  test -f "$home/.codex/skills/obsidian-project-kb-core/scripts/kb_granola.py"
-  python3 -B "$home/.codex/skills/obsidian-project-kb-core/scripts/project_kb.py" ingest-granola --help >/dev/null
+  test -f "$home/.codex/skills/granola-meeting-ingest/scripts/ingest_granola.py"
+  python3 -B "$home/.codex/skills/granola-meeting-ingest/scripts/ingest_granola.py" --help >/dev/null
   test -f "$home/.codex/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   for agent in paper-miner literature-reviewer kaggle-miner code-reviewer rebuttal-writer tdd-guide; do
     test -f "$home/.codex/agents/$agent.toml"

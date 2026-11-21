@@ -11,8 +11,8 @@ discussion in the current project's Obsidian knowledge base.
 1. Confirm the target project and its Obsidian binding.
 2. Read the selected meeting through the user's Granola connector or local
    export. Keep decisions, action items, and open questions distinct.
-3. Use the project KB helper to write the Markdown note under
-   `Sources/Interviews/granola-<meeting UUID>.md` and refresh the project index.
+3. Run this skill's `scripts/ingest_granola.py` to write the Markdown note
+   under `Sources/Interviews/granola-<meeting UUID>.md` and refresh the project index.
 4. Return the note path and import status so the user can open it.
 
 Follow the [meeting workflow and note format](references/GRANOLA-MEETING-NOTES.md)

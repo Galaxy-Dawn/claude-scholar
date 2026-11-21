@@ -104,15 +104,11 @@ def find_repo_root(cwd: Path) -> Path:
 
 
 def binding_registry_path(repo_root: Path) -> Path:
-    registry = repo_root / '.codex' / 'project-memory' / 'registry.yaml'
-    legacy = repo_root / '.claude' / 'project-memory' / 'registry.yaml'
-    if not registry.exists() and legacy.is_file():
-        return legacy
-    return registry
+    return repo_root / '.claude' / 'project-memory' / 'registry.yaml'
 
 
 def project_memory_path(repo_root: Path, project_id: str) -> Path:
-    return binding_registry_path(repo_root).parent / f'{project_id}.md'
+    return repo_root / '.claude' / 'project-memory' / f'{project_id}.md'
 
 
 def load_binding_registry(path: Path) -> dict[str, Any]:
@@ -167,7 +163,7 @@ def wikilink(rel_path: str) -> str:
     return f'[[{rel}]]'
 
 
-def parse_frontmatter(text: str, *, json_string_fields: tuple[str, ...] = ()) -> dict[str, str]:
+def parse_frontmatter(text: str) -> dict[str, str]:
     if not text.startswith('---\n'):
         return {}
     try:
@@ -179,14 +175,7 @@ def parse_frontmatter(text: str, *, json_string_fields: tuple[str, ...] = ()) ->
         if ':' not in line or line.strip().startswith('- '):
             continue
         key, value = line.split(':', 1)
-        key, value = key.strip(), value.strip()
-        if key in json_string_fields and value.startswith('"'):
-            try:
-                data[key] = json.loads(value)
-                continue
-            except json.JSONDecodeError:
-                pass
-        data[key] = value.strip('"')
+        data[key.strip()] = value.strip().strip('"')
     return data
 
 
@@ -216,8 +205,10 @@ def project_root_for(vault_path: Path, project_slug: str) -> Path:
     return vault_path / 'Research' / project_slug
 
 
-def resolve_binding(repo_root: Path, project_id: str | None = None) -> Binding:
-    registry = load_binding_registry(binding_registry_path(repo_root))
+def resolve_binding(
+    repo_root: Path, project_id: str | None = None, *, registry_file: Path | None = None,
+) -> Binding:
+    registry = load_binding_registry(registry_file or binding_registry_path(repo_root))
     projects = registry.get('projects') or {}
     if not projects:
         raise SystemExit('No registered projects found in .codex/project-memory/registry.yaml')
@@ -225,7 +216,7 @@ def resolve_binding(repo_root: Path, project_id: str | None = None) -> Binding:
         if len(projects) == 1:
             project_id = next(iter(projects))
         else:
-            detected = detect(repo_root)
+            detected = detect(repo_root, registry_file=registry_file)
             project = detected.get('project') or {}
             project_id = project.get('project_id')
             if not project_id:
@@ -274,8 +265,8 @@ def detect_project_features(repo_root: Path) -> dict[str, Any]:
     }
 
 
-def detect(repo_root: Path) -> dict[str, Any]:
-    registry = load_binding_registry(binding_registry_path(repo_root))
+def detect(repo_root: Path, *, registry_file: Path | None = None) -> dict[str, Any]:
+    registry = load_binding_registry(registry_file or binding_registry_path(repo_root))
     features = detect_project_features(repo_root)
     project = None
     for project_id, entry in (registry.get('projects') or {}).items():
@@ -433,13 +424,28 @@ def default_registry_tables() -> dict[str, list[dict[str, str]]]:
     return {section: [] for section in SECTION_ORDER}
 
 
+def split_table_cells(line: str) -> list[str]:
+    line = line.rstrip()
+    cells = []
+    start = 1  # The caller has checked the opening pipe.
+    backslashes = 0
+    for index, char in enumerate(line[1:], start=1):
+        if char == '|' and backslashes % 2 == 0:
+            cells.append(line[start:index].strip())
+            start = index + 1
+        backslashes = backslashes + 1 if char == '\\' else 0
+    if start < len(line):
+        cells.append(line[start:].strip())
+    return cells
+
+
 def parse_table_row(line: str, columns: list[str]) -> dict[str, str] | None:
     if not line.startswith('|'):
         return None
-    parts = [part.strip() for part in line.strip().strip('|').split('|')]
+    parts = split_table_cells(line)
     if len(parts) != len(columns):
         return None
-    if set(parts) == {'---'}:
+    if all(re.fullmatch(r':?-{3,}:?', part) for part in parts):
         return None
     return dict(zip(columns, parts))
 
@@ -461,7 +467,7 @@ def parse_registry_md(path: Path) -> dict[str, list[dict[str, str]]]:
         if current_section is None or not line.startswith('|'):
             continue
         if columns is None:
-            header = [part.strip() for part in line.strip().strip('|').split('|')]
+            header = split_table_cells(line)
             if header == SECTION_COLUMNS[current_section]:
                 columns = header
             continue
@@ -704,10 +710,11 @@ def update_index(project_root: Path) -> None:
         ]).rstrip() + '\n'
     else:
         content = set_frontmatter_value(content, 'updated', now_iso())
+        # Keep link backslashes literal when inserting the generated index text.
         if AUTO_INDEX_BEGIN in content and AUTO_INDEX_END in content:
             content = re.sub(
                 rf'{re.escape(AUTO_INDEX_BEGIN)}[\s\S]*?{re.escape(AUTO_INDEX_END)}',
-                auto_block,
+                lambda _: auto_block,
                 content,
                 count=1,
             )
@@ -722,7 +729,7 @@ def update_index(project_root: Path) -> None:
             if re.search(r'(?m)^## Auto Index\s*$', content):
                 content = re.sub(
                     r'(?ms)^## Auto Index\s*\n.*?(?=^## |\Z)',
-                    auto_section,
+                    lambda _: auto_section,
                     content,
                     count=1,
                 ).rstrip() + '\n'

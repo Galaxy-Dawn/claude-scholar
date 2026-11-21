@@ -1,8 +1,11 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import re
+import sys
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
@@ -10,7 +13,11 @@ from typing import Any, Iterator
 from urllib.parse import urlsplit, urlunsplit
 from uuid import UUID
 
-import kb_common as common
+KB_SCRIPTS = Path(__file__).resolve().parents[2] / 'obsidian-project-kb-core' / 'scripts'
+sys.path.insert(0, str(KB_SCRIPTS))
+
+import kb_common as common  # type: ignore
+from project_kb import sync_registry  # type: ignore
 
 
 SOURCE_DIRECTORIES = ('Sources', 'Archive/Sources')
@@ -143,6 +150,25 @@ def existing_meeting(project_root: Path, meeting_id: str) -> Path | None:
     return candidates[0] if candidates else None
 
 
+def saved_title(note: Path, fallback: str) -> str:
+    text = common.read_text(note)
+    title = common.parse_frontmatter(text).get('title', '')
+    frontmatter = text.split('---\n', 2)
+    if len(frontmatter) == 3 and not frontmatter[0]:
+        quoted = re.search(r'(?m)^[ \t]*title[ \t]*:[ \t]*("[^\n]*)$', frontmatter[1])
+        if quoted:
+            try:
+                title = json.loads(quoted.group(1))
+            except json.JSONDecodeError:
+                pass
+    title = line(title.strip() or fallback, 'existing note title')
+    try:
+        title.encode('utf-8')
+    except UnicodeEncodeError as exc:
+        raise ValueError('existing note title must be valid UTF-8') from exc
+    return title
+
+
 def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
     meeting_id, title, content = render_meeting(meeting, binding.note_language)
     note_bytes = content.encode('utf-8')
@@ -150,8 +176,9 @@ def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
     if binding.status != 'active' or not root.is_dir():
         raise ValueError('Granola import requires an active, existing Obsidian project binding')
     destination = root / 'Sources' / 'Interviews' / f'granola-{meeting_id}.md'
+    registry = common.registry_path(root)
     source_directories = [root / folder for folder in SOURCE_DIRECTORIES]
-    for path in (destination, common.registry_path(root), root / '02-Index.md', *source_directories):
+    for path in (destination, registry, root / '02-Index.md', *source_directories):
         if not path.resolve().is_relative_to(root):
             raise ValueError('the import path must stay inside the bound Obsidian project')
     (root / '_system').mkdir(parents=True, exist_ok=True)
@@ -175,12 +202,55 @@ def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
         relative = note.relative_to(root).as_posix()
         if status != 'archived':
             if status == 'existing':
-                metadata = common.parse_frontmatter(common.read_text(note), json_string_fields=('title',))
-                title = line(metadata.get('title', '').strip() or title, 'existing note title')
-                try:
-                    title.encode('utf-8')
-                except UnicodeEncodeError as exc:
-                    raise ValueError('existing note title must be valid UTF-8') from exc
+                title = saved_title(note, title)
+            try:
+                needs_registry_rebuild = registry.stat().st_size == 0
+            except FileNotFoundError:
+                needs_registry_rebuild = True
+            if needs_registry_rebuild:
+                sync_registry(root)
             common.registry_add_or_update(root, relative, title=title, origin='Granola')
             common.update_index(root)
         return {'status': status, 'project_id': binding.project_id, 'note': relative}
+
+
+def resolve_granola_binding(repo_root: Path, project_id: str | None) -> common.Binding:
+    # The preview stored some bindings outside the KB helper's normal location.
+    registry = common.binding_registry_path(repo_root)
+    preview = repo_root / '.codex' / 'project-memory' / 'registry.yaml'
+    if not preview.is_file():
+        return common.resolve_binding(repo_root, project_id)
+    if not registry.exists():
+        return common.resolve_binding(repo_root, project_id, registry_file=preview)
+    if project_id is not None:
+        registered = common.load_binding_registry(registry).get('projects') or {}
+        if project_id not in registered:
+            preview_projects = common.load_binding_registry(preview).get('projects') or {}
+            if project_id in preview_projects:
+                return common.resolve_binding(repo_root, project_id, registry_file=preview)
+    return common.resolve_binding(repo_root, project_id)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description='Import a summarized Granola meeting into a bound Obsidian project.')
+    parser.add_argument('--cwd', type=Path, default=Path.cwd(), help='Repository bound to the Obsidian project.')
+    parser.add_argument('--project-id', help='Select a specific registered project.')
+    parser.add_argument('--input', required=True, help='Meeting JSON file, or - for standard input.')
+    args = parser.parse_args()
+
+    try:
+        if args.input == '-':
+            meeting = json.load(sys.stdin)
+        else:
+            with Path(args.input).expanduser().open(encoding='utf-8') as stream:
+                meeting = json.load(stream)
+        repo_root = common.find_repo_root(args.cwd.expanduser().resolve())
+        binding = resolve_granola_binding(repo_root, args.project_id)
+        result = ingest_meeting(binding, meeting)
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f'Granola import failed: {exc}') from exc
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+if __name__ == '__main__':
+    main()
