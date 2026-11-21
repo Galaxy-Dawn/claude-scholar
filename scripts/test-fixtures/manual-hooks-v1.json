@@ -1,0 +1,62 @@
+{
+  "PreToolUse": [
+    {
+      "matcher": "Bash|Write|Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node -e \"const{execSync}=require('child_process'),p=require('path'),h=require('os').homedir();execSync(\\\"node \\\"+p.join(h,'.claude/hooks/security-guard.js'),{stdio:'inherit'})\"",
+          "timeout": 5
+        }
+      ]
+    }
+  ],
+  "SessionEnd": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node -e \"const{execSync}=require('child_process'),p=require('path'),h=require('os').homedir();execSync(\\\"node \\\"+p.join(h,'.claude/hooks/session-summary.js'),{stdio:'inherit'})\"",
+          "timeout": 15
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node -e \"const{execSync}=require('child_process'),p=require('path'),h=require('os').homedir();execSync(\\\"node \\\"+p.join(h,'.claude/hooks/session-start.js'),{stdio:'inherit'})\"",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node -e \"const{execSync}=require('child_process'),p=require('path'),h=require('os').homedir();execSync(\\\"node \\\"+p.join(h,'.claude/hooks/stop-summary.js'),{stdio:'inherit'})\"",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node -e \"const{execSync}=require('child_process'),p=require('path'),h=require('os').homedir();execSync(\\\"node \\\"+p.join(h,'.claude/hooks/skill-forced-eval.js'),{stdio:'inherit'})\"",
+          "timeout": 10
+        }
+      ]
+    }
+  ]
+}

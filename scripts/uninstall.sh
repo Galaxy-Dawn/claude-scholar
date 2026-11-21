@@ -182,16 +182,18 @@ function removeNestedPath(root, dottedPath) {
 if (settings.hooks && typeof settings.hooks === 'object') {
   for (const [eventName, matchers] of Object.entries(settings.hooks)) {
     if (!Array.isArray(matchers)) continue;
-    const nextMatchers = matchers
-      .map((matcher) => {
-        const key = `${eventName}::${matcher.matcher || '*'}`;
-        const owned = ownedHookMatchers.get(key) || new Set();
-        const hooks = Array.isArray(matcher.hooks)
-          ? matcher.hooks.filter((hook) => !owned.has(hookSignature(hook)))
-          : [];
-        return hooks.length > 0 ? { ...matcher, hooks } : null;
-      })
-      .filter(Boolean);
+    const nextMatchers = matchers.flatMap((matcher) => {
+      if (!Array.isArray(matcher?.hooks)) return [matcher];
+      const key = `${eventName}::${matcher.matcher || '*'}`;
+      const owned = ownedHookMatchers.get(key);
+      if (!owned) return [matcher];
+      const hooks = matcher.hooks.filter((hook) => {
+        const stock = hook && Object.keys(hook).every((key) => ['type', 'command', 'timeout'].includes(key));
+        return !stock || !owned.has(hookSignature(hook));
+      });
+      if (hooks.length === matcher.hooks.length) return [matcher];
+      return hooks.length > 0 ? [{ ...matcher, hooks }] : [];
+    });
     if (nextMatchers.length > 0) {
       settings.hooks[eventName] = nextMatchers;
     } else {

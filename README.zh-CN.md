@@ -145,6 +145,8 @@ bash /tmp/claude-scholar/scripts/setup.sh
 
 **重要 CLAUDE 说明**：如果你原来就有自己的 `~/.claude/CLAUDE.md` 或 `~/.claude/CLAUDE.zh-CN.md`，安装后请查看 `~/.claude/CLAUDE.scholar.md` 和 `~/.claude/CLAUDE.zh-CN.scholar.md`，并将其中你需要的 Claude Scholar 内容按需合并到你自己的文件里；不要假设这些旁路文件会自动生效。
 
+**更新旧版手动 hooks 配置**：重新运行安装器。安装器会备份 `settings.json`，并将五个原版 Scholar 启动命令更新为 [`settings.json.template`](settings.json.template) 中的对应命令。新命令支持含空格的用户目录，并保留 hook 的退出码。安装器会保留自定义 hook。若使用了自定义旧启动命令或选择性安装，请对照模板检查对应命令。
+
 以后做增量更新时：
 
 ```bash

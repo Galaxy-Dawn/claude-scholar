@@ -140,6 +140,8 @@ bash /tmp/claude-scholar/scripts/setup.sh
 
 **CLAUDEに関する重要事項**: 既に独自の`~/.claude/CLAUDE.md`や`~/.claude/CLAUDE.zh-CN.md`をお持ちの場合、インストール後に`~/.claude/CLAUDE.scholar.md`と`~/.claude/CLAUDE.zh-CN.scholar.md`を確認し、必要なClaude Scholarのセクションを手動で統合してください。別名で配置された補助ファイルは自動的には適用されません。
 
+**古い手動hooks設定の更新**: インストーラーを再実行します。インストーラーは`settings.json`をバックアップし、既定の5つのScholar起動コマンドを[`settings.json.template`](settings.json.template)の対応するコマンドに更新します。新しいコマンドは空白を含むホームパスに対応し、hookの終了コードを保持します。カスタムhookは保持されます。古い起動コマンドを変更した場合や選択インストールをした場合は、テンプレートと照合してください。
+
 アップデート方法:
 
 ```bash

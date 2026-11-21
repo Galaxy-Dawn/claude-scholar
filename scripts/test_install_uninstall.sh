@@ -29,6 +29,7 @@ test_roundtrip_empty_home() {
   test -f "$home/.claude/.claude-scholar-manifest.txt"
   test -f "$home/.claude/.claude-scholar-install-state"
   test -f "$home/.claude/CLAUDE.md"
+  node "$REPO_ROOT/scripts/test_settings_hooks.js" "$home/.claude/settings.json"
   test -f "$home/.claude/commands/promote.md"
   test -f "$home/.claude/skills/post-acceptance/references/xquik-promotion.md"
   test -f "$home/.claude/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
@@ -114,6 +115,111 @@ hooks = data["hooks"]["Stop"][0]["hooks"]
 assert len(hooks) == 1 and hooks[0]["command"] == "echo user-hook"
 PY
   pass "preserve pre-existing settings entries with overlapping keys"
+}
+
+test_stock_manual_hooks_migrate_on_upgrade() {
+  local home warnings
+  home="$(make_home)"
+  mkdir -p "$home/.claude"
+
+  python3 - "$REPO_ROOT" "$home/.claude/settings.json" <<'PY'
+import json, sys
+from pathlib import Path
+
+root, target = map(Path, sys.argv[1:])
+legacy = json.loads((root / "scripts/test-fixtures/manual-hooks-v1.json").read_text())
+current = json.loads((root / "settings.json.template").read_text())["hooks"]
+legacy["SessionEnd"].append(current["SessionEnd"][0])
+legacy["PreToolUse"].append({"matcher": "Read", "hooks": []})
+custom = {**legacy["Stop"][0]["hooks"][0], "timeout": 33}
+legacy["Stop"][0]["hooks"].append(custom)
+target.write_text(json.dumps({"hooks": legacy, "model": "user-model"}))
+PY
+
+  printf '%s' '{"settings":' > "$home/.claude/.claude-scholar-install-state"
+  warnings="$(run_setup "$home" 2>&1)"
+  [[ "$warnings" == *"Ignoring unreadable previous Claude Scholar install state"* ]]
+  test -f "$home/.claude/settings.json.bak"
+  run_setup "$home"
+  python3 - "$REPO_ROOT" "$home/.claude" <<'PY'
+import json, sys
+from pathlib import Path
+
+root, config_dir = map(Path, sys.argv[1:])
+settings = json.loads((config_dir / "settings.json").read_text())
+state = json.loads((config_dir / ".claude-scholar-install-state").read_text())
+current = json.loads((root / "settings.json.template").read_text())["hooks"]
+legacy = json.loads((root / "scripts/test-fixtures/manual-hooks-v1.json").read_text())
+assert settings["model"] == "user-model"
+for event, expected in current.items():
+    empty_matchers = [m for m in settings["hooks"][event] if not m["hooks"]]
+    expected_empty = [{"matcher": "Read", "hooks": []}] if event == "PreToolUse" else []
+    assert empty_matchers == expected_empty, event
+    active = [h for m in settings["hooks"][event] for h in m["hooks"]]
+    old = legacy[event][0]["hooks"][0]
+    assert active.count(expected[0]["hooks"][0]) == 1, event
+    assert old not in active, event
+assert len(state["settings"]["addedHooks"]) == 4
+custom = {**legacy["Stop"][0]["hooks"][0], "timeout": 33}
+assert custom in settings["hooks"]["Stop"][0]["hooks"]
+PY
+
+  run_uninstall "$home"
+  python3 - "$REPO_ROOT" "$home/.claude/settings.json" <<'PY'
+import json, sys
+from pathlib import Path
+
+root, target = map(Path, sys.argv[1:])
+settings = json.loads(target.read_text())
+current = json.loads((root / "settings.json.template").read_text())["hooks"]
+legacy = json.loads((root / "scripts/test-fixtures/manual-hooks-v1.json").read_text())
+assert settings["model"] == "user-model"
+assert settings["hooks"] == {
+    "PreToolUse": [{"matcher": "Read", "hooks": []}],
+    "SessionEnd": current["SessionEnd"],
+    "Stop": [{"matcher": "*", "hooks": [{**legacy["Stop"][0]["hooks"][0], "timeout": 33}]}],
+}
+PY
+  pass "upgrade replaces stock manual Hooks, is repeatable, and preserves user Hooks"
+}
+
+test_customized_installed_hooks_are_preserved() {
+  local home reinstall
+  for reinstall in no yes; do
+    home="$(make_home)"
+    run_setup "$home"
+    python3 - "$home/.claude/settings.json" <<'PY'
+import json, sys
+from pathlib import Path
+
+settings = Path(sys.argv[1])
+data = json.loads(settings.read_text())
+data["hooks"]["SessionStart"][0]["hooks"][0]["async"] = True
+settings.write_text(json.dumps(data))
+PY
+
+    if [ "$reinstall" = yes ]; then
+      run_setup "$home"
+      python3 - "$home/.claude/.claude-scholar-install-state" <<'PY'
+import json, sys
+
+state = json.load(open(sys.argv[1], encoding="utf-8"))
+assert all(hook["event"] != "SessionStart" for hook in state["settings"]["addedHooks"])
+PY
+    fi
+
+    run_uninstall "$home"
+    python3 - "$REPO_ROOT" "$home/.claude/settings.json" <<'PY'
+import json, sys
+from pathlib import Path
+
+root, settings = map(Path, sys.argv[1:])
+expected = json.loads((root / "settings.json.template").read_text())["hooks"]["SessionStart"]
+expected[0]["hooks"][0]["async"] = True
+assert json.loads(settings.read_text())["hooks"] == {"SessionStart": expected}
+PY
+  done
+  pass "uninstall preserves customized installed Hooks with or without reinstall"
 }
 
 test_manifest_missing_fails_safe() {
@@ -255,6 +361,8 @@ main() {
   test_roundtrip_empty_home
   test_writing_memory_survives_update_and_legacy_uninstall
   test_preserve_preexisting_settings_keys
+  test_stock_manual_hooks_migrate_on_upgrade
+  test_customized_installed_hooks_are_preserved
   test_manifest_missing_fails_safe
   test_state_records_direct_claude_targets
   test_identical_preexisting_file_is_not_owned
