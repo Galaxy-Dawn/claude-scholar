@@ -230,6 +230,21 @@ for the repository workflow. Check the
 [Xquik MCP guide](https://docs.xquik.com/mcp/overview) for current client
 details.
 
+### Granola meeting notes (optional)
+
+Reuse a Granola connector already available in Codex. To connect a local
+Codex CLI, add the [official Granola MCP server](https://www.granola.ai/blog/granola-mcp)
+and sign in through the browser when prompted:
+
+```bash
+codex mcp add granola --url https://mcp.granola.ai/mcp
+codex mcp login granola
+```
+
+In a repo bound to Obsidian, ask `$obsidian-source-ingestion` to import a
+selected Granola meeting. See the [meeting workflow](./skills/obsidian-source-ingestion/references/GRANOLA-MEETING-NOTES.md)
+for the input, source-note location and repeat-import behavior.
+
 ## Verification
 
 After configuration, restart your CLI and verify MCP servers are connected:

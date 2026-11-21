@@ -15,6 +15,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Test Granola meeting ingestion
+        run: python3 scripts/test_granola_ingest.py
+
       - name: Check tracked top-level docs for obvious machine-specific paths
         run: |
           set -euo pipefail

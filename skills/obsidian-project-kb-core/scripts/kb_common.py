@@ -104,11 +104,15 @@ def find_repo_root(cwd: Path) -> Path:
 
 
 def binding_registry_path(repo_root: Path) -> Path:
-    return repo_root / '.claude' / 'project-memory' / 'registry.yaml'
+    registry = repo_root / '.codex' / 'project-memory' / 'registry.yaml'
+    legacy = repo_root / '.claude' / 'project-memory' / 'registry.yaml'
+    if not registry.exists() and legacy.is_file():
+        return legacy
+    return registry
 
 
 def project_memory_path(repo_root: Path, project_id: str) -> Path:
-    return repo_root / '.claude' / 'project-memory' / f'{project_id}.md'
+    return binding_registry_path(repo_root).parent / f'{project_id}.md'
 
 
 def load_binding_registry(path: Path) -> dict[str, Any]:
@@ -163,7 +167,7 @@ def wikilink(rel_path: str) -> str:
     return f'[[{rel}]]'
 
 
-def parse_frontmatter(text: str) -> dict[str, str]:
+def parse_frontmatter(text: str, *, json_string_fields: tuple[str, ...] = ()) -> dict[str, str]:
     if not text.startswith('---\n'):
         return {}
     try:
@@ -175,7 +179,14 @@ def parse_frontmatter(text: str) -> dict[str, str]:
         if ':' not in line or line.strip().startswith('- '):
             continue
         key, value = line.split(':', 1)
-        data[key.strip()] = value.strip().strip('"')
+        key, value = key.strip(), value.strip()
+        if key in json_string_fields and value.startswith('"'):
+            try:
+                data[key] = json.loads(value)
+                continue
+            except json.JSONDecodeError:
+                pass
+        data[key] = value.strip('"')
     return data
 
 
@@ -455,7 +466,7 @@ def parse_registry_md(path: Path) -> dict[str, list[dict[str, str]]]:
                 columns = header
             continue
         row = parse_table_row(line, columns)
-        if not row or '---' in ''.join(row.values()):
+        if not row:
             continue
         if current_section == 'Archive':
             if row.get('Old Path', '') or row.get('Archived Path', ''):
@@ -551,7 +562,10 @@ def prefix_for_section_row(section: str, row: dict[str, str]) -> str:
     }[section]
 
 
-def registry_add_or_update(project_root: Path, rel_path: str, *, status: str | None = None) -> dict[str, Any]:
+def registry_add_or_update(
+    project_root: Path, rel_path: str, *, status: str | None = None,
+    title: str | None = None, origin: str | None = None,
+) -> dict[str, Any]:
     payload = section_and_row_for_relpath(rel_path)
     if payload is None:
         return {'updated': False, 'reason': 'path-not-registrable'}
@@ -572,6 +586,11 @@ def registry_add_or_update(project_root: Path, rel_path: str, *, status: str | N
         existing['Updated'] = row['Updated']
         if status is not None:
             existing['Status'] = status
+        row = existing
+    if title is not None:
+        row['Title'] = title.replace('|', '｜')
+    if origin is not None and section == 'Sources':
+        row['Origin'] = origin
     write_registry(project_root, rows)
     return {'updated': True, 'section': section, 'path': rel_path}
 

@@ -61,6 +61,11 @@ def parse_args() -> argparse.Namespace:
     find.add_argument('--query', required=True)
     find.add_argument('--limit', type=int, default=5)
 
+    granola = subparsers.add_parser('ingest-granola', help='Import a summarized Granola meeting into a bound project.')
+    granola.add_argument('--cwd', default='.')
+    granola.add_argument('--project-id', default='')
+    granola.add_argument('--input', required=True, help='Meeting JSON file, or - for standard input.')
+
     note = subparsers.add_parser('note-lifecycle', help='Manage a single canonical note.')
     note.add_argument('--cwd', default='.')
     note.add_argument('--project-id', default='')
@@ -450,6 +455,21 @@ def main() -> None:
 
     if args.command == 'status':
         print(json.dumps(project_status(binding), ensure_ascii=False, indent=2))
+        return
+
+    if args.command == 'ingest-granola':
+        from kb_granola import ingest_meeting
+
+        try:
+            if args.input == '-':
+                meeting = json.load(sys.stdin)
+            else:
+                with Path(args.input).expanduser().open(encoding='utf-8') as stream:
+                    meeting = json.load(stream)
+            result = ingest_meeting(binding, meeting)
+        except (OSError, ValueError) as exc:
+            raise SystemExit(f'Granola import failed: {exc}') from exc
+        print(json.dumps(result, ensure_ascii=False, indent=2))
         return
 
     if args.command == 'lifecycle':

@@ -1,6 +1,6 @@
 ---
 name: obsidian-source-ingestion
-description: Use this skill to ingest external materials into the current project-scoped Obsidian KB as source notes under Sources/Papers, Sources/Web, Sources/Docs, Sources/Data, Sources/Interviews, or Sources/Notes.
+description: Ingest external materials, including selected Granola meeting notes, into the current project-scoped Obsidian KB under Sources/Papers, Sources/Web, Sources/Docs, Sources/Data, Sources/Interviews, or Sources/Notes.
 ---
 
 # Obsidian Source Ingestion
@@ -23,6 +23,13 @@ Use this skill when external material should become a project-local source note.
 - important sources should update `02-Index.md`
 - if the source arrived during an active work session, append a short note to today's `Daily/`
 - do not create a top-level `Papers/`
+
+## Granola meetings
+
+For a selected meeting, use the existing Granola connector or a local export
+provided by the user. Follow [Granola meeting ingestion](references/GRANOLA-MEETING-NOTES.md)
+to create a source note with decisions, actions and open questions in the bound
+project. Use the Granola meeting UUID to find an existing import.
 
 ## Read next
 

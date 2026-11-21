@@ -7,6 +7,10 @@ Repo-local binding metadata remains under:
 .codex/project-memory/<project_id>.md
 ```
 
+If only a legacy `.claude/project-memory/registry.yaml` exists, continue to use
+it and keep its project memory in the same directory. Codex uses its own
+registry when both files exist.
+
 This is the runtime binding layer only.
 
 It may record:
