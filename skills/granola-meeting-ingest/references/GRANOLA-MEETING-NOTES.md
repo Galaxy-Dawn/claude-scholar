@@ -66,10 +66,17 @@ Use the project root from the binding. The default scaffold stores it under
 `Sources/Interviews/granola-<meeting UUID>.md` relative to that project root.
 Each meeting UUID identifies one note. Its title appears inside the note.
 
-The helper adds the note to `_system/registry.md` and `02-Index.md`. It
-returns the project ID, the relative note path, and the import status.
-A repeat import keeps any edits to the existing note and restores its registry
-and index links if needed. An archived import stays archived.
+The helper returns the project ID, the note's current relative path, and a status.
+
+| Status | What happens in the vault |
+| --- | --- |
+| `created` | The new note appears in `_system/registry.md` and `02-Index.md`. |
+| `existing` | The helper recognizes the meeting UUID after a rename or move to a registered project folder. It keeps the saved Markdown and updates the registry and index. |
+| `archived` | The helper returns the archived note's path. The note stays in the archive. |
+
+Keep the `source_provider` and `granola_meeting_id` fields when editing the
+note. If multiple notes have the same meeting UUID, the helper reports the
+conflict so you can choose which copy to keep.
 
 The example JSON above produces this Markdown in an English project. The
 project's note language controls the section headings.

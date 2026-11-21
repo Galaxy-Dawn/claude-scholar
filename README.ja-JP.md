@@ -120,6 +120,7 @@ Claude Scholar は特に次のような人に向いています。
 - （任意）Python + [uv](https://docs.astral.sh/uv/) — Python 開発用
 - （任意）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) — 文献ワークフロー用
 - （任意）[Obsidian](https://obsidian.md/) — プロジェクト知識ベース用
+- （任意）[Granola](./MCP_SETUP.ja-JP.md#granola-の会議ノートオプション) — 会議を振り返り、決定事項と次の作業を Obsidian に保存
 
 ### オプション 1：フルインストール（推奨）
 

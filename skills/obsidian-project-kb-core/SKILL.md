@@ -34,7 +34,7 @@ _system/
 ## Core rules
 
 - Keep all durable project knowledge inside the current `Research/{project-slug}/`.
-- Keep repo-local `.codex/project-memory/*` only as the runtime binding layer.
+- Keep runtime binding data in the [active repository-local directory](references/BINDING-LAYER.md).
 - `_system/registry.md` is the only visible project registry.
 - `02-Index.md` is a human navigation note, not a registry mirror.
 - `Maps/` is a derived-artifact area; do not generate non-essential canvases by default.

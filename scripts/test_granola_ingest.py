@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -87,6 +88,20 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertIn('| Granola |', registry)
         self.assertIn(f'[[Sources/Interviews/{self.note.stem}]]', self.index.read_text(encoding='utf-8'))
         self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 1)
+
+    def test_documented_json_generates_the_documented_english_note(self) -> None:
+        guide = SKILLS / 'granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md'
+        examples = dict(re.findall(r'^```(json|markdown)\n(.*?)^```$', guide.read_text(encoding='utf-8'),
+                                   flags=re.MULTILINE | re.DOTALL))
+        binding = json.loads(self.kb('bootstrap', '--vault-path', str(self.vault),
+                                     '--project-name', 'Guide example', '--note-language', 'en').stdout)
+        result = json.loads(self.run_cli(GRANOLA_HELPER, '--project-id', binding['project_id'],
+                                         '--input', '-', stdin=examples['json']).stdout)
+        self.assertEqual(result['status'], 'created')
+        expected_name = 'granola-' + json.loads(examples['json'])['meeting_id'] + '.md'
+        self.assertEqual(result['note'], 'Sources/Interviews/' + expected_name)
+        saved = Path(binding['project_root']) / result['note']
+        self.assertEqual(saved.read_text(encoding='utf-8'), examples['markdown'])
 
     def test_retry_preserves_edits_and_repairs_registry(self) -> None:
         title = 'Pilot "A" \\ branch'

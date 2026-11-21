@@ -120,6 +120,7 @@ It can still help in other research settings, but its current workflow design is
 - (Optional) Python + [uv](https://docs.astral.sh/uv/) for Python development
 - (Optional) [Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) for literature workflows
 - (Optional) [Obsidian](https://obsidian.md/) for project knowledge-base workflows
+- (Optional) [Granola](./MCP_SETUP.md#granola-meeting-notes-optional) to review a meeting and save its decisions and action items in Obsidian
 
 ### Option 1: Full Installation (Recommended)
 
@@ -481,7 +482,7 @@ Legacy Codex-era Obsidian skill shims such as `obsidian-project-memory`, `obsidi
 **Note language configuration**
 
 Generated and synced Obsidian notes now resolve their language with this priority:
-1. project config: `.codex/project-memory/registry.yaml` -> `note_language`
+1. `note_language` in the project's [active binding registry](./OBSIDIAN_SETUP.md#repository-local-memory-binding)
 2. environment variable: `OBSIDIAN_NOTE_LANGUAGE`
 3. default: `en`
 
