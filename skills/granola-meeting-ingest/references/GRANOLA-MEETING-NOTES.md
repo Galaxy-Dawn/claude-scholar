@@ -17,15 +17,23 @@ source ingestion workflow.
    `.codex`. For a new project, use `obsidian-project-kb-core` to bind the repo
    to the intended vault.
 2. Identify exactly one source using the entry point that matches the request.
+   Use the equivalent search, listing and reading tools available in the current
+   client. When the client cannot read the note, use the local export path.
+   [Granola MCP tool list](https://docs.granola.ai/help-center/sharing/integrations/mcp)
 
    - **Note link.** Pass the supplied Granola `/d/` or `/t/` URL unchanged to
-     `get_meetings`. Use the meeting UUID returned for that note.
-   - **Title and date.** Use `search_meetings` with the title keywords and
-     `from_date` and `to_date` for the requested day in the user's time zone.
-     Check the candidates against the title, date and any other details the
-     user supplied. Follow `next_cursor` while more candidates are available.
-     Once the match is unique, read it with `get_meetings`.
-     If several candidates remain, ask the user to choose or supply its link.
+     a reader that accepts note links, such as `get_meetings`. If it requires
+     an ID, use a verified meeting UUID from discovery results or the user.
+   - **Title and date.** Search the title and the requested day in the user's
+     time zone. For example, use `keywords`, `from_date` and `to_date` with
+     `search_meetings`. If search is unavailable, use `list_meetings` or the
+     client's list tool and check the same details in its results. Check candidates
+     against the other details the user supplied. Follow continuation cursors
+     such as `next_cursor` to confirm one match before reading the note. When
+     several meetings match, show their titles and times and ask the user to
+     choose one. If results remain incomplete, narrow the date or use another known filter
+     and search again. If that search is still incomplete or cannot confirm one
+     source, ask for its link or verified UUID.
    - **Local export.** From a Granola CSV, select one row by title and date.
      For copied Markdown, use the selected note and its accompanying link.
      Convert the selected content to the summary JSON below. Use only a
@@ -37,7 +45,8 @@ source ingestion workflow.
      [Granola Markdown copy and links](https://docs.granola.ai/help-center/sharing/sharing-notes)
 
 3. Prepare a short source summary in the project's note language. Use the
-   actual meeting date when available. For a lecture, capture the speaker's
+   meeting UUID verified in step 2 and the meeting date when available.
+   For a lecture, capture the speaker's
    main points and examples. Use accessible transcript excerpts to verify
    wording, speaker or decisions when needed. If only the notes are
    accessible, set `source_kind` to `notes` and summarize those notes.
