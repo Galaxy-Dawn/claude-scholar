@@ -23,6 +23,16 @@ class DoctorTest(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.touch()
 
+    def record_paths(self, paths):
+        (self.codex_home / doctor.MANIFEST).write_text('\n'.join(paths), encoding='utf-8')
+        (self.codex_home / doctor.RECEIPT).write_text(json.dumps({'managedPaths': paths}), encoding='utf-8')
+
+    def run_doctor(self, *options):
+        args = ['doctor.py', '--codex-home', str(self.codex_home), '--cwd', str(self.root), *options]
+        with patch('sys.argv', args), redirect_stdout(io.StringIO()) as stdout:
+            doctor.main()
+        return stdout.getvalue()
+
     def test_same_named_skill_without_receipt(self):
         self.install_file(doctor.COMPONENTS[0])
         result = doctor.installation(self.codex_home)
@@ -73,6 +83,82 @@ class DoctorTest(unittest.TestCase):
         self.assertEqual(result['status'], 'installed')
         self.assertTrue(result['manifest_valid'])
         self.assertFalse(any(item['managed'] for item in result['components']))
+
+    def test_recorded_files_and_unowned_components(self):
+        core = 'skills/obsidian-project-kb-core/scripts/project_kb.py'
+        template = 'templates/example.md'
+        self.record_paths([template, core])
+        for relative in (*doctor.COMPONENTS, template):
+            self.install_file(relative)
+        empty_list = subprocess.CompletedProcess([], 0, '[]', '')
+        with patch('doctor.shutil.which', return_value='/example/bin/codex'), \
+                patch('doctor.subprocess.run', return_value=empty_list):
+            report = json.loads(self.run_doctor('--json'))
+        self.assertFalse(report['mcp']['servers']['granola']['configured'])
+        result = report['installation']
+        self.assertEqual(result['status'], 'installed')
+        self.assertIsNone(result['source_revision'])  # Older receipts have no revision.
+        self.assertEqual([entry['path'] for entry in result['components'] if entry['managed']], [core])
+
+        (self.codex_home / core).unlink()
+        (self.codex_home / template).unlink()
+        (self.codex_home / template).mkdir()
+        result = doctor.installation(self.codex_home)
+        self.assertEqual(result['status'], 'incomplete')
+        self.assertEqual(result['missing_managed_paths'], [core, template])
+        with patch('doctor.shutil.which', return_value=None):
+            self.assertEqual(json.loads(self.run_doctor('--json'))['installation'], result)
+            text = self.run_doctor()
+        for relative in (core, template):
+            self.assertIn(f'  {relative}: missing\n', text)
+
+    def test_unowned_required_helpers_can_be_user_symlinks(self):
+        self.record_paths([])
+        for relative in doctor.COMPONENTS:
+            self.install_file(relative)
+        for name in ('project_kb.py', 'kb_common.py'):
+            relative = f'skills/obsidian-project-kb-core/scripts/{name}'
+            link = self.codex_home / relative
+            link.unlink()
+            result = doctor.installation(self.codex_home)
+            self.assertEqual(result['status'], 'incomplete')
+            self.assertIn({'path': relative, 'present': False, 'managed': False}, result['components'])
+            self.assertEqual(result['missing_managed_paths'], [])
+            (self.root / name).touch()
+            link.symlink_to(self.root / name)
+            self.assertEqual(doctor.installation(self.codex_home)['status'], 'installed')
+
+    def test_invalid_paths_are_not_checked(self):
+        for relative in ('../outside', str(self.root / 'outside'), 'C:/outside', r'..\outside', 'file\0name', '.'):
+            with self.subTest(relative=relative):
+                self.record_paths([relative])
+                with patch('doctor.local_path', wraps=doctor.local_path) as check:
+                    result = doctor.installation(self.codex_home)
+                self.assertNotIn(relative, [call.args[1] for call in check.call_args_list])
+                self.assertEqual(result['status'], 'incomplete_receipt')
+                self.assertFalse(result['receipt_valid'])
+                self.assertFalse(result['manifest_valid'])
+
+    def test_symlinks_stay_within_the_installation(self):
+        self.install_file('inside/file')
+        for relative in doctor.COMPONENTS:
+            self.install_file(relative)
+        alias = self.codex_home / 'alias'
+        alias.symlink_to(self.codex_home / 'inside', target_is_directory=True)
+        self.record_paths(['alias/file'])
+        self.assertEqual(doctor.installation(self.codex_home)['status'], 'installed')
+
+        (self.root / 'file').touch()
+        alias.unlink()
+        alias.symlink_to(self.root, target_is_directory=True)
+        result = doctor.installation(self.codex_home)
+        self.assertEqual(result['status'], 'incomplete')
+        self.assertEqual(result['missing_managed_paths'], ['alias/file'])
+
+        receipt = self.codex_home / doctor.RECEIPT
+        receipt.rename(self.root / 'outside-receipt')
+        receipt.symlink_to(self.root / 'outside-receipt')
+        self.assertFalse(doctor.installation(self.codex_home)['receipt_valid'])
 
     def test_configured_mcp_keeps_secrets_out_of_report(self):
         raw = [{

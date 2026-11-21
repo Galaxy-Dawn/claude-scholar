@@ -171,7 +171,10 @@ python3 ~/.codex/scripts/doctor.py --cwd .
 ```
 
 ソースのチェックアウトからは `python3 scripts/doctor.py` を実行します。
-インストール情報、構成ファイル、ローカル MCP 設定、Obsidian のバインドを確認します。
+主要な構成ファイルには `project_kb.py` とその補助スクリプト `kb_common.py` が含まれ、ユーザーが事前に用意したものも確認します。
+インストール記録とマニフェストの内容が一致する場合は、そこに記載された全ファイルも確認します。
+不足している管理対象ファイルのパスはテキストのレポートと JSON の `installation.missing_managed_paths` に表示されます。
+ローカル MCP 設定と Obsidian のバインドも確認できます。
 `--json` は構造化出力、`--codex-home` はカスタムディレクトリを指定します。
 新規インストールではソースのコミットも記録します。
 

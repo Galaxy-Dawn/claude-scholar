@@ -170,8 +170,9 @@ bash scripts/uninstall.sh
 python3 ~/.codex/scripts/doctor.py --cwd .
 ```
 
-也可以在源码目录运行 `python3 scripts/doctor.py`。命令检查安装清单、
-组件文件、本机 MCP 配置和 Obsidian 绑定。`--json` 输出结构化结果，
+也可以在源码目录运行 `python3 scripts/doctor.py`。命令会检查核心组件，包括预先安装的 `project_kb.py` 及其配套脚本 `kb_common.py`。安装回执和清单一致时，还会检查清单中的每个文件。
+缺失文件的相对路径会出现在文本报告和 JSON 的 `installation.missing_managed_paths` 字段中。
+报告也显示本机 MCP 配置和 Obsidian 绑定。`--json` 输出结构化结果，
 `--codex-home` 指定自定义目录。新安装会记录源码提交。检查使用当前
 这份工具配套的 KB 脚本和 CLI 的 MCP 配置。
 

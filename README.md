@@ -170,10 +170,15 @@ Run the installed doctor from a research repository:
 python3 ~/.codex/scripts/doctor.py --cwd .
 ```
 
-You can also run `python3 scripts/doctor.py` from a checkout. The doctor reads
-the installation receipt, expected files, local MCP configuration and Obsidian
-binding. Use `--json` for structured output or `--codex-home` for a custom
-Codex directory. It reports the source commit recorded by new installations.
+You can also run `python3 scripts/doctor.py` from a checkout. The doctor checks
+the core components, including `project_kb.py` and its helper `kb_common.py`, and every file
+listed in the matching receipt and manifest. Core components are checked even
+when they predate the installer.
+Missing managed files are listed by path in the text report and in the JSON
+field `installation.missing_managed_paths`. The report also shows the local MCP
+configuration and Obsidian binding. Use `--json` for structured output or
+`--codex-home` for a custom Codex directory. The doctor reports the source
+commit recorded by new installations.
 The copy you run uses its matching KB helper and reads the CLI's MCP registry.
 
 ### Option 2: Minimal Installation
