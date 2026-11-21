@@ -15,6 +15,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Test literature canvas output and workflow guidance
+        run: python3 -B scripts/test_literature_canvas.py
+
       - name: Check tracked top-level docs for obvious machine-specific paths
         run: |
           set -euo pipefail
