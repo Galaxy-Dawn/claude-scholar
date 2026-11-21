@@ -212,16 +212,28 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertNotEqual(failed.returncode, 0)
         self.assertEqual(self.note.read_text(encoding='utf-8'), '# Existing note\n')
 
-    def test_reads_preview_binding_without_moving_or_rewriting_it(self) -> None:
-        binding = self.repo / '.claude/project-memory/registry.yaml'
-        self.assertTrue(binding.with_name('granola-demo.md').is_file())
-        preview = self.repo / '.codex/project-memory/registry.yaml'
-        preview.parent.mkdir(parents=True)
-        binding.rename(preview)
-        before = preview.read_bytes()
+    def test_preview_binding_supports_standard_obsidian_commands(self) -> None:
+        standard = self.repo / '.claude/project-memory'
+        preview = self.repo / '.codex/project-memory'
+        self.assertTrue((standard / 'registry.yaml').is_file())
+        self.assertTrue((standard / 'granola-demo.md').is_file())
+        preview.parent.mkdir()
+        standard.rename(preview)
+        registry = preview / 'registry.yaml'
+        before = registry.read_bytes()
+
+        self.assertEqual(json.loads(self.kb('detect').stdout)['project']['project_id'], 'granola-demo')
+        self.assertEqual(json.loads(self.kb('status').stdout)['project_root'], str(self.root.resolve()))
         self.assertEqual(self.ingest()['status'], 'created')
-        self.assertFalse(binding.exists())
-        self.assertEqual(preview.read_bytes(), before)
+        self.assertEqual(json.loads(self.kb('sync').stdout)['project_id'], 'granola-demo')
+        self.assertIn('scope=auto;', (preview / 'granola-demo.md').read_text(encoding='utf-8'))
+        self.assertEqual(registry.read_bytes(), before)
+        self.assertFalse(standard.exists())
+
+        self.assertEqual(json.loads(self.kb('lifecycle', '--mode', 'detach').stdout)['status'], 'detached')
+        self.assertEqual(json.loads(self.kb('status').stdout)['status'], 'detached')
+        self.assertTrue(self.note.is_file())
+        self.assertFalse(standard.exists())
 
     def test_existing_binding_has_priority_and_specific_preview_project_can_be_selected(self) -> None:
         other_project = self.vault / 'Research/another-project'
@@ -234,6 +246,10 @@ class GranolaIngestTest(unittest.TestCase):
         }}), encoding='utf-8')
         binding = self.repo / '.claude/project-memory/registry.yaml'
         before = {path: path.read_bytes() for path in (binding, preview)}
+        self.assertEqual(json.loads(self.kb('detect').stdout)['project']['project_id'], 'granola-demo')
+        self.assertEqual(json.loads(self.kb('status').stdout)['project_root'], str(self.root.resolve()))
+        self.kb('sync')
+        self.assertIn('scope=auto;', binding.with_name('granola-demo.md').read_text(encoding='utf-8'))
         self.assertEqual(self.ingest()['project_id'], 'granola-demo')
         self.assertTrue(self.note.is_file())
         self.assertEqual(self.ingest(project_id='granola-demo')['status'], 'existing')

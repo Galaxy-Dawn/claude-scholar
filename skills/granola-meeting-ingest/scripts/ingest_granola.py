@@ -215,14 +215,10 @@ def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
 
 
 def resolve_granola_binding(repo_root: Path, project_id: str | None) -> common.Binding:
-    # The preview stored some bindings outside the KB helper's normal location.
+    # Explicit Granola requests may select a preview project alongside the standard binding.
     registry = common.binding_registry_path(repo_root)
     preview = repo_root / '.codex' / 'project-memory' / 'registry.yaml'
-    if not preview.is_file():
-        return common.resolve_binding(repo_root, project_id)
-    if not registry.exists():
-        return common.resolve_binding(repo_root, project_id, registry_file=preview)
-    if project_id is not None:
+    if project_id is not None and registry != preview and preview.is_file():
         registered = common.load_binding_registry(registry).get('projects') or {}
         if project_id not in registered:
             preview_projects = common.load_binding_registry(preview).get('projects') or {}

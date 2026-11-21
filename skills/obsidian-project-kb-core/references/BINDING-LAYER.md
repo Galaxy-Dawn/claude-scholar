@@ -1,11 +1,15 @@
 # Binding Layer
 
-Repo-local binding metadata remains under:
+The default repo-local binding and project memory use the same directory.
 
 ```text
-.codex/project-memory/registry.yaml
-.codex/project-memory/<project_id>.md
+.claude/project-memory/registry.yaml
+.claude/project-memory/<project_id>.md
 ```
+
+If the default registry is absent, the KB uses an existing
+`.codex/project-memory/registry.yaml` and keeps the project memory beside it.
+When both registries exist, ordinary KB commands use the `.claude` registry.
 
 This is the runtime binding layer only.
 

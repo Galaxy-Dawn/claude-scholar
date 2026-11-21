@@ -104,11 +104,15 @@ def find_repo_root(cwd: Path) -> Path:
 
 
 def binding_registry_path(repo_root: Path) -> Path:
-    return repo_root / '.claude' / 'project-memory' / 'registry.yaml'
+    standard = repo_root / '.claude' / 'project-memory' / 'registry.yaml'
+    if standard.exists() or standard.is_symlink():
+        return standard
+    previous = repo_root / '.codex' / 'project-memory' / 'registry.yaml'
+    return previous if previous.is_file() else standard
 
 
 def project_memory_path(repo_root: Path, project_id: str) -> Path:
-    return repo_root / '.claude' / 'project-memory' / f'{project_id}.md'
+    return binding_registry_path(repo_root).parent / f'{project_id}.md'
 
 
 def load_binding_registry(path: Path) -> dict[str, Any]:

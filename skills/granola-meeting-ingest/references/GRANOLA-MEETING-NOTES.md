@@ -6,12 +6,12 @@ discussion in their project knowledge base.
 ## Read and summarize the meeting
 
 1. Use the current repo's Obsidian binding. Check it with
-   `project_kb.py detect` or `project_kb.py status`. The importer can also
-   read `.codex/project-memory/registry.yaml` from a previous Granola preview
-   when the project KB's normal binding file is absent or when
-   `--project-id` selects a project listed only in the preview registry.
-   For a new project, use `obsidian-project-kb-core` to bind the repo to the
-   intended vault.
+   `project_kb.py detect` or `project_kb.py status`. Both commands can read
+   `.codex/project-memory/registry.yaml` from a previous preview when
+   `.claude/project-memory/registry.yaml` is absent. When both exist,
+   Granola's `--project-id` can also select a project registered only in
+   `.codex`. For a new project, use `obsidian-project-kb-core` to bind the repo
+   to the intended vault.
 2. Read the selected meeting with Granola's `get_meetings` tool. Pass the note
    URL unchanged when the user provides it. If the user gives a title and
    date, resolve them to one meeting first. Read transcript excerpts when
