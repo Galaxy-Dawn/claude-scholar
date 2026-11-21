@@ -148,32 +148,33 @@ def update_hub_link_block(binding: common.Binding) -> None:
 
 
 def run_sync(binding: common.Binding, scope: str = 'auto') -> dict[str, Any]:
-    common.ensure_project_scaffold(binding.project_root, binding.project_slug, common.titleize_slug(binding.project_slug))
-    migrated = common.maybe_migrate_old_layout(binding.project_root)
-    daily_path = common.ensure_today_daily(binding.project_root, binding.project_slug)
-    registry_result = sync_registry(binding.project_root)
-    common.update_index(binding.project_root)
-    update_hub_link_block(binding)
-    summary = f'scope={scope}; canonical={len(registry_result["canonical_paths"])}; added={len(registry_result["added"])}; migrated={len(migrated)}'
-    common.update_project_memory(
-        binding.repo_root,
-        binding.project_id,
-        binding.project_root,
-        common.relative_note_path(binding.project_root / '00-Hub.md', binding.vault_path),
-        binding.note_language,
-        summary=summary,
-    )
-    common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: sync refreshed scaffold, registry, index, and daily note ({scope}).')
-    return {
-        'project_id': binding.project_id,
-        'project_root': str(binding.project_root),
-        'daily_note': str(daily_path),
-        'migrated_paths': migrated,
-        'registry_added': registry_result['added'],
-        'registry_removed': registry_result['removed'],
-        'canonical_count': len(registry_result['canonical_paths']),
-        'scope': scope,
-    }
+    with common.project_write_lock(binding.project_root):
+        common.ensure_project_scaffold(binding.project_root, binding.project_slug, common.titleize_slug(binding.project_slug))
+        migrated = common.maybe_migrate_old_layout(binding.project_root)
+        daily_path = common.ensure_today_daily(binding.project_root, binding.project_slug)
+        registry_result = sync_registry(binding.project_root)
+        common.update_index(binding.project_root)
+        update_hub_link_block(binding)
+        summary = f'scope={scope}; canonical={len(registry_result["canonical_paths"])}; added={len(registry_result["added"])}; migrated={len(migrated)}'
+        common.update_project_memory(
+            binding.repo_root,
+            binding.project_id,
+            binding.project_root,
+            common.relative_note_path(binding.project_root / '00-Hub.md', binding.vault_path),
+            binding.note_language,
+            summary=summary,
+        )
+        common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: sync refreshed scaffold, registry, index, and daily note ({scope}).')
+        return {
+            'project_id': binding.project_id,
+            'project_root': str(binding.project_root),
+            'daily_note': str(daily_path),
+            'migrated_paths': migrated,
+            'registry_added': registry_result['added'],
+            'registry_removed': registry_result['removed'],
+            'canonical_count': len(registry_result['canonical_paths']),
+            'scope': scope,
+        }
 
 
 def load_binding(repo_root: Path, project_id: str | None) -> common.Binding:
@@ -339,46 +340,47 @@ def ensure_parent(path: Path) -> None:
 
 
 def note_lifecycle(binding: common.Binding, mode: str, note: str, dest: str = '', reason: str = 'manual') -> dict[str, Any]:
-    source = common.resolve_project_note(binding.project_root, note)
-    source_rel = str(source.relative_to(binding.project_root)).replace(os.sep, '/')
+    with common.project_write_lock(binding.project_root):
+        source = common.resolve_project_note(binding.project_root, note)
+        source_rel = str(source.relative_to(binding.project_root)).replace(os.sep, '/')
 
-    if mode == 'rename':
-        if not dest:
-            raise SystemExit('--dest is required for rename')
-        target = (binding.project_root / dest).resolve()
-        ensure_parent(target)
-        shutil.move(str(source), str(target))
-        target_rel = str(target.relative_to(binding.project_root)).replace(os.sep, '/')
-        rewritten = rewrite_project_references(binding.project_root, source_rel, target_rel)
-        common.registry_add_or_update(binding.project_root, target_rel)
-        common.registry_remove_path(binding.project_root, source_rel, reason='renamed', record_archive=False)
-        sync_registry(binding.project_root)
-        common.update_index(binding.project_root)
-        source_label = Path(source_rel).stem.replace('-', ' ')
-        target_link = target_rel[:-3] if target_rel.endswith('.md') else target_rel
-        common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: renamed {source_label} -> [[{target_link}]].')
-        return {'mode': mode, 'from': source_rel, 'to': target_rel, 'rewritten_paths': rewritten}
+        if mode == 'rename':
+            if not dest:
+                raise SystemExit('--dest is required for rename')
+            target = (binding.project_root / dest).resolve()
+            ensure_parent(target)
+            shutil.move(str(source), str(target))
+            target_rel = str(target.relative_to(binding.project_root)).replace(os.sep, '/')
+            rewritten = rewrite_project_references(binding.project_root, source_rel, target_rel)
+            common.registry_add_or_update(binding.project_root, target_rel)
+            common.registry_remove_path(binding.project_root, source_rel, reason='renamed', record_archive=False)
+            sync_registry(binding.project_root)
+            common.update_index(binding.project_root)
+            source_label = Path(source_rel).stem.replace('-', ' ')
+            target_link = target_rel[:-3] if target_rel.endswith('.md') else target_rel
+            common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: renamed {source_label} -> [[{target_link}]].')
+            return {'mode': mode, 'from': source_rel, 'to': target_rel, 'rewritten_paths': rewritten}
 
-    if mode == 'archive':
-        archived = binding.project_root / 'Archive' / source_rel
-        ensure_parent(archived)
-        shutil.move(str(source), str(archived))
-        archived_rel = str(archived.relative_to(binding.project_root)).replace(os.sep, '/')
-        rewritten = rewrite_project_references(binding.project_root, source_rel, archived_rel)
-        common.registry_archive(binding.project_root, source_rel, archived_rel, reason=reason)
-        common.update_index(binding.project_root)
-        common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: archived [[{source_rel[:-3] if source_rel.endswith(".md") else source_rel}]].')
-        return {'mode': mode, 'from': source_rel, 'to': archived_rel, 'rewritten_paths': rewritten}
+        if mode == 'archive':
+            archived = binding.project_root / 'Archive' / source_rel
+            ensure_parent(archived)
+            shutil.move(str(source), str(archived))
+            archived_rel = str(archived.relative_to(binding.project_root)).replace(os.sep, '/')
+            rewritten = rewrite_project_references(binding.project_root, source_rel, archived_rel)
+            common.registry_archive(binding.project_root, source_rel, archived_rel, reason=reason)
+            common.update_index(binding.project_root)
+            common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: archived [[{source_rel[:-3] if source_rel.endswith(".md") else source_rel}]].')
+            return {'mode': mode, 'from': source_rel, 'to': archived_rel, 'rewritten_paths': rewritten}
 
-    if mode == 'purge':
-        source.unlink()
-        rewritten = rewrite_project_references(binding.project_root, source_rel, None)
-        common.registry_remove_path(binding.project_root, source_rel, reason=reason)
-        common.update_index(binding.project_root)
-        common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: purged {source_rel}.')
-        return {'mode': mode, 'purged': source_rel, 'rewritten_paths': rewritten}
+        if mode == 'purge':
+            source.unlink()
+            rewritten = rewrite_project_references(binding.project_root, source_rel, None)
+            common.registry_remove_path(binding.project_root, source_rel, reason=reason)
+            common.update_index(binding.project_root)
+            common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: purged {source_rel}.')
+            return {'mode': mode, 'purged': source_rel, 'rewritten_paths': rewritten}
 
-    raise SystemExit(f'Unsupported note lifecycle mode: {mode}')
+        raise SystemExit(f'Unsupported note lifecycle mode: {mode}')
 
 
 def project_status(binding: common.Binding) -> dict[str, Any]:

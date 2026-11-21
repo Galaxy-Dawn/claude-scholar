@@ -9,6 +9,16 @@ on:
       - opencode
 
 jobs:
+  granola-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test Granola ingestion and shared Obsidian writes
+        run: python scripts/test_granola_ingest.py
+
   repo-sanity:
     runs-on: ubuntu-latest
     steps:

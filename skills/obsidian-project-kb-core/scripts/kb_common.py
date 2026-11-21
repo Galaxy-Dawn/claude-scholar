@@ -6,10 +6,11 @@ import os
 import re
 import shutil
 import subprocess
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 IGNORE_DIRS = {
     '.git', '.hg', '.svn', '.venv', 'venv', 'node_modules', '__pycache__',
@@ -28,6 +29,7 @@ SECTION_COLUMNS: dict[str, list[str]] = {
     'Archive': ['ID', 'Title', 'Old Path', 'Archived Path', 'Reason', 'Archived At'],
 }
 SECTION_ORDER = list(SECTION_COLUMNS)
+CANONICAL_DIRECTORIES = ('Sources', 'Knowledge', 'Experiments', 'Results', 'Writing', 'Maps')
 SOURCE_TYPES = {
     'Papers': 'paper',
     'Web': 'web',
@@ -156,6 +158,24 @@ def write_text(path: Path, content: str) -> None:
     path.write_text(content, encoding='utf-8')
 
 
+@contextmanager
+def project_write_lock(project_root: Path) -> Iterator[None]:
+    root = project_root.resolve()
+    lock_path = root / '_system' / '.kb-write.lock'
+    if not lock_path.resolve().is_relative_to(root):
+        raise ValueError('the write lock must stay inside the bound Obsidian project')
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open('a+b') as lock:
+        lock.seek(0)
+        if os.name == 'nt':
+            import msvcrt
+            msvcrt.locking(lock.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        yield
+
+
 def relative_note_path(target: Path, vault_path: Path) -> str:
     return str(target.relative_to(vault_path)).replace(os.sep, '/')
 
@@ -181,6 +201,67 @@ def parse_frontmatter(text: str) -> dict[str, str]:
         key, value = line.split(':', 1)
         data[key.strip()] = value.strip().strip('"')
     return data
+
+
+# Escape sequences supported by YAML double-quoted scalars beyond JSON.
+_YAML_JSON_ESCAPES = {
+    '0': r'\u0000', 'a': r'\u0007', 'v': r'\u000b', 'e': r'\u001b',
+    ' ': r'\u0020', '\t': r'\t', 'N': r'\u0085', '_': r'\u00a0',
+    'L': r'\u2028', 'P': r'\u2029',
+}
+
+
+def _yaml_escape_as_json(match: re.Match[str]) -> str:
+    escape = match[1]
+    if len(escape) > 1:
+        return json.dumps(chr(int(escape[1:], 16)))[1:-1]
+    return _YAML_JSON_ESCAPES.get(escape, match[0])
+
+
+def _frontmatter_scalar(value: str) -> str | None:
+    if value.startswith("'"):
+        quoted = re.fullmatch(r"'((?:[^']|'')*)'(?:[ \t]+#.*)?", value)
+        return quoted[1].replace("''", "'") if quoted else None
+    if value.startswith('"'):
+        quoted = re.fullmatch(r'("(?:[^"\\]|\\.)*")(?:[ \t]+#.*)?', value)
+        if quoted is None:
+            return None
+        try:
+            return json.loads(re.sub(r'\\(x[0-9a-fA-F]{2}|U[0-9a-fA-F]{8}|.)', _yaml_escape_as_json, quoted[1]))
+        except ValueError:
+            return None
+    return re.split(r'[ \t]+#', value, maxsplit=1)[0].rstrip()
+
+
+def read_frontmatter_fields(path: Path, *fields: str) -> dict[str, str]:
+    """Read selected top-level, single-line scalars without reading the note body."""
+    names = {field.encode('utf-8'): field for field in fields}
+    values: dict[str, str] = {}
+    root_indent = None
+    with path.open('rb') as stream:
+        if stream.readline(5).rstrip(b'\r\n') != b'---':
+            return {}
+        for line in stream:
+            if line.rstrip(b'\r\n') in {b'---', b'...'}:
+                return values
+            content = line.lstrip(b' ')
+            if not content.strip() or content.startswith(b'#'):
+                continue
+            indent = len(line) - len(content)
+            if root_indent is None:
+                root_indent = indent
+            if indent != root_indent:
+                continue
+            raw_name, separator, raw_value = content.partition(b':')
+            field = names.get(raw_name.rstrip())
+            if separator and field:
+                try:
+                    value = _frontmatter_scalar(raw_value.decode('utf-8').strip())
+                except UnicodeDecodeError:
+                    continue
+                if value is not None:
+                    values[field] = value
+    return {}
 
 
 def set_frontmatter_value(text: str, key: str, value: str) -> str:
@@ -505,14 +586,16 @@ def write_registry(project_root: Path, rows: dict[str, list[dict[str, str]]]) ->
     write_text(registry_path(project_root), render_registry_md(rows))
 
 
-def section_and_row_for_relpath(rel_path: str) -> tuple[str, dict[str, str]] | None:
+def section_and_row_for_relpath(
+    rel_path: str, *, imported_source_type: str | None = None,
+) -> tuple[str, dict[str, str]] | None:
     rel = rel_path.replace('\\', '/')
     updated = now_iso()
     title = Path(rel).stem.replace('-', ' ')
     if rel.startswith('Sources/'):
         parts = rel.split('/', 2)
         source_folder = parts[1] if len(parts) >= 2 else ''
-        source_type = SOURCE_TYPES.get(source_folder)
+        source_type = SOURCE_TYPES.get(source_folder) or imported_source_type
         if not source_type:
             return None
         return 'Sources', {
@@ -572,11 +655,39 @@ def prefix_for_section_row(section: str, row: dict[str, str]) -> str:
     }[section]
 
 
+def imported_source_metadata(project_root: Path, relative: str) -> dict[str, str]:
+    path = project_root / relative
+    if path.suffix != '.md' or path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(project_root.resolve()):
+        return {}
+    try:
+        fields = read_frontmatter_fields(path, 'type', 'source_provider', 'title')
+    except OSError:
+        return {}
+    if not fields.get('type', '').startswith('source-') or not fields.get('source_provider', '').strip():
+        return {}
+    return fields
+
+
+def _metadata_cell(value: str) -> str | None:
+    value = ' '.join(value.split())
+    try:
+        value.encode('utf-8')
+    except UnicodeEncodeError:
+        return None
+    return value or None
+
+
 def registry_add_or_update(
     project_root: Path, rel_path: str, *, status: str | None = None,
     title: str | None = None, origin: str | None = None,
 ) -> dict[str, Any]:
+    metadata = None
     payload = section_and_row_for_relpath(rel_path)
+    if payload is None and rel_path.replace('\\', '/').startswith('Sources/'):
+        metadata = imported_source_metadata(project_root, rel_path)
+        source_type = metadata.get('type', '').removeprefix('source-')
+        if source_type in SOURCE_TYPES.values():
+            payload = section_and_row_for_relpath(rel_path, imported_source_type=source_type)
     if payload is None:
         return {'updated': False, 'reason': 'path-not-registrable'}
     section, row = payload
@@ -591,6 +702,15 @@ def registry_add_or_update(
         if status:
             row['Status'] = status
         rows[section].append(row)
+        if metadata is None:
+            metadata = imported_source_metadata(project_root, rel_path)
+        if metadata:
+            if title is None:
+                title = _metadata_cell(metadata.get('title', ''))
+            if origin is None:
+                provider = _metadata_cell(metadata['source_provider'])
+                if provider is not None:
+                    origin = provider[0].upper() + provider[1:]
     else:
         existing['Path'] = row['Path']
         existing['Updated'] = row['Updated']
@@ -600,7 +720,7 @@ def registry_add_or_update(
     if title is not None:
         row['Title'] = title.replace('|', '｜')
     if origin is not None and section == 'Sources':
-        row['Origin'] = origin
+        row['Origin'] = origin.replace('|', '｜')
     write_registry(project_root, rows)
     return {'updated': True, 'section': section, 'path': rel_path}
 
@@ -662,7 +782,7 @@ def registry_remove_path(project_root: Path, rel_path: str, reason: str = 'purge
 
 def scan_canonical_relpaths(project_root: Path) -> list[str]:
     rels: list[str] = []
-    for base in ['Sources', 'Knowledge', 'Experiments', 'Results', 'Writing', 'Maps']:
+    for base in CANONICAL_DIRECTORIES:
         path = project_root / base
         if not path.exists():
             continue

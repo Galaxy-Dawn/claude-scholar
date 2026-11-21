@@ -3,13 +3,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
-from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 from uuid import UUID
 
@@ -18,9 +16,6 @@ sys.path.insert(0, str(KB_SCRIPTS))
 
 import kb_common as common  # type: ignore
 from project_kb import sync_registry  # type: ignore
-
-
-SOURCE_DIRECTORIES = ('Sources', 'Archive/Sources')
 
 
 def line(value: Any, field: str) -> str:
@@ -122,45 +117,32 @@ def render_meeting(meeting: Any, language: str) -> tuple[str, str, str]:
     return meeting_id, title, '\n'.join(lines)
 
 
-@contextmanager
-def lock_import(project_root: Path) -> Iterator[None]:
-    # Lock this vault project's read/modify/write sequence across importer processes.
-    with (project_root / '_system' / '.granola-ingest.lock').open('a+b') as lock:
-        lock.seek(0)
-        if os.name == 'nt':
-            import msvcrt
-            msvcrt.locking(lock.fileno(), msvcrt.LK_LOCK, 1)
-        else:
-            import fcntl
-            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-        yield
-
-
 def existing_meeting(project_root: Path, meeting_id: str) -> Path | None:
     candidates = []
-    for folder in SOURCE_DIRECTORIES:
-        for path in (project_root / folder).rglob('*.md'):
-            if path.is_symlink() or not path.is_file():
+    for collection in (project_root, project_root / 'Archive'):
+        for name in (*common.CANONICAL_DIRECTORIES, 'Daily'):
+            folder = collection / name
+            if not folder.resolve().is_relative_to(project_root):
                 continue
-            metadata = common.parse_frontmatter(common.read_text(path))
-            if metadata.get('source_provider') == 'granola' and metadata.get('granola_meeting_id') == meeting_id:
-                candidates.append(path)
+            for path in folder.rglob('*.md'):
+                if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(project_root):
+                    continue
+                metadata = common.read_frontmatter_fields(path, 'source_provider', 'granola_meeting_id')
+                if metadata.get('source_provider', '').strip().casefold() != 'granola':
+                    continue
+                try:
+                    saved_id = str(UUID(metadata.get('granola_meeting_id', '').strip()))
+                except ValueError:
+                    continue
+                if saved_id == meeting_id:
+                    candidates.append(path)
     if len(candidates) > 1:
         raise ValueError('this Granola meeting already has multiple notes in the project')
     return candidates[0] if candidates else None
 
 
 def saved_title(note: Path, fallback: str) -> str:
-    text = common.read_text(note)
-    title = common.parse_frontmatter(text).get('title', '')
-    frontmatter = text.split('---\n', 2)
-    if len(frontmatter) == 3 and not frontmatter[0]:
-        quoted = re.search(r'(?m)^[ \t]*title[ \t]*:[ \t]*("[^\n]*)$', frontmatter[1])
-        if quoted:
-            try:
-                title = json.loads(quoted.group(1))
-            except json.JSONDecodeError:
-                pass
+    title = common.read_frontmatter_fields(note, 'title').get('title', '')
     title = line(title.strip() or fallback, 'existing note title')
     try:
         title.encode('utf-8')
@@ -177,12 +159,10 @@ def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
         raise ValueError('Granola import requires an active, existing Obsidian project binding')
     destination = root / 'Sources' / 'Interviews' / f'granola-{meeting_id}.md'
     registry = common.registry_path(root)
-    source_directories = [root / folder for folder in SOURCE_DIRECTORIES]
-    for path in (destination, registry, root / '02-Index.md', *source_directories):
+    for path in (destination, registry, root / '02-Index.md'):
         if not path.resolve().is_relative_to(root):
             raise ValueError('the import path must stay inside the bound Obsidian project')
-    (root / '_system').mkdir(parents=True, exist_ok=True)
-    with lock_import(root):
+    with common.project_write_lock(root):
         existing = existing_meeting(root, meeting_id)
         if existing is None:
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -209,7 +189,9 @@ def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
                 needs_registry_rebuild = True
             if needs_registry_rebuild:
                 sync_registry(root)
-            common.registry_add_or_update(root, relative, title=title, origin='Granola')
+            result = common.registry_add_or_update(root, relative, title=title, origin='Granola')
+            if not result['updated']:
+                raise ValueError(f'the existing note cannot be registered at {relative}')
             common.update_index(root)
         return {'status': status, 'project_id': binding.project_id, 'note': relative}
 

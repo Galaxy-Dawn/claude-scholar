@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -158,10 +159,16 @@ class GranolaIngestTest(unittest.TestCase):
                     self.assertIn(f'[[Sources/Interviews/granola-{meeting_id}]]', index)
 
     def test_renamed_and_archived_notes_remain_unique(self) -> None:
-        self.ingest()
+        title = 'Discussion of the evaluation split'
+        self.ingest(title=title)
         original = self.note.relative_to(self.root).as_posix()
         renamed = 'Sources/Interviews/group-meeting.md'
         self.kb('note-lifecycle', '--mode', 'rename', '--note', original, '--dest', renamed)
+        self.kb('sync')
+        row = next(row for row in self.registry.read_text(encoding='utf-8').splitlines()
+                   if '[[Sources/Interviews/group-meeting]]' in row)
+        self.assertIn(f'| {title} |', row)
+        self.assertIn('| Granola |', row)
         self.assertEqual(self.ingest()['note'], renamed)
         moved = 'Sources/Notes/discussions/group-meeting.md'
         self.kb('note-lifecycle', '--mode', 'rename', '--note', renamed, '--dest', moved)
@@ -176,6 +183,115 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 0)
         self.assertFalse(self.note.exists())
 
+    def test_cross_category_move_and_archive_keep_the_same_meeting(self) -> None:
+        self.ingest(title='Fixture research discussion')
+        original = self.note.relative_to(self.root).as_posix()
+        note_bytes = self.note.read_bytes()
+        moved = 'Knowledge/discussions/team-review.md'
+        self.kb('note-lifecycle', '--mode', 'rename', '--note', original, '--dest', moved)
+        private = self.root / 'Private'
+        private.mkdir()
+        (private / 'synthetic-copy.md').write_bytes(note_bytes)
+        (self.root / 'README.md').write_bytes(note_bytes)
+        retry = self.ingest()
+        self.assertEqual((retry['status'], retry['note']), ('existing', moved))
+        self.assertEqual((self.root / moved).read_bytes(), note_bytes)
+        self.assertIn('[[Knowledge/discussions/team-review]]', self.index.read_text(encoding='utf-8'))
+
+        self.kb('note-lifecycle', '--mode', 'archive', '--note', moved)
+        archived = self.ingest()
+        self.assertEqual((archived['status'], archived['note']), ('archived', f'Archive/{moved}'))
+        self.assertEqual((self.root / archived['note']).read_bytes(), note_bytes)
+        self.assertFalse(self.note.exists())
+
+    def test_manually_renamed_note_accepts_quoted_frontmatter(self) -> None:
+        self.ingest(title='Original fixture')
+        original = self.note.read_text(encoding='utf-8')
+        renamed = self.root / 'Sources/Interviews/manually-renamed.md'
+        self.note.rename(renamed)
+        for uuid_value, provider, title_value, title in (
+            (f"'{MEETING_ID.upper()}'", "'granola'", "'Researcher''s check' # comment", "Researcher's check"),
+            (json.dumps(MEETING_ID).replace('-', r'\x2d'), r'"\x67ranola"',
+             r'"Second\x3a \"Demo\""', 'Second: "Demo"'),
+        ):
+            with self.subTest(uuid_value=uuid_value):
+                text = original.replace(f'granola_meeting_id: {MEETING_ID}', f'granola_meeting_id: {uuid_value}')
+                text = text.replace('source_provider: granola', f'source_provider: {provider}')
+                text = text.replace('title: "Original fixture"', f'title: {title_value}')
+                renamed.write_text(text + '\nA manual edit.\n', encoding='utf-8')
+                before = renamed.read_bytes()
+                self.kb('sync')
+                result = self.ingest(title='New upstream title')
+                self.assertEqual((result['status'], result['note']), ('existing', 'Sources/Interviews/manually-renamed.md'))
+                self.assertEqual(renamed.read_bytes(), before)
+                self.assertFalse(self.note.exists())
+                row = next(row for row in self.registry.read_text(encoding='utf-8').splitlines()
+                           if '[[Sources/Interviews/manually-renamed]]' in row)
+                self.assertIn(f'| {title} |', row)
+                self.assertIn('| Granola |', row)
+
+    def test_indented_frontmatter_preserves_root_fields_and_ignores_nested_keys(self) -> None:
+        self.ingest()
+        title = 'Reviewer\'s "Lab Notes"'
+        edited = '\n'.join([
+            '---', '# Unindented comment before the mapping.', '',
+            '  type: source-interview',
+            '  source_provider: "granola"',
+            f"  granola_meeting_id: '{MEETING_ID}'",
+            """  title: 'Reviewer''s "Lab Notes"'""",
+            '  details:',
+            f'    granola_meeting_id: {SECOND_ID}',
+            '    source_provider: nested',
+            '    title: Nested title',
+            '---', '', 'User-authored note body.', '',
+        ])
+        self.note.write_text(edited, encoding='utf-8')
+        before = self.note.read_bytes()
+        decoy = self.note.parent / 'nested-metadata.md'
+        decoy.write_text(
+            f'---\n  details:\n    source_provider: granola\n    granola_meeting_id: {MEETING_ID}\n---\n',
+            encoding='utf-8',
+        )
+
+        result = self.ingest(title='Remote title')
+        self.assertEqual((result['status'], result['note']), ('existing', self.note.relative_to(self.root).as_posix()))
+        self.assertEqual(self.note.read_bytes(), before)
+        self.registry.unlink()
+        self.kb('sync')
+        row = next(row for row in self.registry.read_text(encoding='utf-8').splitlines() if MEETING_ID in row)
+        self.assertIn(f'| {title} |', row)
+        self.assertIn('| Granola |', row)
+
+    def test_rebuilding_registry_recovers_all_meeting_titles_and_origins(self) -> None:
+        titles = {MEETING_ID: 'Fixture Atlas review', SECOND_ID: 'Fixture seminar'}
+        for meeting_id, title in titles.items():
+            self.ingest(meeting_id=meeting_id, title=title)
+        for action in ('sync', 'import'):
+            with self.subTest(action=action):
+                self.registry.write_bytes(b'')
+                if action == 'sync':
+                    self.kb('sync')
+                else:
+                    self.assertEqual(self.ingest()['status'], 'existing')
+                rows = self.registry.read_text(encoding='utf-8').splitlines()
+                for meeting_id, title in titles.items():
+                    row = next(row for row in rows if meeting_id in row)
+                    self.assertIn(f'| {title} |', row)
+                    self.assertIn('| Granola |', row)
+
+    def test_retry_registers_a_note_in_a_custom_sources_subfolder(self) -> None:
+        self.ingest(title='Custom folder meeting')
+        moved = 'Sources/Meetings/team-review.md'
+        self.kb('note-lifecycle', '--mode', 'rename', '--note', self.note.relative_to(self.root).as_posix(), '--dest', moved)
+        self.registry.unlink()
+        result = self.ingest()
+        self.assertEqual((result['status'], result['note']), ('existing', moved))
+        link = '[[Sources/Meetings/team-review]]'
+        self.assertIn(link, self.index.read_text(encoding='utf-8'))
+        row = next(row for row in self.registry.read_text(encoding='utf-8').splitlines() if link in row)
+        self.assertIn('| interview | Custom folder meeting |', row)
+        self.assertIn('| Granola |', row)
+
     def test_concurrent_imports_keep_both_meetings_and_deduplicate(self) -> None:
         with ThreadPoolExecutor(max_workers=3) as executor:
             results = list(executor.map(lambda uid: self.ingest(meeting_id=uid),
@@ -183,6 +299,83 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertCountEqual([item['status'] for item in results], ['created', 'existing', 'created'])
         self.assertEqual(len(list(self.note.parent.glob('*.md'))), 2)
         self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 2)
+
+    def test_concurrent_sync_and_import_preserve_registry_and_index(self) -> None:
+        paper = self.root / 'Sources/Papers/fixture.md'
+        paper.write_text('# Fixture paper\n', encoding='utf-8')
+        meeting_file = self.repo / 'fixture-meeting.json'
+        meeting_file.write_text(json.dumps(self.meeting()), encoding='utf-8')
+        pause_sync = """
+import sys
+from pathlib import Path
+
+script, cwd = sys.argv[1:]
+sys.path.insert(0, str(Path(script).parent))
+import project_kb
+
+scan = project_kb.common.scan_canonical_relpaths
+
+def pause_after_scan(root):
+    snapshot = scan(root)
+    print('snapshot', flush=True)
+    if sys.stdin.readline().strip() != 'resume':
+        raise SystemExit('sync was not released')
+    return snapshot
+
+project_kb.common.scan_canonical_relpaths = pause_after_scan
+sys.argv = [script, 'sync', '--cwd', cwd]
+project_kb.main()
+"""
+        notify_import = """
+import sys
+from pathlib import Path
+
+script, cwd, meeting = sys.argv[1:]
+sys.path.insert(0, str(Path(script).parent))
+import ingest_granola
+
+ingest = ingest_granola.ingest_meeting
+
+def report_started(binding, payload):
+    print('importing', flush=True)
+    return ingest(binding, payload)
+
+ingest_granola.ingest_meeting = report_started
+sys.argv = [script, '--cwd', cwd, '--input', meeting]
+ingest_granola.main()
+"""
+
+        @contextmanager
+        def worker(code: str, script: Path, *args: Path):
+            command = [sys.executable, '-B', '-c', code, str(script), str(self.repo), *map(str, args)]
+            with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE, text=True, encoding='utf-8') as process:
+                try:
+                    yield process
+                finally:
+                    if process.poll() is None:
+                        process.kill()
+
+        with worker(pause_sync, KB_HELPER) as syncing:
+            self.assertEqual(syncing.stdout.readline().strip(), 'snapshot')
+            with worker(notify_import, GRANOLA_HELPER, meeting_file) as importing:
+                try:
+                    self.assertEqual(importing.stdout.readline().strip(), 'importing')
+                    with self.assertRaises(subprocess.TimeoutExpired):
+                        importing.wait(timeout=0.5)
+                finally:
+                    _, sync_error = syncing.communicate(input='resume\n', timeout=10)
+                import_output, import_error = importing.communicate(timeout=10)
+                self.assertEqual(syncing.returncode, 0, sync_error)
+                self.assertEqual(importing.returncode, 0, import_error)
+                self.assertEqual(json.loads(import_output)['status'], 'created')
+
+        self.assertTrue(self.note.is_file())
+        registry = self.registry.read_text(encoding='utf-8')
+        index = self.index.read_text(encoding='utf-8')
+        for link in ('[[Sources/Papers/fixture]]', f'[[Sources/Interviews/{self.note.stem}]]'):
+            self.assertIn(link, registry)
+            self.assertIn(link, index)
 
     def test_invalid_input_rejects_writes(self) -> None:
         for override in (
