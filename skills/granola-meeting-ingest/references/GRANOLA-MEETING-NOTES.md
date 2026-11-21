@@ -3,6 +3,8 @@
 Use this workflow when the user selects one meeting and asks to save a research
 discussion in their project knowledge base.
 
+## Read and summarize the meeting
+
 1. Resolve the current repo's Obsidian binding with `project_kb.py detect` or
    `project_kb.py status`. If there is no binding, use
    `obsidian-project-kb-core` to bind the repo to the intended vault.
@@ -18,6 +20,8 @@ discussion in their project knowledge base.
 4. Pass the structured summary to the installed KB helper. Use the meeting
    UUID returned by the connector, including when the meeting was selected by
    a public note link.
+
+## Import the summary
 
 ```json
 {
@@ -51,10 +55,58 @@ For a repository checkout, run
 helper. Use `--input -` for standard input, or `--project-id` when selecting a
 specific registered project.
 
-The helper writes `Sources/Interviews/granola-<meeting UUID>.md` and adds it to
-the vault registry and index. It reports the project ID, note path and status.
+## Obsidian directory and note format
+
+Use the project root from the binding. The default scaffold stores it under
+`Research/<project-slug>/` in the vault. The helper writes
+`Sources/Interviews/granola-<meeting UUID>.md` relative to that project root.
+Each meeting UUID identifies one note. Its title appears inside the note.
+
+The helper adds the note to `_system/registry.md` and `02-Index.md`. It
+returns the project ID, the relative note path, and the import status.
 A repeat import keeps any edits to the existing note and restores its registry
 and index links if needed. An archived import stays archived.
+
+The example JSON above produces this Markdown in an English project. The
+project's note language controls the section headings.
+
+```markdown
+---
+type: source-interview
+source_provider: granola
+granola_meeting_id: a5c6d001-fd66-4e9c-b002-010203040506
+source_kind: notes-and-transcript
+title: "Lab meeting - baseline experiment"
+meeting_date: 2026-11-21
+---
+
+# Lab meeting - baseline experiment
+
+## Participants
+
+- Researcher A
+- Researcher B
+
+## Summary
+
+- The baseline experiment needs the same evaluation split as the proposed method.
+
+## Decisions
+
+- Use the existing evaluation split for the baseline.
+
+## Action items
+
+- [ ] Prepare the baseline configuration (Researcher A, Due date unspecified)
+
+## Open questions
+
+- How many seeds should the main table report?
+```
+
+When the input includes a source URL, the helper records it in the metadata
+and adds a link near the title. Empty sections use the project's equivalent
+of “None recorded.”
 
 A meeting note is a project source. Use the normal evidence workflow when a
 claim from a discussion is needed in a paper or a durable knowledge note.

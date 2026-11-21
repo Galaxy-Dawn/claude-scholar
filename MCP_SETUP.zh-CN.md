@@ -236,10 +236,10 @@ codex mcp add granola --url https://mcp.granola.ai/mcp
 codex mcp login granola
 ```
 
-在已绑定 Obsidian 的项目中，给 `$obsidian-source-ingestion` 一场会议的
+在已绑定 Obsidian 的项目中，给 `$granola-meeting-ingest` 一场会议的
 链接，请它整理已定事项、待办和未决问题。笔记进入该项目的
 `Sources/Interviews/`。具体输入和重复导入行为见
-[会议导入说明](./skills/obsidian-source-ingestion/references/GRANOLA-MEETING-NOTES.md)。
+[会议导入说明](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)。
 
 ## 验证
 

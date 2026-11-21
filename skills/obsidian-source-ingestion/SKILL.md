@@ -26,10 +26,9 @@ Use this skill when external material should become a project-local source note.
 
 ## Granola meetings
 
-For a selected meeting, use the existing Granola connector or a local export
-provided by the user. Follow [Granola meeting ingestion](references/GRANOLA-MEETING-NOTES.md)
-to create a source note with decisions, actions and open questions in the bound
-project. Use the Granola meeting UUID to find an existing import.
+For a selected Granola meeting, use
+[`granola-meeting-ingest`](../granola-meeting-ingest/SKILL.md) to write its
+discussion, decisions, and action items into the bound project.
 
 ## Read next
 

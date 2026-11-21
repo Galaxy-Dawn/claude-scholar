@@ -241,8 +241,8 @@ codex mcp add granola --url https://mcp.granola.ai/mcp
 codex mcp login granola
 ```
 
-In a repo bound to Obsidian, ask `$obsidian-source-ingestion` to import a
-selected Granola meeting. See the [meeting workflow](./skills/obsidian-source-ingestion/references/GRANOLA-MEETING-NOTES.md)
+In a repo bound to Obsidian, ask `$granola-meeting-ingest` to import a
+selected Granola meeting. See the [meeting workflow](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
 for the input, source-note location and repeat-import behavior.
 
 ## Verification

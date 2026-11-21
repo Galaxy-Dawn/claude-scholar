@@ -240,8 +240,8 @@ codex mcp login granola
 ```
 
 Obsidian にバインドしたプロジェクトで、対象の会議リンクを
-`$obsidian-source-ingestion` に指定します。入力形式と再インポートの
-動作は [会議インポート手順](./skills/obsidian-source-ingestion/references/GRANOLA-MEETING-NOTES.md)
+`$granola-meeting-ingest` に指定します。入力形式と再インポートの
+動作は [会議インポート手順](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
 を参照してください。
 
 ## 検証

@@ -120,6 +120,7 @@ Claude Scholar 当前尤其适合：
 - （可选）Python + [uv](https://docs.astral.sh/uv/) 用于 Python 开发
 - （可选）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) 用于文献工作流
 - （可选）[Obsidian](https://obsidian.md/) 用于项目知识库工作流
+- （可选）[Granola](./MCP_SETUP.zh-CN.md#granola-会议笔记可选) 用于会议复盘，并把讨论内容整理到 Obsidian
 
 ### 选项 1：完整安装（推荐）
 
