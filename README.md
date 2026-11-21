@@ -162,6 +162,20 @@ The uninstaller removes only files and config sections recorded in that install 
 
 **Windows**: please use Git Bash or WSL to run the installer.
 
+### Check an existing installation
+
+Run the installed doctor from a research repository:
+
+```bash
+python3 ~/.codex/scripts/doctor.py --cwd .
+```
+
+You can also run `python3 scripts/doctor.py` from a checkout. The doctor reads
+the installation receipt, expected files, local MCP configuration and Obsidian
+binding. Use `--json` for structured output or `--codex-home` for a custom
+Codex directory. It reports the source commit recorded by new installations.
+The copy you run uses its matching KB helper and reads the CLI's MCP registry.
+
 ### Option 2: Minimal Installation
 
 Install only a small research-focused subset:

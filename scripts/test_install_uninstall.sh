@@ -42,6 +42,8 @@ test_roundtrip_existing_config() {
   test -f "$home/.codex/skills/research-ideation/references/research-contract.md"
   test -f "$home/.codex/skills/post-acceptance/references/xquik-promotion.md"
   test -f "$home/.codex/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
+  python3 -B "$home/.codex/scripts/doctor.py" --codex-home "$home/.codex" --cwd "$home" --json |
+    python3 -c 'import json, sys; d = json.load(sys.stdin); assert d["installation"]["status"] == "installed"'
   for agent in paper-miner literature-reviewer kaggle-miner code-reviewer rebuttal-writer tdd-guide; do
     test -f "$home/.codex/agents/$agent.toml"
     test ! -f "$home/.codex/agents/$agent/config.toml"

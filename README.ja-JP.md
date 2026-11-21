@@ -162,6 +162,19 @@ bash scripts/uninstall.sh
 
 **Windows**：インストーラーは Git Bash / WSL から実行してください。
 
+### インストール状態を確認する
+
+研究リポジトリから実行します。
+
+```bash
+python3 ~/.codex/scripts/doctor.py --cwd .
+```
+
+ソースのチェックアウトからは `python3 scripts/doctor.py` を実行します。
+インストール情報、構成ファイル、ローカル MCP 設定、Obsidian のバインドを確認します。
+`--json` は構造化出力、`--codex-home` はカスタムディレクトリを指定します。
+新規インストールではソースのコミットも記録します。
+
 ### オプション 2：最小インストール
 
 研究ワークフローの小さめのサブセットだけを導入します。

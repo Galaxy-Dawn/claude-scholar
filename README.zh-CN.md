@@ -162,6 +162,19 @@ bash scripts/uninstall.sh
 
 **Windows**：请使用 Git Bash / WSL 运行安装脚本。
 
+### 检查安装状态
+
+在科研项目目录中运行：
+
+```bash
+python3 ~/.codex/scripts/doctor.py --cwd .
+```
+
+也可以在源码目录运行 `python3 scripts/doctor.py`。命令检查安装清单、
+组件文件、本机 MCP 配置和 Obsidian 绑定。`--json` 输出结构化结果，
+`--codex-home` 指定自定义目录。新安装会记录源码提交。检查使用当前
+这份工具配套的 KB 脚本和 CLI 的 MCP 配置。
+
 ### 选项 2：最小化安装
 
 只安装较小的一组研究工作流子集：
