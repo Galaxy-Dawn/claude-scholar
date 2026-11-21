@@ -491,4 +491,7 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+    # Piped JSON may contain Unicode vault paths on a Windows legacy code page.
+    if not sys.stdout.isatty():
+        sys.stdout.reconfigure(encoding='utf-8')
     main()

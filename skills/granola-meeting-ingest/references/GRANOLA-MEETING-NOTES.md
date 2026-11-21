@@ -64,7 +64,8 @@ python3 ~/.codex/skills/granola-meeting-ingest/scripts/ingest_granola.py \
 For a repository checkout, run
 `skills/granola-meeting-ingest/scripts/ingest_granola.py` in place of the
 installed script. Use `--input -` for standard input, or `--project-id` when
-selecting a specific registered project.
+selecting a specific registered project. Pass JSON as UTF-8 when piping it to
+the helper. The helper returns UTF-8 JSON, including non-ASCII note paths.
 
 ## Obsidian directory and note format
 

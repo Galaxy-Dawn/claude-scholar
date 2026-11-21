@@ -231,7 +231,7 @@ def main() -> None:
 
     try:
         if args.input == '-':
-            meeting = json.load(sys.stdin)
+            meeting = json.load(sys.stdin.buffer)
         else:
             with Path(args.input).expanduser().open(encoding='utf-8') as stream:
                 meeting = json.load(stream)
@@ -240,7 +240,8 @@ def main() -> None:
         result = ingest_meeting(binding, meeting)
     except (OSError, ValueError) as exc:
         raise SystemExit(f'Granola import failed: {exc}') from exc
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    output = json.dumps(result, ensure_ascii=False, indent=2)
+    sys.stdout.buffer.write((output + '\n').encode('utf-8'))
 
 
 if __name__ == '__main__':

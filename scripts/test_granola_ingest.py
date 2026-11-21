@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
+from unittest.mock import patch
 
 
 SKILLS = Path(__file__).resolve().parents[1] / 'skills'
@@ -152,6 +154,17 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertIn(f'title: {json.dumps(topic, ensure_ascii=False)}', content)
         self.assertIn('## 已定事项\n\n- 未记录', content)
         self.assertIn('## 待办\n\n- 未记录', content)
+
+    def test_utf8_json_pipes_on_a_legacy_windows_code_page(self) -> None:
+        payload = json.dumps(self.meeting(), ensure_ascii=False)
+        with patch.dict(os.environ, {'PYTHONIOENCODING': 'cp1252'}):
+            saved = json.loads(self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=payload).stdout)
+            self.assertEqual(saved['note'], self.note.relative_to(self.root).as_posix())
+            renamed = 'Sources/Interviews/手动改名.md'
+            moved = json.loads(self.kb('note-lifecycle', '--mode', 'rename', '--note', saved['note'],
+                                       '--dest', renamed).stdout)
+            self.assertEqual((moved['from'], moved['to']), (saved['note'], renamed))
+            self.assertEqual(self.ingest()['note'], renamed)
 
     def test_retry_preserves_edits_and_repairs_registry(self) -> None:
         title = 'Pilot "A" \\ branch'
