@@ -296,12 +296,12 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 
 ### Granola
 
-1. **初回の設定。** フルインストールには `granola-meeting-ingest` が含まれます。Codex から Granola に接続して認証し、研究プロジェクトに Obsidian の保管庫を紐付けます。設定済みの接続と保管庫をそのまま使えます。[Granola の接続](./MCP_SETUP.ja-JP.md#granola-の会議ノートオプション) · [保管庫の設定](./OBSIDIAN_SETUP.ja-JP.md)
+1. **プロジェクトと保管庫を選ぶ。** フルインストールには `granola-meeting-ingest` が含まれます。Codex から Granola に接続し、研究プロジェクトを開いて、普段 Obsidian で使っている保管庫を指定します。Codex は紐付けられたフォルダとプロジェクトを確認し、候補が複数あればどれを使うか尋ねます。[Granola の接続](./MCP_SETUP.ja-JP.md#granola-の会議ノートオプション) · [保管庫の設定](./OBSIDIAN_SETUP.ja-JP.md)
 2. **会議を記録する。** Granola で記録を開始し、終了後にノートができたことを確認します。会議、インタビュー、講演のノートがすでにあれば、そのまま使えます。[Granola での記録方法](https://docs.granola.ai/help-center/taking-notes/transcription)
 3. **取り込みを依頼する。** 紐付けたプロジェクトで、ノートのリンクを添えて「この Granola の会議をプロジェクトの Obsidian に保存して」と Codex に伝えます。会議名と日付でも指定できます。複数の候補がある場合は、どの会議かを確認します。本文はコネクターが読み取ります。
-4. **ノートを開く。** Codex が内容に沿ったタイトルを付け、要約、決定事項、今後の作業をまとめて保存し、パスを返します。プロジェクトの `02-Index.md` からも開けます。同じ会議を再度取り込んでも、手で加えた編集は残ります。
+4. **ノートを開く。** Codex は要約、決定事項、今後の作業を保存し、保管庫のフォルダ、保管庫内のパス、Obsidian で開くリンクを返します。標準の保存先は `Research/<project-slug>/Sources/Interviews/` です。プロジェクトの `02-Index.md` からも開けます。デスクトップ版に保管庫が未登録なら、「保管庫を管理」から返されたフォルダを保管庫として開き、リンクを選んでください。
 
-保存先は `Sources/Interviews/Granola-<YY-MM-DD>-<題名>-<会議 UUID>.md` です。コネクターが使えない場合は、ローカルに書き出したノートと会議 UUID を渡します。[取り込み手順とノートの例](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
+ノートは紐付けたプロジェクトの `Sources/Interviews/` に保存されます。ファイル名の例は `Granola-26-11-21-実験の振り返り.md` です。同名のファイルがある場合、新しい会議には `-2`、`-3` と順に番号が付きます。再度取り込むと、ノートのプロパティにある会議 UUID を使って既存のノートを開けるパスを返します。コネクターが使えない場合は、ローカルに書き出したノートと会議 UUID を渡します。[取り込み手順とノートの例](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
 
 ### Xquik（任意）
 

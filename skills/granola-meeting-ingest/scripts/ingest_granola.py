@@ -9,7 +9,7 @@ import unicodedata
 from datetime import date
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import quote, urlsplit, urlunsplit
 from uuid import UUID
 
 KB_SCRIPTS = Path(__file__).resolve().parents[2] / 'obsidian-project-kb-core' / 'scripts'
@@ -62,16 +62,35 @@ def note_url(value: Any) -> str | None:
     return urlunsplit(('https', 'notes.granola.ai', url.path, '', ''))
 
 
-def meeting_filename(meeting_id: str, meeting_date: str | None, title: str) -> str:
+def meeting_filename(meeting_date: str | None, title: str) -> str:
     topic = ''.join(
         char if char.isalnum() or unicodedata.category(char).startswith('M') else '-'
         for char in unicodedata.normalize('NFC', title)
     )
     topic = re.sub(r'-+', '-', topic).strip('-')
-    # Leave space for the date and full UUID even when the title is multibyte.
     topic = topic.encode('utf-8')[:96].decode('utf-8', errors='ignore').rstrip('-') or 'note'
     short_date = meeting_date[2:] if meeting_date else 'undated'
-    return f'Granola-{short_date}-{topic}-{meeting_id}.md'
+    return f'Granola-{short_date}-{topic}.md'
+
+
+def create_meeting_note(path: Path, content: bytes) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    stem = path.stem
+    number = 1
+    while True:
+        try:
+            stream = path.open('xb')
+            break
+        except FileExistsError:
+            number += 1
+            path = path.with_name(f'{stem}-{number}.md')
+    try:
+        with stream:
+            stream.write(content)
+    except OSError:
+        path.unlink(missing_ok=True)
+        raise
+    return path
 
 
 def render_meeting(meeting: Any, binding: common.Binding) -> tuple[str, str, str | None, str]:
@@ -192,31 +211,30 @@ def saved_title(note: Path, fallback: str) -> str:
     return title
 
 
+def import_target(binding: common.Binding) -> dict[str, str]:
+    if binding.status != 'active' or not binding.project_root.is_dir():
+        raise ValueError('Granola import requires an active, existing Obsidian project binding')
+    return {
+        'project_id': binding.project_id, 'vault_path': str(binding.vault_path),
+        'project_folder': binding.project_root.relative_to(binding.vault_path).as_posix(),
+    }
+
+
 def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
+    target = import_target(binding)
     meeting_id, title, meeting_date, content = render_meeting(meeting, binding)
     note_bytes = content.encode('utf-8')
     root = binding.project_root
-    if binding.status != 'active' or not root.is_dir():
-        raise ValueError('Granola import requires an active, existing Obsidian project binding')
-    destination = root / 'Sources' / 'Interviews' / meeting_filename(meeting_id, meeting_date, title)
+    interviews = root / 'Sources' / 'Interviews'
     registry = common.registry_path(root)
-    for path in (destination, registry, root / '02-Index.md'):
+    for path in (interviews, registry, root / '02-Index.md'):
         if not path.resolve().is_relative_to(root):
             raise ValueError('the import path must stay inside the bound Obsidian project')
     with common.project_write_lock(root):
         existing = existing_meeting(root, meeting_id)
         if existing is None:
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            # Exclusive creation preserves an unrelated note at the canonical path.
-            stream = destination.open('xb')
-            try:
-                with stream:
-                    stream.write(note_bytes)
-            except OSError:
-                destination.unlink(missing_ok=True)
-                raise
+            note = create_meeting_note(interviews / meeting_filename(meeting_date, title), note_bytes)
             status = 'created'
-            note = destination
         else:
             note = existing
             status = 'archived' if note.is_relative_to(root / 'Archive') else 'existing'
@@ -234,38 +252,61 @@ def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
             if not result['updated']:
                 raise ValueError(f'the existing note cannot be registered at {relative}')
             common.update_index(root)
-        return {'status': status, 'project_id': binding.project_id, 'note': relative}
+        return {
+            **target, 'status': status, 'note': relative,
+            'vault_note': note.relative_to(binding.vault_path).as_posix(),
+            'obsidian_uri': 'obsidian://open?path=' + quote(str(note), safe=''),
+        }
 
 
 def resolve_granola_binding(repo_root: Path, project_id: str | None) -> common.Binding:
     # Explicit Granola requests may select a preview project alongside the standard binding.
     registry = common.binding_registry_path(repo_root)
     preview = repo_root / '.codex' / 'project-memory' / 'registry.yaml'
-    if project_id is not None and registry != preview and preview.is_file():
-        registered = common.load_binding_registry(registry).get('projects') or {}
-        if project_id not in registered:
-            preview_projects = common.load_binding_registry(preview).get('projects') or {}
-            if project_id in preview_projects:
-                return common.resolve_binding(repo_root, project_id, registry_file=preview)
-    return common.resolve_binding(repo_root, project_id)
+    registered = common.load_binding_registry(registry).get('projects') or {}
+    if project_id is not None and project_id not in registered and registry != preview and preview.is_file():
+        preview_projects = common.load_binding_registry(preview).get('projects') or {}
+        if project_id in preview_projects:
+            return common.resolve_binding(repo_root, project_id, registry_file=preview)
+    if not registered:
+        raise ValueError('Bind the project to the intended existing Obsidian vault before importing')
+    if project_id is None:
+        matches = [key for key, entry in registered.items()
+                   if any(Path(p).expanduser().resolve() == repo_root for p in entry.get('repo_roots') or [])]
+        if len(matches) == 1:
+            project_id = matches[0]
+        elif len(registered) > 1:
+            raise ValueError('Choose a binding with --project-id: ' + ', '.join(sorted(matches or registered)))
+        elif next(iter(registered.values())).get('repo_roots'):
+            raise ValueError('The binding belongs to another repository. Confirm its vault and project before '
+                             'selecting it with --project-id.')
+    return common.resolve_binding(repo_root, project_id, registry_file=registry)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description='Import a summarized Granola meeting into a bound Obsidian project.')
     parser.add_argument('--cwd', type=Path, default=Path.cwd(), help='Repository bound to the Obsidian project.')
     parser.add_argument('--project-id', help='Select a specific registered project.')
-    parser.add_argument('--input', required=True, help='Meeting JSON file, or - for standard input.')
+    parser.add_argument('--expect-vault', type=Path, help='Require this vault folder to match the project binding.')
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('--show-target', action='store_true', help='Show the bound vault and project without writing.')
+    action.add_argument('--input', help='Meeting JSON file, or - for standard input.')
     args = parser.parse_args()
 
     try:
-        if args.input == '-':
-            meeting = json.load(sys.stdin.buffer)
-        else:
-            with Path(args.input).expanduser().open('rb') as stream:
-                meeting = json.load(stream)
         repo_root = common.find_repo_root(args.cwd.expanduser().resolve())
         binding = resolve_granola_binding(repo_root, args.project_id)
-        result = ingest_meeting(binding, meeting)
+        if args.expect_vault is not None and not args.expect_vault.expanduser().samefile(binding.vault_path):
+            raise ValueError(f'Bound vault {binding.vault_path} does not match the requested vault {args.expect_vault}')
+        if args.show_target:
+            result = import_target(binding)
+        else:
+            if args.input == '-':
+                meeting = json.load(sys.stdin.buffer)
+            else:
+                with Path(args.input).expanduser().open('rb') as stream:
+                    meeting = json.load(stream)
+            result = ingest_meeting(binding, meeting)
     except (OSError, ValueError) as exc:
         raise SystemExit(f'Granola import failed: {exc}') from exc
     output = json.dumps(result, ensure_ascii=False, indent=2)

@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlsplit
 
 
 SKILLS = Path(__file__).resolve().parents[1] / 'skills'
@@ -33,7 +34,7 @@ class GranolaIngestTest(unittest.TestCase):
         self.kb('bootstrap', '--vault-path', str(self.vault), '--project-name', 'Granola Demo',
                 '--note-language', 'zh-CN')
         self.root = self.vault / 'Research' / 'granola-demo'
-        self.note = self.root / 'Sources/Interviews' / f'Granola-26-11-21-组会-消融实验-{MEETING_ID}.md'
+        self.note = self.root / 'Sources/Interviews/Granola-26-11-21-组会-消融实验.md'
         self.registry = self.root / '_system/registry.md'
         self.index = self.root / '02-Index.md'
 
@@ -80,9 +81,15 @@ class GranolaIngestTest(unittest.TestCase):
         )
         payload.write_text(json.dumps(fixture, ensure_ascii=False), encoding='utf-8')
         result = json.loads(self.run_cli(GRANOLA_HELPER, '--input', str(payload)).stdout)
-        self.assertEqual(result, {
-            'status': 'created', 'project_id': 'granola-demo', 'note': self.note.relative_to(self.root).as_posix(),
-        })
+        self.assertEqual(result['status'], 'created')
+        self.assertEqual(result['project_id'], 'granola-demo')
+        self.assertEqual(result['note'], self.note.relative_to(self.root).as_posix())
+        self.assertEqual(result['vault_path'], str(self.vault.resolve()))
+        self.assertEqual(result['vault_note'], self.note.relative_to(self.vault).as_posix())
+        uri = urlsplit(result['obsidian_uri'])
+        self.assertEqual((uri.scheme, uri.netloc), ('obsidian', 'open'))
+        self.assertEqual(parse_qs(uri.query), {'path': [str(self.note.resolve())]})
+        self.assertNotIn(' ', result['obsidian_uri'])
         note = self.note.read_text(encoding='utf-8')
         self.assertIn('type: source\nsource_type: interview\nproject: "granola-demo"\nstatus: active\n', note)
         self.assertIn(f'granola_meeting_id: {MEETING_ID}', note)
@@ -118,8 +125,9 @@ class GranolaIngestTest(unittest.TestCase):
         result = json.loads(self.run_cli(GRANOLA_HELPER, '--project-id', binding['project_id'],
                                          '--input', '-', stdin=examples['json']).stdout)
         self.assertEqual(result['status'], 'created')
-        expected_name = f'Granola-26-11-21-Lab-meeting-baseline-experiment-{MEETING_ID}.md'
+        expected_name = 'Granola-26-11-21-Lab-meeting-baseline-experiment.md'
         self.assertEqual(result['note'], 'Sources/Interviews/' + expected_name)
+        self.assertIn(f'`{expected_name}`', guide.read_text(encoding='utf-8'))
         saved = Path(binding['project_root']) / result['note']
         note = saved.read_text(encoding='utf-8')
         timestamp_pattern = r'^(created|updated): (.+)$'
@@ -149,7 +157,7 @@ class GranolaIngestTest(unittest.TestCase):
         retry = self.ingest(title='Revised title', meeting_date='2026-11-22')
         self.assertEqual((retry['status'], retry['note']), ('existing', f'Sources/Interviews/{legacy.name}'))
         new = self.ingest(meeting_id=SECOND_ID, title='Revised title')
-        self.assertEqual(new['note'], f'Sources/Interviews/Granola-26-11-21-Revised-title-{SECOND_ID}.md')
+        self.assertEqual(new['note'], 'Sources/Interviews/Granola-26-11-21-Revised-title.md')
         self.kb('sync')
         self.assertEqual({path: path.read_bytes() for path in before}, before)
         self.assertFalse(self.note.exists())
@@ -163,7 +171,7 @@ class GranolaIngestTest(unittest.TestCase):
         payload = self.meeting(title='!?…')
         del payload['meeting_date']
         result = json.loads(self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=json.dumps(payload)).stdout)
-        expected = f'Sources/Interviews/Granola-undated-note-{MEETING_ID}.md'
+        expected = 'Sources/Interviews/Granola-undated-note.md'
         self.assertEqual(result['note'], expected)
         retry = self.ingest(title='Date and topic now known')
         self.assertEqual((retry['status'], retry['note']), ('existing', expected))
@@ -175,8 +183,8 @@ class GranolaIngestTest(unittest.TestCase):
         path = self.root / result['note']
         self.assertEqual(path.parent, self.note.parent)
         self.assertTrue(path.name.startswith('Granola-26-11-21-讲座-研究方法-训练-复习-'))
-        self.assertTrue(path.name.endswith(f'-{MEETING_ID}.md'))
-        filename_topic = path.stem.removeprefix('Granola-26-11-21-').removesuffix(f'-{MEETING_ID}')
+        self.assertNotIn(MEETING_ID, path.name)
+        filename_topic = path.stem.removeprefix('Granola-26-11-21-')
         self.assertLessEqual(len(filename_topic.encode('utf-8')), 96)
         link = f'[[Sources/Interviews/{path.stem}]]'
         self.assertIn(link, self.index.read_text(encoding='utf-8'))
@@ -379,14 +387,17 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertEqual(self.note.read_bytes(), before)
         self.registry.unlink()
         self.kb('sync')
-        row = next(row for row in self.registry.read_text(encoding='utf-8').splitlines() if MEETING_ID in row)
+        link = f'[[Sources/Interviews/{self.note.stem}]]'
+        row = next(row for row in self.registry.read_text(encoding='utf-8').splitlines() if link in row)
         self.assertIn(f'| {title} |', row)
         self.assertIn('| Granola |', row)
 
     def test_rebuilding_registry_recovers_all_meeting_titles_and_origins(self) -> None:
         titles = {MEETING_ID: 'Fixture Atlas review', SECOND_ID: 'Fixture seminar'}
+        links = {}
         for meeting_id, title in titles.items():
-            self.ingest(meeting_id=meeting_id, title=title)
+            note_path = self.ingest(meeting_id=meeting_id, title=title)['note']
+            links[meeting_id] = f'[[{note_path.removesuffix(".md")}]]'
         for action in ('sync', 'import'):
             with self.subTest(action=action):
                 self.registry.write_bytes(b'')
@@ -396,7 +407,7 @@ class GranolaIngestTest(unittest.TestCase):
                     self.assertEqual(self.ingest()['status'], 'existing')
                 rows = self.registry.read_text(encoding='utf-8').splitlines()
                 for meeting_id, title in titles.items():
-                    row = next(row for row in rows if meeting_id in row)
+                    row = next(row for row in rows if links[meeting_id] in row)
                     self.assertIn(f'| {title} |', row)
                     self.assertIn('| Granola |', row)
 
@@ -431,9 +442,15 @@ class GranolaIngestTest(unittest.TestCase):
             results = list(executor.map(lambda uid: self.ingest(meeting_id=uid),
                                         [MEETING_ID, MEETING_ID, SECOND_ID]))
         self.assertCountEqual([item['status'] for item in results], ['created', 'existing', 'created'])
-        self.assertEqual({item['note'] for item in results}, {
-            f'Sources/Interviews/Granola-26-11-21-组会-消融实验-{uid}.md' for uid in (MEETING_ID, SECOND_ID)
-        })
+        first, repeated, second = [item['note'] for item in results]
+        self.assertEqual(first, repeated)
+        self.assertEqual({first, second}, {self.note.relative_to(self.root).as_posix(),
+                                         'Sources/Interviews/Granola-26-11-21-组会-消融实验-2.md'})
+        for uid, path in ((MEETING_ID, first), (SECOND_ID, second)):
+            self.assertIn(f'granola_meeting_id: {uid}', (self.root / path).read_text(encoding='utf-8'))
+            self.assertEqual(self.ingest(meeting_id=uid, title='Changed title')['note'], path)
+            for listing in (self.registry, self.index):
+                self.assertEqual(listing.read_text(encoding='utf-8').count(f'[[{path.removesuffix(".md")}]]'), 1)
         self.assertEqual(len(list(self.note.parent.glob('*.md'))), 2)
         self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 2)
 
@@ -538,9 +555,84 @@ ingest_granola.main()
 
     def test_import_does_not_overwrite_unrelated_notes(self) -> None:
         self.note.write_text('# Existing note\n', encoding='utf-8')
-        failed = self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=json.dumps(self.meeting()), check=False)
-        self.assertNotEqual(failed.returncode, 0)
+        occupied = self.note.with_stem(self.note.stem + '-2')
+        occupied.write_text('# Another interview\n', encoding='utf-8')
+        result = self.ingest()
+        self.assertEqual(result['status'], 'created')
+        self.assertEqual(self.root / result['note'], self.note.with_stem(self.note.stem + '-3'))
+        self.assertEqual(self.ingest()['note'], result['note'])
         self.assertEqual(self.note.read_text(encoding='utf-8'), '# Existing note\n')
+        self.assertEqual(occupied.read_text(encoding='utf-8'), '# Another interview\n')
+
+    def test_dated_uuid_note_can_be_reused_then_renamed_without_losing_edits(self) -> None:
+        legacy = self.note.with_stem(f'{self.note.stem}-{MEETING_ID}')
+        original = f'---\nsource_provider: granola\ngranola_meeting_id: {MEETING_ID}\n---\n# Group meeting\nMy edits.\n'
+        legacy.write_text(original, encoding='utf-8')
+        old_path = legacy.relative_to(self.root).as_posix()
+        self.assertEqual(self.ingest()['note'], old_path)
+        self.assertFalse(self.note.exists())
+        new_path = self.note.relative_to(self.root).as_posix()
+        self.kb('note-lifecycle', '--mode', 'rename', '--note', old_path, '--dest', new_path)
+        result = self.ingest(title='A different title on retry')
+        self.assertEqual((result['status'], result['note']), ('existing', new_path))
+        self.assertEqual(self.note.read_text(encoding='utf-8'), original)
+        for listing in (self.registry, self.index):
+            entries = listing.read_text(encoding='utf-8')
+            self.assertIn(f'[[{new_path.removesuffix(".md")}]]', entries)
+            self.assertNotIn(legacy.stem, entries)
+
+    def test_target_check_distinguishes_same_named_vaults_before_writing(self) -> None:
+        other_vault = self.repo.parent / 'Other' / self.vault.name
+        other_vault.mkdir(parents=True)
+        before = {p: p.read_bytes() for p in self.root.rglob('*.md')}
+        target = json.loads(self.run_cli(GRANOLA_HELPER, '--show-target').stdout)
+        self.assertEqual(target, {'project_id': 'granola-demo', 'vault_path': str(self.vault.resolve()),
+                                  'project_folder': 'Research/granola-demo'})
+        failed = self.run_cli(GRANOLA_HELPER, '--expect-vault', str(other_vault), '--input', '-',
+                              stdin=json.dumps(self.meeting()), check=False)
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertIn('does not match', failed.stderr)
+        self.assertEqual({p: p.read_bytes() for p in self.root.rglob('*.md')}, before)
+        self.assertEqual(list(other_vault.iterdir()), [])
+        self.assertFalse((self.vault / '.obsidian').exists())
+        saved = json.loads(self.run_cli(GRANOLA_HELPER, '--expect-vault', target['vault_path'],
+                                        '--input', '-', stdin=json.dumps(self.meeting())).stdout)
+        self.assertEqual(saved['status'], 'created')
+        self.assertEqual(saved['vault_note'], self.note.relative_to(self.vault).as_posix())
+
+    def test_ambiguous_project_requires_an_explicit_binding(self) -> None:
+        other = json.loads(self.kb('bootstrap', '--vault-path', str(self.vault),
+                                   '--project-name', 'Another project').stdout)
+        for args in (('--show-target',), ('--input', '-')):
+            rejected = self.run_cli(GRANOLA_HELPER, *args, stdin=json.dumps(self.meeting()), check=False)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn('--project-id', rejected.stderr)
+        selected = json.loads(self.run_cli(GRANOLA_HELPER, '--project-id', other['project_id'], '--show-target').stdout)
+        self.assertEqual(selected['project_folder'], 'Research/another-project')
+        self.assertFalse(self.note.exists())
+        self.assertEqual(list((Path(other['project_root']) / 'Sources/Interviews').iterdir()), [])
+
+    def test_unbound_repo_does_not_create_a_trial_vault(self) -> None:
+        self.repo = self.repo.parent / 'New repo'
+        self.repo.mkdir()
+        for args in (('--show-target',), ('--input', '-')):
+            rejected = self.run_cli(GRANOLA_HELPER, *args, stdin=json.dumps(self.meeting()), check=False)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn('existing Obsidian vault', rejected.stderr)
+        self.assertEqual(list(self.repo.iterdir()), [])
+
+    def test_copied_binding_does_not_silently_import_to_original_repo(self) -> None:
+        original_registry = self.repo / '.claude/project-memory/registry.yaml'
+        self.repo = self.repo.parent / 'Copied repo'
+        copy = self.repo / '.claude/project-memory/registry.yaml'
+        copy.parent.mkdir(parents=True)
+        copy.write_bytes(original_registry.read_bytes())
+        rejected = self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=json.dumps(self.meeting()), check=False)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn('another repository', rejected.stderr)
+        self.assertFalse(self.note.exists())
+        target = json.loads(self.run_cli(GRANOLA_HELPER, '--project-id', 'granola-demo', '--show-target').stdout)
+        self.assertEqual(target['vault_path'], str(self.vault.resolve()))
 
     def test_preview_binding_supports_standard_obsidian_commands(self) -> None:
         standard = self.repo / '.claude/project-memory'

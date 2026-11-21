@@ -9,13 +9,29 @@ source ingestion workflow.
 
 ## Read and summarize the meeting
 
-1. Use the current repo's Obsidian binding. Check it with
-   `project_kb.py detect` or `project_kb.py status`. Both commands can read
-   `.codex/project-memory/registry.yaml` from a previous preview when
-   `.claude/project-memory/registry.yaml` is absent. When both exist,
-   Granola's `--project-id` can also select a project registered only in
-   `.codex`. For a new project, use `obsidian-project-kb-core` to bind the repo
-   to the intended vault.
+1. **Resolve the destination before reading a meeting.** From the research
+   repo, run the helper with `--cwd . --show-target`. This read-only command
+   returns the vault folder (`vault_path`), project ID and vault-relative
+   project folder. An unambiguous binding to the intended project can be
+   reused immediately. If several projects match, show their locations using
+   `--project-id <id> --show-target` and ask which to use. If a binding is
+   missing, stale or conflicts with the user's chosen destination, get the
+   intended vault and project before writing. Use the existing Obsidian
+   project setup for a new binding. If a previous test left a demo vault
+   bound to the repo, confirm that destination or bind the intended vault.
+
+   If Desktop is available, compare the **full vault folder path** with the
+   vault switcher's registered locations or the output of `obsidian vaults verbose`.
+   Identically named vaults can have different paths. If the intended folder
+   is missing from that list, use **Manage vaults → Open folder as vault** on
+   the confirmed `vault_path`. Select the folder that contains `Research/`.
+   If Desktop is unavailable, use an explicitly identified or already known
+   destination and give the same folder-opening instructions with the result.
+   [Manage vaults](https://obsidian.md/help/Files%20and%20folders/Manage%20vaults)
+
+   The standard binding is `.claude/project-memory/registry.yaml`. A previous
+   preview may have a `.codex/project-memory/registry.yaml` binding. The helper
+   can also select a preview-only project with `--project-id` when both exist.
 2. Identify exactly one source using the entry point that matches the request.
    Use the equivalent search, listing and reading tools available in the current
    client. When the client cannot read the note, use the local export path.
@@ -88,31 +104,44 @@ strings. Include each field only when you have evidence for it.
 
 ```bash
 python3 ~/.codex/skills/granola-meeting-ingest/scripts/ingest_granola.py \
-  --cwd . --input -
+  --cwd . --project-id "guide-example" --expect-vault "/path/to/the/selected/vault" --input -
 ```
 
 Pass one UTF-8 summary JSON object on standard input. If using a file, keep
 it outside the repository and pass its path to `--input`. For a checkout,
 use `skills/granola-meeting-ingest/scripts/ingest_granola.py` in place of the
-installed script. Use `--project-id` when selecting a specific registered
-project. The helper returns UTF-8 JSON, including non-ASCII note paths.
+installed script. Substitute the selected project ID and vault folder in the
+command. A vault-path mismatch stops the import before writing. The helper
+returns UTF-8 JSON, including non-ASCII note paths.
 
 ## Obsidian directory and note format
 
-Use the project root from the binding. The default scaffold stores it under
-`Research/<project-slug>/` in the vault. New notes use
-`Sources/Interviews/Granola-<YY-MM-DD>-<topic>-<meeting UUID>.md`. The JSON
-example above produces `Granola-26-11-21-Lab-meeting-baseline-experiment-a5c6d001-fd66-4e9c-b002-010203040506.md`.
+Use the project root from the binding. The default scaffold stores each project
+under `Research/<project-slug>/` in the vault. The importer appends
+`Sources/Interviews/Granola-<YY-MM-DD>-<topic>.md` to that project's root.
+The JSON example above produces `Granola-26-11-21-Lab-meeting-baseline-experiment.md`.
 
-The filename uses the meeting date (`undated` when unknown) and the full
-Granola UUID. Spaces and punctuation in the title become hyphens. The topic
-keeps up to 96 UTF-8 bytes and falls back to `note` when empty. The full title
-remains in the note. Re-imports look up the UUID in the note's metadata. This
-preserves the path and edits of existing notes, including older
-`granola-<meeting UUID>.md` files. A hand-written interview without the Granola
-UUID is a separate source, even when the titles match.
+The filename uses the meeting date (`undated` when unknown) and a short topic.
+Spaces and punctuation become hyphens. The topic keeps up to 96 UTF-8 bytes
+and falls back to `note` when empty. The full title and meeting UUID stay in
+the note properties. If another note already has the desired filename, the new
+note takes the first available suffix (`-2.md`, `-3.md`, and so on).
 
-The helper returns the project ID, the note's current relative path, and a status.
+Re-imports find the saved `granola_meeting_id` even if the title or filename
+has changed. Older names such as `granola-<meeting UUID>.md` and
+`Granola-<YY-MM-DD>-<topic>-<meeting UUID>.md` still resolve to the original
+note. To shorten an existing name and update its project links, use
+`project_kb.py note-lifecycle --mode rename --note <old-path> --dest <new-path>`
+with project-relative paths and an available destination name.
+
+For delivery, give the vault folder (`vault_path`), the complete path inside it
+(`vault_note`, including the project), and the local `obsidian_uri` returned
+by the helper. The `note` field is relative to the project for existing
+scripts. The link uses the absolute file path so two vaults with the same name
+can be distinguished on this device. Opening the link requires the vault to
+be registered in Desktop. A successful write establishes that the file is on
+disk. To confirm it is visible, open the link and verify the note's title and
+path in the app. [Obsidian URI](https://obsidian.md/help/uri)
 
 | Status | What happens in the vault |
 | --- | --- |
