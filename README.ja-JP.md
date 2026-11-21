@@ -184,7 +184,9 @@ python3 ~/.codex/scripts/doctor.py --cwd . --json
 | `components_only` | 必須コンポーネントの一部または全部があり、インストール記録はありません。 |
 | `not_detected` | 指定したディレクトリにはインストール記録も必須コンポーネントも見つかりません。 |
 
-テキスト出力には不足ファイルのパスが表示されます。JSON の `installation.missing_managed_paths` はインストーラーの管理対象のうち不足しているファイルを示します。`installation.components` にはユーザーが用意した必須コンポーネントも含まれます。`present` はファイルの有無、`managed` は管理対象かどうかを示します。記録済みのソースコミット、ローカル MCP 設定、現在のプロジェクトの Obsidian バインドも表示します。MCP の状態は CLI への登録と有効化の状況を示します。
+テキスト出力には不足ファイルのパスが表示されます。JSON の `installation.missing_managed_paths` はインストーラーの管理対象のうち不足しているファイルを示します。`installation.components` にはユーザーが用意した必須コンポーネントも含まれます。`present` はファイルの有無、`managed` は管理対象かどうかを示します。記録済みのソースコミットと現在のプロジェクトの Obsidian バインドも表示します。
+
+診断コマンドは指定した Codex ディレクトリの `config.toml` を読み、Zotero と Granola の登録状況と有効・無効を表示します。プロジェクト固有の設定を含む実効値は、プロジェクト内で `codex mcp list` を実行して確認します。Python 3.11 以降は標準の TOML パーサーを使用します。以前のバージョンでは `tomli` を利用でき、未導入でもインストールとバインドの確認は可能です。
 
 ### オプション 2：最小インストール
 

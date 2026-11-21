@@ -190,7 +190,11 @@ lists missing files owned by the installer. `installation.components` also
 shows required components supplied by the user, with separate `present` and
 `managed` fields. The report includes the recorded source commit when available,
 the local MCP configuration and the current project's Obsidian binding.
-MCP status describes which servers the CLI has configured and enabled.
+The doctor reads the Zotero and Granola entries in the selected Codex directory's
+`config.toml` and reports only their presence and enabled flags. For effective
+settings that include project overrides, run `codex mcp list` from the project.
+Python 3.11+ includes the TOML reader. On earlier versions the doctor uses
+`tomli` when available and still reports installation and binding status without it.
 
 ### Option 2: Minimal Installation
 

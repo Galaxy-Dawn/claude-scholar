@@ -6,8 +6,6 @@ import argparse
 import json
 import os
 import re
-import shutil
-import subprocess
 import sys
 from pathlib import Path, PureWindowsPath
 
@@ -90,33 +88,37 @@ def installation(codex_home: Path) -> dict:
     }
 
 
-def mcp_status(codex_home: Path, cwd: Path) -> dict:
+def mcp_status(codex_home: Path) -> dict:
+    result = {'scope': 'user_config', 'servers': None}
     if not codex_home.is_dir():
-        return {'status': 'codex_home_missing', 'servers': None}
-    codex = shutil.which('codex')
-    if codex is None:
-        return {'status': 'codex_cli_missing', 'servers': None}
+        return {**result, 'status': 'codex_home_missing'}
+    config = codex_home / 'config.toml'
     try:
-        call = subprocess.run(
-            [codex, 'mcp', 'list', '--json'],
-            cwd=cwd, env={**os.environ, 'CODEX_HOME': str(codex_home)},
-            capture_output=True, text=True, encoding='utf-8', check=True, timeout=15,
-        )
-        rows = json.loads(call.stdout)
-        if not isinstance(rows, list):
-            return {'status': 'unavailable', 'servers': None}
-    except (OSError, ValueError, subprocess.SubprocessError):
-        return {'status': 'unavailable', 'servers': None}
+        with config.open('rb') as stream:
+            try:
+                import tomllib
+            except ImportError:  # Python < 3.11
+                import tomli as tomllib
+            servers = tomllib.load(stream).get('mcp_servers', {})
+    except FileNotFoundError:
+        if config.is_symlink():
+            return {**result, 'status': 'unavailable'}
+        servers = {}
+    except ImportError:
+        return {**result, 'status': 'toml_reader_missing'}
+    except (OSError, ValueError):
+        return {**result, 'status': 'unavailable'}
 
-    enabled = {
-        row.get('name'): bool(row.get('enabled', True)) for row in rows
-        if isinstance(row, dict) and row.get('name') in ('granola', 'zotero')
-    }
-    return {
-        'status': 'configured_servers_read',
-        'servers': {name: {'configured': name in enabled, 'enabled': enabled.get(name)}
-                    for name in ('zotero', 'granola')},
-    }
+    if not isinstance(servers, dict):
+        return {**result, 'status': 'unavailable'}
+    reported = {}
+    for name in ('zotero', 'granola'):
+        entry = servers.get(name, {})
+        if not isinstance(entry, dict) or not isinstance(entry.get('enabled', True), bool):
+            return {**result, 'status': 'unavailable'}
+        configured = name in servers
+        reported[name] = {'configured': configured, 'enabled': entry.get('enabled', True) if configured else None}
+    return {**result, 'status': 'configured_servers_read', 'servers': reported}
 
 
 def obsidian_binding(cwd: Path) -> dict:
@@ -124,7 +126,10 @@ def obsidian_binding(cwd: Path) -> dict:
     if not (helpers / 'kb_common.py').is_file():
         return {'status': 'helper_unavailable'}
     sys.path.insert(0, str(helpers))
-    import kb_common as kb
+    try:
+        import kb_common as kb
+    finally:
+        sys.path.pop(0)
 
     repo = kb.find_repo_root(cwd)
     registry = kb.binding_registry_path(repo)
@@ -163,7 +168,7 @@ def main() -> None:
         'client': 'codex',
         'codex_home': str(codex_home),
         'installation': installation(codex_home),
-        'mcp': mcp_status(codex_home, cwd),
+        'mcp': mcp_status(codex_home),
         'obsidian': obsidian_binding(cwd),
     }
     if args.json:
@@ -180,7 +185,7 @@ def main() -> None:
     for relative in installed['missing_managed_paths']:
         if relative not in COMPONENTS:
             print(f'  {relative}: missing')
-    print(f'Local MCP: {report["mcp"]["status"]}')
+    print(f'MCP in user config.toml: {report["mcp"]["status"]}')
     for name, status in (report['mcp']['servers'] or {}).items():
         label = 'not configured' if not status['configured'] else 'enabled' if status['enabled'] else 'disabled'
         print(f'  {name}: {label}')
@@ -188,4 +193,5 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+    sys.dont_write_bytecode = True  # Keep the installed KB helper directory read-only.
     main()

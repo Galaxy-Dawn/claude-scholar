@@ -182,7 +182,9 @@ python3 ~/.codex/scripts/doctor.py --cwd . --json
 | `components_only` | 找到核心组件，缺少整套安装记录。 |
 | `not_detected` | 指定目录中既没有安装记录，也没有检测到核心组件。 |
 
-文本报告会列出缺失文件。JSON 的 `installation.missing_managed_paths` 列出由安装器管理的缺失文件。`installation.components` 也包含用户自行提供的核心组件，`present` 表示文件是否存在，`managed` 表示安装器是否管理它。报告还会显示可用的源码提交记录、本机 MCP 配置和当前项目的 Obsidian 绑定。MCP 状态反映 CLI 已配置和启用的服务。
+文本报告会列出缺失文件。JSON 的 `installation.missing_managed_paths` 列出由安装器管理的缺失文件。`installation.components` 也包含用户自行提供的核心组件，`present` 表示文件是否存在，`managed` 表示安装器是否管理它。报告还会显示可用的源码提交记录和当前项目的 Obsidian 绑定。
+
+诊断命令读取所选 Codex 目录的 `config.toml`，只报告 Zotero 和 Granola 是否已配置和启用。要查看包含项目覆盖项的实际配置，在项目内运行 `codex mcp list`。Python 3.11 及以上版本内置 TOML 解析器。更早版本可使用 `tomli`，缺少它时仍能检查安装和绑定状态。
 
 ### 选项 2：最小化安装
 

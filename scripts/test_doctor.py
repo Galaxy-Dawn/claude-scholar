@@ -1,6 +1,9 @@
 import io
 import json
+import os
+import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -98,10 +101,7 @@ class DoctorTest(unittest.TestCase):
         self.record_paths([template, core])
         for relative in (*doctor.COMPONENTS, template):
             self.install_file(relative)
-        empty_list = subprocess.CompletedProcess([], 0, '[]', '')
-        with patch('doctor.shutil.which', return_value='/example/bin/codex'), \
-                patch('doctor.subprocess.run', return_value=empty_list):
-            report = json.loads(self.run_doctor('--json'))
+        report = json.loads(self.run_doctor('--json'))
         self.assertFalse(report['mcp']['servers']['granola']['configured'])
         result = report['installation']
         self.assertEqual(result['status'], 'installed')
@@ -114,9 +114,8 @@ class DoctorTest(unittest.TestCase):
         result = doctor.installation(self.codex_home)
         self.assertEqual(result['status'], 'incomplete')
         self.assertEqual(result['missing_managed_paths'], [core, template])
-        with patch('doctor.shutil.which', return_value=None):
-            self.assertEqual(json.loads(self.run_doctor('--json'))['installation'], result)
-            text = self.run_doctor()
+        self.assertEqual(json.loads(self.run_doctor('--json'))['installation'], result)
+        text = self.run_doctor()
         for relative in (core, template):
             self.assertIn(f'  {relative}: missing\n', text)
 
@@ -169,25 +168,63 @@ class DoctorTest(unittest.TestCase):
         self.assertFalse(doctor.installation(self.codex_home)['receipt_valid'])
 
     def test_configured_mcp_keeps_secrets_out_of_report(self):
-        raw = [{
-            'name': 'granola', 'enabled': False,
-            'transport': {'headers': {'Authorization': 'fixture-private-value'}},
-        }]
-        completed = subprocess.CompletedProcess([], 0, json.dumps(raw), '')
-        with patch('doctor.shutil.which', return_value='/example/bin/codex'), \
-                patch('doctor.subprocess.run', return_value=completed) as run:
-            result = doctor.mcp_status(self.codex_home, self.root)
+        (self.codex_home / 'config.toml').write_text(
+            '[mcp_servers.granola]\nenabled = false\n'
+            '[mcp_servers.granola.http_headers]\nAuthorization = "fixture-private-value"\n'
+            '[mcp_servers.other]\ncommand = "some-program"\n', encoding='utf-8')
+        result = doctor.mcp_status(self.codex_home)
         self.assertEqual(result['servers']['granola'], {'configured': True, 'enabled': False})
         self.assertEqual(result['servers']['zotero'], {'configured': False, 'enabled': None})
         self.assertNotIn('fixture-private-value', json.dumps(result))
-        self.assertEqual(run.call_args.kwargs['env']['CODEX_HOME'], str(self.codex_home))
+        self.assertNotIn('other', result['servers'])
 
     def test_unavailable_mcp_is_separate_from_unconfigured(self):
-        with patch('doctor.shutil.which', return_value='/example/bin/codex'), \
-                patch('doctor.subprocess.run', side_effect=subprocess.TimeoutExpired('codex', 15)):
-            result = doctor.mcp_status(self.codex_home, self.root)
-        self.assertEqual(result, {'status': 'unavailable', 'servers': None})
-        self.assertEqual(doctor.mcp_status(self.root / 'missing', self.root)['status'], 'codex_home_missing')
+        self.assertEqual(doctor.mcp_status(self.codex_home)['status'], 'configured_servers_read')
+        self.assertEqual(doctor.mcp_status(self.root / 'missing')['status'], 'codex_home_missing')
+        for data in ('[broken', 'mcp_servers = 1', '[mcp_servers.zotero]\nenabled = "yes"'):
+            with self.subTest(data=data):
+                (self.codex_home / 'config.toml').write_text(data, encoding='utf-8')
+                report = json.loads(self.run_doctor('--json'))
+                self.assertEqual(report['mcp'], {'scope': 'user_config', 'status': 'unavailable', 'servers': None})
+                self.assertEqual(report['installation']['status'], 'not_detected')
+
+    def test_missing_toml_reader_only_affects_mcp_status(self):
+        (self.codex_home / 'config.toml').write_text('[mcp_servers]\n', encoding='utf-8')
+        with patch.dict(sys.modules, {'tomllib': None, 'tomli': None}):
+            report = json.loads(self.run_doctor('--json'))
+        self.assertEqual(report['mcp']['status'], 'toml_reader_missing')
+        self.assertIsNone(report['mcp']['servers'])
+        self.assertEqual(report['installation']['status'], 'not_detected')
+        self.assertEqual(report['obsidian']['status'], 'unbound')
+
+    def test_documented_command_preserves_installation_and_project(self):
+        source = Path(doctor.__file__).resolve()
+        entry = self.codex_home / 'scripts/doctor.py'
+        entry.parent.mkdir()
+        shutil.copyfile(source, entry)
+        relative = Path('skills/obsidian-project-kb-core/scripts/kb_common.py')
+        (self.codex_home / relative).parent.mkdir(parents=True)
+        shutil.copyfile(source.parents[1] / relative, self.codex_home / relative)
+        config = self.codex_home / 'config.toml'
+        config.write_text('[mcp_servers.zotero]\ncommand = "example"\n', encoding='utf-8')
+        project = self.root / 'project'
+        (project / '.codex').mkdir(parents=True)
+        (project / '.codex/config.toml').write_text('[mcp_servers.granola]\ncommand = "example"\n', encoding='utf-8')
+        env = dict(os.environ, CODEX_HOME=str(self.codex_home))
+        env.pop('PYTHONDONTWRITEBYTECODE', None)
+        env.pop('PYTHONPYCACHEPREFIX', None)
+
+        def snapshot():
+            return {p.relative_to(self.root): p.read_bytes() if p.is_file() else None for p in self.root.rglob('*')}
+
+        before = snapshot()
+        output = subprocess.check_output([sys.executable, str(entry), '--cwd', '.', '--json'], cwd=project, env=env)
+        report = json.loads(output)
+        self.assertEqual(report['obsidian']['status'], 'unbound')
+        self.assertEqual(report['mcp']['scope'], 'user_config')
+        self.assertEqual(report['mcp']['servers']['zotero'], {'configured': True, 'enabled': True})
+        self.assertFalse(report['mcp']['servers']['granola']['configured'])
+        self.assertEqual(snapshot(), before)
 
     def test_binding_uses_actual_kb_helper_path(self):
         cwd = self.root / 'research'
