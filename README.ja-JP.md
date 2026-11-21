@@ -136,11 +136,15 @@ bash /tmp/claude-scholar/scripts/setup.sh
 - 既存の`~/.claude/CLAUDE.md`を保持し、リポジトリ版を`~/.claude/CLAUDE.scholar.md`としてインストール
 - 既存の`~/.claude/CLAUDE.zh-CN.md`を保持し、リポジトリ版を`~/.claude/CLAUDE.zh-CN.scholar.md`としてインストール
 - 既存の`env`、モデル/プロバイダー設定、APIキー、パーミッション、現在の`mcpServers`値を保持
-- 既存のフックセットを置き換えるのではなく、不足しているフックエントリを追加
+- 不足している Scholar フックを追加し、識別できた旧版の既定起動コマンドを更新
 
 **CLAUDEに関する重要事項**: 既に独自の`~/.claude/CLAUDE.md`や`~/.claude/CLAUDE.zh-CN.md`をお持ちの場合、インストール後に`~/.claude/CLAUDE.scholar.md`と`~/.claude/CLAUDE.zh-CN.scholar.md`を確認し、必要なClaude Scholarのセクションを手動で統合してください。別名で配置された補助ファイルは自動的には適用されません。
 
-**古い手動hooks設定の更新**: インストーラーを再実行すると、`settings.json`のバックアップが作られ、既定の5つのScholar起動コマンドが更新されます。イベントとマッチャーがテンプレートと一致する場合、古いコマンドだけが置き換わり、`async`や`timeout`などの設定は保持されます。コマンドやマッチャーが異なるhookの設定も保持されます。新しいコマンドは空白を含むホームパスに対応し、hookの終了コードを保持します。選択インストールの場合は、起動コマンドを[`settings.json.template`](settings.json.template)と照合してください。
+**手動で設定した旧版フックの更新。** インストーラーを再実行すると、`settings.json` をバックアップし、Scholar の既定の起動コマンドを5つ更新します。新しいコマンドは空白を含むホームパスに対応し、フックの終了コードを保持します。
+
+- 同じイベントとマッチャーでは、異なるユーザー設定を1つずつ残します。`async`、`timeout`、`statusMessage` も保持され、再インストールしても結果は同じです。
+- 独自のコマンドや別のマッチャーの設定は保持されます。アンインストール後もカスタマイズした項目は残ります。
+- 選択インストールでは、起動コマンドを [`settings.json.template`](settings.json.template) と照合してください。
 
 アップデート方法:
 

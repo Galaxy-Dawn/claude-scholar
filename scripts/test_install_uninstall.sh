@@ -142,7 +142,8 @@ legacy = json.loads((root / "scripts/test-fixtures/manual-hooks-v1.json").read_t
 current = json.loads((root / "settings.json.template").read_text())["hooks"]
 legacy["SessionEnd"].append(current["SessionEnd"][0])
 legacy["SessionStart"][0]["hooks"][0]["async"] = True
-legacy["PreToolUse"].append({"matcher": "Read", "hooks": []})
+read_hook = {**legacy["PreToolUse"][0]["hooks"][0], "statusMessage": "Reading"}
+legacy["PreToolUse"].append({"matcher": "Read", "hooks": [read_hook]})
 stop = legacy["Stop"][0]["hooks"][0]
 legacy["Stop"][0]["hooks"].extend([{**stop, "timeout": 33}, {**stop, "async": False, "statusMessage": "Saving"}])
 current_stop = current["Stop"][0]["hooks"][0]
@@ -151,6 +152,7 @@ legacy["Stop"].append({"matcher": "*", "hooks": [current_stop, same_options]})
 target.write_text(json.dumps({"hooks": legacy, "model": "user-model"}))
 PY
 
+  cp "$home/.claude/settings.json" "$home/settings-before-upgrade.json"
   printf '%s' '{"settings":' > "$home/.claude/.claude-scholar-install-state"
   warnings="$(run_setup "$home" 2>&1)"
   [[ "$warnings" == *"Ignoring unreadable previous Claude Scholar install state"* ]]
@@ -170,7 +172,8 @@ assert settings["model"] == "user-model"
 stop = current["Stop"][0]["hooks"][0]
 current["Stop"][0]["hooks"] = [{**stop, "timeout": 33}, {**stop, "async": False, "statusMessage": "Saving"}]
 current["SessionStart"][0]["hooks"][0]["async"] = True
-current["PreToolUse"].append({"matcher": "Read", "hooks": []})
+original = json.loads((config_dir.parent / "settings-before-upgrade.json").read_text())
+current["PreToolUse"].append(original["hooks"]["PreToolUse"][-1])
 assert settings["hooks"] == current, settings["hooks"]
 owned = state["settings"]["addedHooks"]
 assert sorted((h["event"], h["matcher"]) for h in owned) == [
@@ -189,8 +192,9 @@ current = json.loads((root / "settings.json.template").read_text())["hooks"]
 assert settings["model"] == "user-model"
 stop = current["Stop"][0]["hooks"][0]
 current["SessionStart"][0]["hooks"][0]["async"] = True
+original = json.loads((target.parent.parent / "settings-before-upgrade.json").read_text())
 assert settings["hooks"] == {
-    "PreToolUse": [{"matcher": "Read", "hooks": []}],
+    "PreToolUse": [original["hooks"]["PreToolUse"][-1]],
     "SessionEnd": current["SessionEnd"],
     "SessionStart": current["SessionStart"],
     "Stop": [{"matcher": "*", "hooks": [{**stop, "timeout": 33}, {**stop, "async": False, "statusMessage": "Saving"}]}],
