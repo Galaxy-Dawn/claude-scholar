@@ -5,6 +5,7 @@ import argparse
 import json
 import re
 import sys
+import unicodedata
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -61,7 +62,19 @@ def note_url(value: Any) -> str | None:
     return urlunsplit(('https', 'notes.granola.ai', url.path, '', ''))
 
 
-def render_meeting(meeting: Any, language: str) -> tuple[str, str, str]:
+def meeting_filename(meeting_id: str, meeting_date: str | None, title: str) -> str:
+    topic = ''.join(
+        char if char.isalnum() or unicodedata.category(char).startswith('M') else '-'
+        for char in unicodedata.normalize('NFC', title)
+    )
+    topic = re.sub(r'-+', '-', topic).strip('-')
+    # Leave space for the date and full UUID even when the title is multibyte.
+    topic = topic.encode('utf-8')[:96].decode('utf-8', errors='ignore').rstrip('-') or 'note'
+    short_date = meeting_date[2:] if meeting_date else 'undated'
+    return f'Granola-{short_date}-{topic}-{meeting_id}.md'
+
+
+def render_meeting(meeting: Any, language: str) -> tuple[str, str, str | None, str]:
     if not isinstance(meeting, dict):
         raise ValueError('meeting JSON must be an object')
     try:
@@ -114,7 +127,7 @@ def render_meeting(meeting: Any, language: str) -> tuple[str, str, str]:
         if key == 'summary' and not bullets:
             raise ValueError('summary must contain at least one item')
         lines.extend([f'## {heading}', '', *(bullets or [f'- {empty}']), ''])
-    return meeting_id, title, '\n'.join(lines)
+    return meeting_id, title, meeting_date, '\n'.join(lines)
 
 
 def existing_meeting(project_root: Path, meeting_id: str) -> Path | None:
@@ -152,12 +165,12 @@ def saved_title(note: Path, fallback: str) -> str:
 
 
 def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
-    meeting_id, title, content = render_meeting(meeting, binding.note_language)
+    meeting_id, title, meeting_date, content = render_meeting(meeting, binding.note_language)
     note_bytes = content.encode('utf-8')
     root = binding.project_root
     if binding.status != 'active' or not root.is_dir():
         raise ValueError('Granola import requires an active, existing Obsidian project binding')
-    destination = root / 'Sources' / 'Interviews' / f'granola-{meeting_id}.md'
+    destination = root / 'Sources' / 'Interviews' / meeting_filename(meeting_id, meeting_date, title)
     registry = common.registry_path(root)
     for path in (destination, registry, root / '02-Index.md'):
         if not path.resolve().is_relative_to(root):

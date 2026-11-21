@@ -30,7 +30,7 @@ class GranolaIngestTest(unittest.TestCase):
         self.kb('bootstrap', '--vault-path', str(self.vault), '--project-name', 'Granola Demo',
                 '--note-language', 'zh-CN')
         self.root = self.vault / 'Research' / 'granola-demo'
-        self.note = self.root / 'Sources/Interviews' / f'granola-{MEETING_ID}.md'
+        self.note = self.root / 'Sources/Interviews' / f'Granola-26-11-21-组会-消融实验-{MEETING_ID}.md'
         self.registry = self.root / '_system/registry.md'
         self.index = self.root / '02-Index.md'
 
@@ -98,14 +98,64 @@ class GranolaIngestTest(unittest.TestCase):
         result = json.loads(self.run_cli(GRANOLA_HELPER, '--project-id', binding['project_id'],
                                          '--input', '-', stdin=examples['json']).stdout)
         self.assertEqual(result['status'], 'created')
-        expected_name = 'granola-' + json.loads(examples['json'])['meeting_id'] + '.md'
+        expected_name = f'Granola-26-11-21-Lab-meeting-baseline-experiment-{MEETING_ID}.md'
         self.assertEqual(result['note'], 'Sources/Interviews/' + expected_name)
         saved = Path(binding['project_root']) / result['note']
         self.assertEqual(saved.read_text(encoding='utf-8'), examples['markdown'])
 
+    def test_legacy_note_and_an_ordinary_interview_share_the_folder(self) -> None:
+        legacy = self.note.parent / f'granola-{MEETING_ID}.md'
+        legacy.write_text(f'---\ntype: source-interview\nsource_provider: granola\n'
+                          f'granola_meeting_id: {MEETING_ID}\ntitle: "Old recording"\n---\n'
+                          '# Old recording\n\nMy edits after the first import.\n', encoding='utf-8')
+        ordinary = self.note.parent / 'lab-interview.md'
+        ordinary.write_text('---\ntype: source\nsource_type: interview\n---\n# Revised title\n',
+                            encoding='utf-8')
+        before = {path: path.read_bytes() for path in (legacy, ordinary)}
+        self.kb('sync')
+
+        retry = self.ingest(title='Revised title', meeting_date='2026-11-22')
+        self.assertEqual((retry['status'], retry['note']), ('existing', f'Sources/Interviews/{legacy.name}'))
+        new = self.ingest(meeting_id=SECOND_ID, title='Revised title')
+        self.assertEqual(new['note'], f'Sources/Interviews/Granola-26-11-21-Revised-title-{SECOND_ID}.md')
+        self.kb('sync')
+        self.assertEqual({path: path.read_bytes() for path in before}, before)
+        self.assertFalse(self.note.exists())
+        self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 3)
+        for listing in (self.registry, self.index):
+            entries = listing.read_text(encoding='utf-8')
+            for path in (ordinary, legacy, self.root / new['note']):
+                self.assertEqual(entries.count(f'[[Sources/Interviews/{path.stem}]]'), 1)
+
+    def test_undated_and_punctuation_only_import_has_a_stable_name(self) -> None:
+        payload = self.meeting(title='!?…')
+        del payload['meeting_date']
+        result = json.loads(self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=json.dumps(payload)).stdout)
+        expected = f'Sources/Interviews/Granola-undated-note-{MEETING_ID}.md'
+        self.assertEqual(result['note'], expected)
+        retry = self.ingest(title='Date and topic now known')
+        self.assertEqual((retry['status'], retry['note']), ('existing', expected))
+
+    def test_lecture_title_is_safe_for_filenames_and_obsidian_links(self) -> None:
+        topic = '讲座/[[研究方法]] #训练|复习：' + '模型' * 80
+        result = self.ingest(title=topic, source_kind='transcript', participants=['主讲人'],
+                             decisions=[], action_items=[], open_questions=[])
+        path = self.root / result['note']
+        self.assertEqual(path.parent, self.note.parent)
+        self.assertTrue(path.name.startswith('Granola-26-11-21-讲座-研究方法-训练-复习-'))
+        self.assertTrue(path.name.endswith(f'-{MEETING_ID}.md'))
+        filename_topic = path.stem.removeprefix('Granola-26-11-21-').removesuffix(f'-{MEETING_ID}')
+        self.assertLessEqual(len(filename_topic.encode('utf-8')), 96)
+        link = f'[[Sources/Interviews/{path.stem}]]'
+        self.assertIn(link, self.index.read_text(encoding='utf-8'))
+        content = path.read_text(encoding='utf-8')
+        self.assertIn(f'title: {json.dumps(topic, ensure_ascii=False)}', content)
+        self.assertIn('## 已定事项\n\n- 未记录', content)
+        self.assertIn('## 待办\n\n- 未记录', content)
+
     def test_retry_preserves_edits_and_repairs_registry(self) -> None:
         title = 'Pilot "A" \\ branch'
-        self.ingest(title=title)
+        self.note = self.root / self.ingest(title=title)['note']
         self.assertIn(f'| {title} |', self.registry.read_text(encoding='utf-8'))
         manually_edited = self.note.read_text(encoding='utf-8') + '\n后续由研究员补充。'
         self.note.write_text(manually_edited, encoding='utf-8')
@@ -145,9 +195,9 @@ class GranolaIngestTest(unittest.TestCase):
                     self.assertIn(link, index)
 
     def test_retry_validates_the_saved_title_before_updating_derived_files(self) -> None:
-        self.ingest(title='Fixture original')
+        self.note = self.root / self.ingest(title='Fixture original')['note']
         original = self.note.read_text(encoding='utf-8')
-        self.ingest(meeting_id=SECOND_ID, title='Another meeting')
+        second = self.root / self.ingest(meeting_id=SECOND_ID, title='Another meeting')['note']
         for edited_title, normalized in (
             ('Pilot "A" \\ branch\nRetrospective', 'Pilot "A" \\ branch Retrospective'),
             ('A lone surrogate: \ud800', None),
@@ -170,12 +220,12 @@ class GranolaIngestTest(unittest.TestCase):
                 self.assertEqual(self.note.read_bytes(), note_before)
                 self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 2)
                 index = self.index.read_text(encoding='utf-8')
-                for meeting_id in (MEETING_ID, SECOND_ID):
-                    self.assertIn(f'[[Sources/Interviews/granola-{meeting_id}]]', index)
+                for note in (self.note, second):
+                    self.assertIn(f'[[Sources/Interviews/{note.stem}]]', index)
 
     def test_renamed_and_archived_notes_remain_unique(self) -> None:
         title = 'Discussion of the evaluation split'
-        self.ingest(title=title)
+        self.note = self.root / self.ingest(title=title)['note']
         original = self.note.relative_to(self.root).as_posix()
         renamed = 'Sources/Interviews/group-meeting.md'
         self.kb('note-lifecycle', '--mode', 'rename', '--note', original, '--dest', renamed)
@@ -199,7 +249,7 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertFalse(self.note.exists())
 
     def test_cross_category_move_and_archive_keep_the_same_meeting(self) -> None:
-        self.ingest(title='Fixture research discussion')
+        self.note = self.root / self.ingest(title='Fixture research discussion')['note']
         original = self.note.relative_to(self.root).as_posix()
         note_bytes = self.note.read_bytes()
         moved = 'Knowledge/discussions/team-review.md'
@@ -220,7 +270,7 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertFalse(self.note.exists())
 
     def test_manually_renamed_note_accepts_quoted_frontmatter(self) -> None:
-        self.ingest(title='Original fixture')
+        self.note = self.root / self.ingest(title='Original fixture')['note']
         original = self.note.read_text(encoding='utf-8')
         renamed = self.root / 'Sources/Interviews/manually-renamed.md'
         self.note.rename(renamed)
@@ -295,7 +345,7 @@ class GranolaIngestTest(unittest.TestCase):
                     self.assertIn('| Granola |', row)
 
     def test_retry_registers_a_note_in_a_custom_sources_subfolder(self) -> None:
-        self.ingest(title='Custom folder meeting')
+        self.note = self.root / self.ingest(title='Custom folder meeting')['note']
         moved = 'Sources/Meetings/team-review.md'
         self.kb('note-lifecycle', '--mode', 'rename', '--note', self.note.relative_to(self.root).as_posix(), '--dest', moved)
         self.registry.unlink()
@@ -312,6 +362,9 @@ class GranolaIngestTest(unittest.TestCase):
             results = list(executor.map(lambda uid: self.ingest(meeting_id=uid),
                                         [MEETING_ID, MEETING_ID, SECOND_ID]))
         self.assertCountEqual([item['status'] for item in results], ['created', 'existing', 'created'])
+        self.assertEqual({item['note'] for item in results}, {
+            f'Sources/Interviews/Granola-26-11-21-组会-消融实验-{uid}.md' for uid in (MEETING_ID, SECOND_ID)
+        })
         self.assertEqual(len(list(self.note.parent.glob('*.md'))), 2)
         self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 2)
 
