@@ -164,22 +164,33 @@ The uninstaller removes only files and config sections recorded in that install 
 
 ### Check an existing installation
 
-Run the installed doctor from a research repository:
+Run the installed doctor from a research repository. Use the second command for JSON output.
 
 ```bash
 python3 ~/.codex/scripts/doctor.py --cwd .
+python3 ~/.codex/scripts/doctor.py --cwd . --json
 ```
 
 You can also run `python3 scripts/doctor.py` from a checkout. The doctor checks
 the core components, including `project_kb.py` and its helper `kb_common.py`, and every file
 listed in the matching receipt and manifest. Core components are checked even
 when they predate the installer.
-Missing managed files are listed by path in the text report and in the JSON
-field `installation.missing_managed_paths`. The report also shows the local MCP
-configuration and Obsidian binding. Use `--json` for structured output or
-`--codex-home` for a custom Codex directory. The doctor reports the source
-commit recorded by new installations.
-The copy you run uses its matching KB helper and reads the CLI's MCP registry.
+Use `--codex-home` for a custom Codex directory.
+
+| `installation.status` | Meaning |
+| --- | --- |
+| `installed` | The receipt matches the manifest. All recorded files and required core components are present. |
+| `incomplete` | The records match, but a recorded file or core component is missing. |
+| `incomplete_receipt` | An installation record exists, but the receipt and manifest cannot be verified together. |
+| `components_only` | Core components are present without installation records. |
+| `not_detected` | The check found neither installation records nor core components in the selected directory. |
+
+The text report names missing files. In JSON, `installation.missing_managed_paths`
+lists missing files owned by the installer. `installation.components` also
+shows required components supplied by the user, with separate `present` and
+`managed` fields. The report includes the recorded source commit when available,
+the local MCP configuration and the current project's Obsidian binding.
+MCP status describes which servers the CLI has configured and enabled.
 
 ### Option 2: Minimal Installation
 

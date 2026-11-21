@@ -164,19 +164,27 @@ bash scripts/uninstall.sh
 
 ### インストール状態を確認する
 
-研究リポジトリから実行します。
+研究リポジトリから実行します。2つ目のコマンドは JSON を出力します。
 
 ```bash
 python3 ~/.codex/scripts/doctor.py --cwd .
+python3 ~/.codex/scripts/doctor.py --cwd . --json
 ```
 
 ソースのチェックアウトからは `python3 scripts/doctor.py` を実行します。
 主要な構成ファイルには `project_kb.py` とその補助スクリプト `kb_common.py` が含まれ、ユーザーが事前に用意したものも確認します。
 インストール記録とマニフェストの内容が一致する場合は、そこに記載された全ファイルも確認します。
-不足している管理対象ファイルのパスはテキストのレポートと JSON の `installation.missing_managed_paths` に表示されます。
-ローカル MCP 設定と Obsidian のバインドも確認できます。
-`--json` は構造化出力、`--codex-home` はカスタムディレクトリを指定します。
-新規インストールではソースのコミットも記録します。
+`--codex-home` で Codex のディレクトリを指定できます。
+
+| `installation.status` | 意味 |
+| --- | --- |
+| `installed` | インストール記録がマニフェストと一致し、登録ファイルと必須コンポーネントがそろっています。 |
+| `incomplete` | 記録は一致しますが、登録ファイルまたは必須コンポーネントが不足しています。 |
+| `incomplete_receipt` | インストール記録はありますが、記録とマニフェストの組を検証できません。 |
+| `components_only` | 必須コンポーネントの一部または全部があり、インストール記録はありません。 |
+| `not_detected` | 指定したディレクトリにはインストール記録も必須コンポーネントも見つかりません。 |
+
+テキスト出力には不足ファイルのパスが表示されます。JSON の `installation.missing_managed_paths` はインストーラーの管理対象のうち不足しているファイルを示します。`installation.components` にはユーザーが用意した必須コンポーネントも含まれます。`present` はファイルの有無、`managed` は管理対象かどうかを示します。記録済みのソースコミット、ローカル MCP 設定、現在のプロジェクトの Obsidian バインドも表示します。MCP の状態は CLI への登録と有効化の状況を示します。
 
 ### オプション 2：最小インストール
 

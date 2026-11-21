@@ -33,6 +33,14 @@ class DoctorTest(unittest.TestCase):
             doctor.main()
         return stdout.getvalue()
 
+    def test_missing_installation_reports_not_detected_without_creating_the_directory(self):
+        self.codex_home.rmdir()
+        report = json.loads(self.run_doctor('--json'))
+        self.assertEqual(report['installation']['status'], 'not_detected')
+        self.assertEqual(report['mcp']['status'], 'codex_home_missing')
+        self.assertIn('Codex Scholar: not_detected', self.run_doctor())
+        self.assertFalse(self.codex_home.exists())
+
     def test_same_named_skill_without_receipt(self):
         self.install_file(doctor.COMPONENTS[0])
         result = doctor.installation(self.codex_home)

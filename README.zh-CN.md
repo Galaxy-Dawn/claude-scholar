@@ -164,17 +164,25 @@ bash scripts/uninstall.sh
 
 ### 检查安装状态
 
-在科研项目目录中运行：
+在科研项目目录中运行。第二条命令输出 JSON。
 
 ```bash
 python3 ~/.codex/scripts/doctor.py --cwd .
+python3 ~/.codex/scripts/doctor.py --cwd . --json
 ```
 
 也可以在源码目录运行 `python3 scripts/doctor.py`。命令会检查核心组件，包括预先安装的 `project_kb.py` 及其配套脚本 `kb_common.py`。安装回执和清单一致时，还会检查清单中的每个文件。
-缺失文件的相对路径会出现在文本报告和 JSON 的 `installation.missing_managed_paths` 字段中。
-报告也显示本机 MCP 配置和 Obsidian 绑定。`--json` 输出结构化结果，
-`--codex-home` 指定自定义目录。新安装会记录源码提交。检查使用当前
-这份工具配套的 KB 脚本和 CLI 的 MCP 配置。
+`--codex-home` 可指定自定义 Codex 目录。
+
+| `installation.status` | 含义 |
+| --- | --- |
+| `installed` | 安装回执与清单一致，登记的文件和必要的核心组件都在。 |
+| `incomplete` | 回执与清单一致，但有登记文件或核心组件缺失。 |
+| `incomplete_receipt` | 找到安装记录，但无法同时验证回执与清单。 |
+| `components_only` | 找到核心组件，缺少整套安装记录。 |
+| `not_detected` | 指定目录中既没有安装记录，也没有检测到核心组件。 |
+
+文本报告会列出缺失文件。JSON 的 `installation.missing_managed_paths` 列出由安装器管理的缺失文件。`installation.components` 也包含用户自行提供的核心组件，`present` 表示文件是否存在，`managed` 表示安装器是否管理它。报告还会显示可用的源码提交记录、本机 MCP 配置和当前项目的 Obsidian 绑定。MCP 状态反映 CLI 已配置和启用的服务。
 
 ### 选项 2：最小化安装
 
