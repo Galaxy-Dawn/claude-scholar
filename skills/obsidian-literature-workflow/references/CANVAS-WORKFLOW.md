@@ -39,4 +39,8 @@ python3 "${CLAUDE_PLUGIN_ROOT}/skills/obsidian-literature-workflow/scripts/build
 
 ## Display rule
 
-- If a second lightweight showcase graph is useful, maintain `Maps/literature-main.canvas` as a filtered presentation copy rather than bloating the default working canvas.
+Routine refreshes write `Maps/literature.canvas`. Create or refresh a separate
+presentation copy only when the user explicitly requests one. For that request,
+add `--output Maps/literature-main.canvas` to the command above. This option
+selects the destination file. Apply any requested presentation edits to that
+copy. Later default refreshes preserve those edits.

@@ -34,7 +34,7 @@ Sources/Papers/ -> Knowledge/ -> Writing/ -> Maps/literature.canvas
 - every promoted claim must carry an Evidence Record ID, source type, claim strength, allowed wording, and forbidden stronger wording when it may flow into writing or rebuttal
 - weak paper notes, abstract-only pages, and webpage placeholders may update coverage or `To-Read`, but they cannot support `Knowledge` or `Writing` conclusions
 - default graph output is `Maps/literature.canvas`
-- do not generate extra canvases unless explicitly requested
+- for an explicitly requested second canvas, follow the [display rule](references/CANVAS-WORKFLOW.md#display-rule)
 
 ## Read next
 

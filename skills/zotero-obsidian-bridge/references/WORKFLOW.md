@@ -63,7 +63,7 @@ After batch note creation or major note updates:
 3. keep the graph lightweight and project-facing
 4. prefer semantic filtering and edge thinning over dense all-to-all paper links
 5. prefer `paper + claim + method + gap` argument-map structure for the main graph
-6. add `Maps/literature-main.canvas` only when a second lightweight display graph is genuinely useful
+6. for an explicitly requested presentation copy, follow the [literature canvas display rule](../../obsidian-literature-workflow/references/CANVAS-WORKFLOW.md#display-rule)
 7. preserve edge evidence strength where possible; do not create all-to-all paper links or stable-looking claim edges without source-note support
 
 ## 7. Push downstream only when justified
