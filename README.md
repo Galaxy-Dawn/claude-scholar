@@ -162,6 +162,46 @@ The uninstaller removes only files and config sections recorded in that install 
 
 **Windows**: please use Git Bash or WSL to run the installer.
 
+### Check an existing installation
+
+Run the installed doctor from a research repository. Use the second command for JSON output.
+
+```bash
+python3 ~/.codex/scripts/doctor.py --cwd .
+python3 ~/.codex/scripts/doctor.py --cwd . --json
+```
+
+You can also run `python3 scripts/doctor.py` from a checkout. The doctor checks
+the core components, including `project_kb.py` and its helper `kb_common.py`, and every file
+listed in the matching receipt and manifest. Core components are checked even
+when they predate the installer.
+Use `--codex-home` to inspect a different Codex installation you trust. The doctor
+runs that installation's Python helper to check the Obsidian binding.
+The doctor reads the project's `.claude/project-memory/registry.yaml` first and
+falls back to the older `.codex/project-memory/registry.yaml`. An unavailable or
+incompatible helper has its own `obsidian.status`. The report still includes
+installation and MCP results. Helper messages go to standard error. Redirected
+text and JSON reports are written as UTF-8.
+
+| `installation.status` | Meaning |
+| --- | --- |
+| `installed` | The receipt matches the manifest. All recorded files and required core components are present. |
+| `incomplete` | The records match, but a recorded file or core component is missing. |
+| `incomplete_receipt` | An installation record exists, but the receipt and manifest cannot be verified together. |
+| `components_only` | Core components are present without installation records. |
+| `not_detected` | The check found neither installation records nor core components in the selected directory. |
+
+The text report names missing files. In JSON, `installation.missing_managed_paths`
+lists missing files owned by the installer. `installation.components` also
+shows required components supplied by the user, with separate `present` and
+`managed` fields. The report includes the recorded source commit when available,
+the local MCP configuration and the current project's Obsidian binding.
+The doctor reads the Zotero and Granola entries in the selected Codex directory's
+`config.toml` and reports only their presence and enabled flags. For effective
+settings that include project overrides, run `codex mcp list` from the project.
+Python 3.11+ includes the TOML reader. On earlier versions the doctor uses
+`tomli` when available and still reports installation and binding status without it.
+
 ### Option 2: Minimal Installation
 
 Install only a small research-focused subset:

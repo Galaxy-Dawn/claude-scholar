@@ -315,9 +315,16 @@ write_install_state() {
   mkdir -p "$CODEX_HOME" || error "Failed to create CODEX_HOME at $CODEX_HOME"
   write_unique_lines "$MANIFEST_FILE" "${MANAGED_PATHS[@]}" || error "Failed to write install manifest"
 
-  local managed_paths_file agents_targets_file
+  local managed_paths_file agents_targets_file source_revision="" source_modified="" source_status
   managed_paths_file="$(mktemp)"
   agents_targets_file="$(mktemp)"
+  if [ -e "$SRC_DIR/.git" ]; then
+    source_revision="$(git -C "$SRC_DIR" rev-parse --verify HEAD 2>/dev/null || true)"
+    if [ -n "$source_revision" ] && source_status="$(git -C "$SRC_DIR" status --porcelain 2>/dev/null)"; then
+      source_modified=0
+      [ -z "$source_status" ] || source_modified=1
+    fi
+  fi
 
   write_unique_lines "$managed_paths_file" "${MANAGED_PATHS[@]}" || error "Failed to write managed paths temp file"
 
@@ -329,6 +336,8 @@ write_install_state() {
   CODEX_AGENTS_TARGETS_FILE="$(normalize_host_path "$agents_targets_file")" \
   CODEX_INSTALLED_AT="$BACKUP_STAMP" \
   CODEX_SOURCE_DIR="$(normalize_host_path "$SRC_DIR")" \
+  CODEX_SOURCE_REVISION="$source_revision" \
+  CODEX_SOURCE_MODIFIED="$source_modified" \
   CODEX_CONFIG_CREATED="$CONFIG_CREATED" \
   CODEX_CONFIG_SHA256="$CONFIG_SHA256" \
   CODEX_BACKUP_DIR="$(normalize_host_path "$BACKUP_DIR")" \
@@ -349,6 +358,8 @@ function readJson(path) {
 const state = {
   installedAt: process.env.CODEX_INSTALLED_AT,
   sourceDir: process.env.CODEX_SOURCE_DIR,
+  sourceRevision: process.env.CODEX_SOURCE_REVISION || null,
+  sourceModified: process.env.CODEX_SOURCE_MODIFIED ? process.env.CODEX_SOURCE_MODIFIED === '1' : null,
   configCreated: process.env.CODEX_CONFIG_CREATED === '1',
   configSha256: process.env.CODEX_CONFIG_SHA256 || '',
   backupDir: process.env.CODEX_BACKUP_READY === '1' ? process.env.CODEX_BACKUP_DIR : '',

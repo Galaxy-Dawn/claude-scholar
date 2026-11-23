@@ -162,6 +162,32 @@ bash scripts/uninstall.sh
 
 **Windows**：インストーラーは Git Bash / WSL から実行してください。
 
+### インストール状態を確認する
+
+研究リポジトリから実行します。2つ目のコマンドは JSON を出力します。
+
+```bash
+python3 ~/.codex/scripts/doctor.py --cwd .
+python3 ~/.codex/scripts/doctor.py --cwd . --json
+```
+
+ソースのチェックアウトからは `python3 scripts/doctor.py` を実行します。
+主要な構成ファイルには `project_kb.py` とその補助スクリプト `kb_common.py` が含まれ、ユーザーが事前に用意したものも確認します。
+インストール記録とマニフェストの内容が一致する場合は、そこに記載された全ファイルも確認します。
+`--codex-home` で、検査する信頼済みの Codex インストール先を指定できます。診断コマンドは、そのインストール先の Python ヘルパーを実行して Obsidian バインドを確認します。プロジェクトの `.claude/project-memory/registry.yaml` を優先し、このファイルがなければ旧形式の `.codex/project-memory/registry.yaml` を読みます。ヘルパーが利用できない場合や互換性がない場合も、`obsidian.status` に結果を示し、インストールと MCP の診断を続けます。ヘルパーのメッセージは標準エラーに出力します。リダイレクトしたテキストと JSON のレポートは UTF-8 で出力します。
+
+| `installation.status` | 意味 |
+| --- | --- |
+| `installed` | インストール記録がマニフェストと一致し、登録ファイルと必須コンポーネントがそろっています。 |
+| `incomplete` | 記録は一致しますが、登録ファイルまたは必須コンポーネントが不足しています。 |
+| `incomplete_receipt` | インストール記録はありますが、記録とマニフェストの組を検証できません。 |
+| `components_only` | 必須コンポーネントの一部または全部があり、インストール記録はありません。 |
+| `not_detected` | 指定したディレクトリにはインストール記録も必須コンポーネントも見つかりません。 |
+
+テキスト出力には不足ファイルのパスが表示されます。JSON の `installation.missing_managed_paths` はインストーラーの管理対象のうち不足しているファイルを示します。`installation.components` にはユーザーが用意した必須コンポーネントも含まれます。`present` はファイルの有無、`managed` は管理対象かどうかを示します。記録済みのソースコミットと現在のプロジェクトの Obsidian バインドも表示します。
+
+診断コマンドは指定した Codex ディレクトリの `config.toml` を読み、Zotero と Granola の登録状況と有効・無効を表示します。プロジェクト固有の設定を含む実効値は、プロジェクト内で `codex mcp list` を実行して確認します。Python 3.11 以降は標準の TOML パーサーを使用します。以前のバージョンでは `tomli` を利用でき、未導入でもインストールとバインドの確認は可能です。
+
 ### オプション 2：最小インストール
 
 研究ワークフローの小さめのサブセットだけを導入します。

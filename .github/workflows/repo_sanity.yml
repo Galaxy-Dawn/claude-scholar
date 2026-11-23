@@ -63,3 +63,6 @@ jobs:
             echo "Tracked junk files detected."
             exit 1
           fi
+
+      - name: Test the installation status command
+        run: python3 -B scripts/test_doctor.py

@@ -31,9 +31,11 @@ run_uninstall() {
 }
 
 test_roundtrip_existing_config() {
-  local home
+  local home kb_dir="skills/obsidian-project-kb-core/scripts"
   home="$(make_home)"
   write_base_config "$home"
+  mkdir -p "$home/.codex/$kb_dir"
+  cp "$REPO_ROOT/$kb_dir/kb_common.py" "$home/.codex/$kb_dir/kb_common.py"
 
   run_setup "$home"
   test -f "$home/.codex/.codex-scholar-manifest.txt"
@@ -42,12 +44,26 @@ test_roundtrip_existing_config() {
   test -f "$home/.codex/skills/research-ideation/references/research-contract.md"
   test -f "$home/.codex/skills/post-acceptance/references/xquik-promotion.md"
   test -f "$home/.codex/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
+  python3 -B "$home/.codex/scripts/doctor.py" --codex-home "$home/.codex" --cwd "$home" --json |
+    python3 -c 'import json, sys; d = json.load(sys.stdin); assert d["installation"]["status"] == "installed"'
   for agent in paper-miner literature-reviewer kaggle-miner code-reviewer rebuttal-writer tdd-guide; do
     test -f "$home/.codex/agents/$agent.toml"
     test ! -f "$home/.codex/agents/$agent/config.toml"
   done
   grep -Fxq "skills/research-ideation/references/research-contract.md" "$home/.codex/.codex-scholar-manifest.txt"
   grep -Fxq "skills/post-acceptance/references/xquik-promotion.md" "$home/.codex/.codex-scholar-manifest.txt"
+
+  rm "$home/.codex/$kb_dir/project_kb.py" "$home/.codex/$kb_dir/kb_common.py"
+  python3 -B "$home/.codex/scripts/doctor.py" --codex-home "$home/.codex" --cwd "$home" --json > "$home/doctor.json"
+  python3 - "$home/doctor.json" "$kb_dir" <<'PY'
+import json, sys
+report = json.load(open(sys.argv[1], encoding='utf-8'))['installation']
+command, helper = (f'{sys.argv[2]}/{name}.py' for name in ('project_kb', 'kb_common'))
+missing = {entry['path']: entry['managed'] for entry in report['components'] if not entry['present']}
+assert report['status'] == 'incomplete'
+assert report['missing_managed_paths'] == [command]
+assert missing == {command: True, helper: False}, missing
+PY
 
   run_uninstall "$home"
   test ! -f "$home/.codex/.codex-scholar-manifest.txt"

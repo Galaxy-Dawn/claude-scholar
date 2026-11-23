@@ -162,6 +162,30 @@ bash scripts/uninstall.sh
 
 **Windows**：请使用 Git Bash / WSL 运行安装脚本。
 
+### 检查安装状态
+
+在科研项目目录中运行。第二条命令输出 JSON。
+
+```bash
+python3 ~/.codex/scripts/doctor.py --cwd .
+python3 ~/.codex/scripts/doctor.py --cwd . --json
+```
+
+也可以在源码目录运行 `python3 scripts/doctor.py`。命令会检查核心组件，包括预先安装的 `project_kb.py` 及其配套脚本 `kb_common.py`。安装回执和清单一致时，还会检查清单中的每个文件。
+`--codex-home` 可指定要检查的可信 Codex 安装目录。命令会运行该目录中的 Python 辅助脚本来检查 Obsidian 绑定。诊断优先读取项目的 `.claude/project-memory/registry.yaml`，缺少该文件时会读取旧版 `.codex/project-memory/registry.yaml`。辅助脚本不可用或不兼容时，`obsidian.status` 会说明原因，报告仍会包含安装和 MCP 检查结果。辅助脚本的消息写入标准错误流。重定向的文本和 JSON 报告使用 UTF-8 编码。
+
+| `installation.status` | 含义 |
+| --- | --- |
+| `installed` | 安装回执与清单一致，登记的文件和必要的核心组件都在。 |
+| `incomplete` | 回执与清单一致，但有登记文件或核心组件缺失。 |
+| `incomplete_receipt` | 找到安装记录，但无法同时验证回执与清单。 |
+| `components_only` | 找到核心组件，缺少整套安装记录。 |
+| `not_detected` | 指定目录中既没有安装记录，也没有检测到核心组件。 |
+
+文本报告会列出缺失文件。JSON 的 `installation.missing_managed_paths` 列出由安装器管理的缺失文件。`installation.components` 也包含用户自行提供的核心组件，`present` 表示文件是否存在，`managed` 表示安装器是否管理它。报告还会显示可用的源码提交记录和当前项目的 Obsidian 绑定。
+
+诊断命令读取所选 Codex 目录的 `config.toml`，只报告 Zotero 和 Granola 是否已配置和启用。要查看包含项目覆盖项的实际配置，在项目内运行 `codex mcp list`。Python 3.11 及以上版本内置 TOML 解析器。更早版本可使用 `tomli`，缺少它时仍能检查安装和绑定状态。
+
 ### 选项 2：最小化安装
 
 只安装较小的一组研究工作流子集：
