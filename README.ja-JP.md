@@ -136,9 +136,15 @@ bash /tmp/claude-scholar/scripts/setup.sh
 - 既存の`~/.claude/CLAUDE.md`を保持し、リポジトリ版を`~/.claude/CLAUDE.scholar.md`としてインストール
 - 既存の`~/.claude/CLAUDE.zh-CN.md`を保持し、リポジトリ版を`~/.claude/CLAUDE.zh-CN.scholar.md`としてインストール
 - 既存の`env`、モデル/プロバイダー設定、APIキー、パーミッション、現在の`mcpServers`値を保持
-- 既存のフックセットを置き換えるのではなく、不足しているフックエントリを追加
+- 不足している Scholar フックを追加し、識別できた旧版の既定起動コマンドを更新
 
 **CLAUDEに関する重要事項**: 既に独自の`~/.claude/CLAUDE.md`や`~/.claude/CLAUDE.zh-CN.md`をお持ちの場合、インストール後に`~/.claude/CLAUDE.scholar.md`と`~/.claude/CLAUDE.zh-CN.scholar.md`を確認し、必要なClaude Scholarのセクションを手動で統合してください。別名で配置された補助ファイルは自動的には適用されません。
+
+**手動で設定した旧版フックの更新。** インストーラーを再実行すると、`settings.json` をバックアップし、Scholar の既定の起動コマンドを5つ更新します。新しいコマンドは空白を含むホームパスに対応し、フックの終了コードを保持します。
+
+- 同じイベントとマッチャーでは、異なるユーザー設定を1つずつ残します。`async`、`timeout`、`statusMessage` も保持され、再インストールしても結果は同じです。
+- セットアップでは独自のコマンドや別のマッチャーの設定を保持します。
+- 選択インストールでは、起動コマンドを [`settings.json.template`](settings.json.template) と照合してください。
 
 アップデート方法:
 
@@ -159,7 +165,7 @@ bash scripts/uninstall.sh
 - `~/.claude/.claude-scholar-manifest.txt`: Claude Scholar が実際に管理するファイル一覧
 - `~/.claude/.claude-scholar-install-state`: 安全なアンインストールに使う ownership メタデータ
 
-アンインストーラーは install state に記録されたファイルと settings エントリだけを削除し、現在のリポジトリ内容から所有権を推測しません。
+アンインストーラーはインストール記録に従って管理対象のファイルと設定項目を削除します。スクリプトや共通ヘルパーが削除された Scholar 起動コマンドも取り除き、元の設定は `~/.claude/.claude-scholar-backups/uninstall-*/settings.json` に保存します。
 
 ### オプション2: ミニマルインストール
 

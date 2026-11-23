@@ -9,6 +9,23 @@ on:
       - opencode
 
 jobs:
+  settings-hooks:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Execute settings hook launchers
+        run: node scripts/test_settings_hooks.js
+
   installer-smoke:
     runs-on: ubuntu-latest
     steps:

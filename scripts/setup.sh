@@ -256,18 +256,33 @@ merge_settings() {
   info "Backed up settings.json → settings.json.bak"
 
   # Merge hooks, mcpServers, enabledPlugins while preserving user env/model/API key settings.
-  CLAUDE_SETTINGS_TARGET="$target" CLAUDE_SETTINGS_TEMPLATE="$template" CLAUDE_SETTINGS_META_FILE="$SETTINGS_META_FILE" node <<'NODE'
+  CLAUDE_SETTINGS_TARGET="$target" CLAUDE_SETTINGS_TEMPLATE="$template" CLAUDE_SETTINGS_META_FILE="$SETTINGS_META_FILE" \
+  CLAUDE_PREVIOUS_INSTALL_STATE="$STATE_FILE" node <<'NODE'
 const fs = require('fs');
+const { createHash } = require('crypto');
+const { isDeepStrictEqual } = require('util');
 
 const targetPath = process.env.CLAUDE_SETTINGS_TARGET;
 const templatePath = process.env.CLAUDE_SETTINGS_TEMPLATE;
 const metaPath = process.env.CLAUDE_SETTINGS_META_FILE;
 const existing = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
 const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+const previousState = readPreviousInstallState(process.env.CLAUDE_PREVIOUS_INSTALL_STATE);
 const addedHooks = [];
 const addedMcpServers = [];
 const addedMcpServerFields = {};
 const addedEnabledPlugins = [];
+
+function readPreviousInstallState(path) {
+  try {
+    const state = JSON.parse(fs.readFileSync(path, 'utf8'));
+    if (state && typeof state === 'object' && !Array.isArray(state)) return state;
+  } catch (error) {
+    if (error.code === 'ENOENT') return {};
+  }
+  console.warn('Ignoring unreadable previous Claude Scholar install state. Existing hook ownership is unknown.');
+  return {};
+}
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -300,58 +315,91 @@ function mergeMissing(existingValue, templateValue, pathParts, addedPaths) {
   return output;
 }
 
+function hookRecord(event, matcher, hook) {
+  return { event, matcher, type: hook.type || '', command: hook.command || '', timeout: hook.timeout ?? null };
+}
+
+const previousAddedHooks = Array.isArray(previousState.settings?.addedHooks) ? previousState.settings.addedHooks : [];
+const previousHookRecords = new Set(previousAddedHooks
+  .filter((hook) => typeof hook?.event === 'string')
+  .map((hook) => JSON.stringify(hookRecord(hook.event, hook.matcher || '*', hook))));
+
+function hasStockHookFields(hook) {
+  return hook && Object.keys(hook).every((key) => ['type', 'command', 'timeout'].includes(key));
+}
+
+// SHA-256 fingerprints of the five stock launchers in the previous manual settings template.
+// Match the command as data, independently of user-supplied hook options.
+const legacyLaunchers = {
+  PreToolUse: '461b19c2871c56b7305e4ed0846e52992c1ebc3cb9675cc54ada23a9162530d8',
+  SessionEnd: '57af87c9030aebe9506e5f45686ed588a4fec01ff69dcbc9a206bc94ba987f14',
+  SessionStart: '21a23ba6dbea227a58a4a80bfb6eea46d44ba9eee819d50b32b626947bff550c',
+  Stop: '00eb714365431b1676af435e19e0d0cf7bf2b874aff1390b17f00fa0fc765675',
+  UserPromptSubmit: '6e18addc8ce01341c895dd82390b470a37ff665a783d50b3e2af31901db89a9c',
+};
+
+function isKnownLauncher(event, item, hook) {
+  if (item?.type !== hook.type || typeof item.command !== 'string') return false;
+  return item.command === hook.command ||
+    createHash('sha256').update(item.command).digest('hex') === legacyLaunchers[event];
+}
+
 function mergeHooks(existingHooks, templateHooks) {
   const output = existingHooks ? clone(existingHooks) : {};
   for (const [eventName, templateMatchers] of Object.entries(templateHooks || {})) {
     const existingMatchers = Array.isArray(output[eventName]) ? output[eventName] : [];
+    const prunableMatchers = new Set();
     for (const templateMatcher of templateMatchers) {
       const matchValue = templateMatcher.matcher || '*';
-      let existingMatcher = existingMatchers.find((item) => (item.matcher || '*') === matchValue);
-      if (!existingMatcher) {
+      const matching = existingMatchers.filter((item) => (item.matcher || '*') === matchValue);
+      if (matching.length === 0) {
         existingMatchers.push(clone(templateMatcher));
         for (const hook of templateMatcher.hooks || []) {
-          addedHooks.push({
-            event: eventName,
-            matcher: matchValue,
-            type: hook.type || '',
-            command: hook.command || '',
-            timeout: hook.timeout ?? null,
-          });
+          addedHooks.push(hookRecord(eventName, matchValue, hook));
         }
         continue;
       }
 
-      existingMatcher.hooks = Array.isArray(existingMatcher.hooks) ? existingMatcher.hooks : [];
-      const seen = new Set(
-        existingMatcher.hooks.map((hook) =>
-          JSON.stringify({
-            type: hook.type || '',
-            command: hook.command || '',
-            timeout: hook.timeout ?? null,
-          }),
-        ),
-      );
+      for (const matcher of matching) {
+        matcher.hooks = Array.isArray(matcher.hooks) ? matcher.hooks : [];
+      }
 
       for (const hook of templateMatcher.hooks || []) {
-        const signature = JSON.stringify({
-          type: hook.type || '',
-          command: hook.command || '',
-          timeout: hook.timeout ?? null,
-        });
-        if (!seen.has(signature)) {
-          existingMatcher.hooks.push(clone(hook));
-          seen.add(signature);
-          addedHooks.push({
-            event: eventName,
-            matcher: matchValue,
-            type: hook.type || '',
-            command: hook.command || '',
-            timeout: hook.timeout ?? null,
-          });
+        const record = hookRecord(eventName, matchValue, hook);
+        const launchers = matching.flatMap((matcher) => matcher.hooks)
+          .filter((item) => isKnownLauncher(eventName, item, hook));
+        if (launchers.length === 0) {
+          matching[0].hooks.push(clone(hook));
+          addedHooks.push(record);
+          continue;
+        }
+
+        // Keep each user-configured variant in its original position. Otherwise
+        // prefer an existing current launcher over the equivalent legacy one.
+        const customized = launchers.filter((item) => !hasStockHookFields(item) || item.timeout !== hook.timeout);
+        const current = launchers.find((item) => item.command === hook.command);
+        const preferred = customized.length ? customized : [current || launchers[0]];
+        const redundant = new Set(launchers);
+        const retained = [];
+        for (const item of preferred) {
+          item.command = hook.command;
+          if (retained.some((other) => isDeepStrictEqual(other, item))) continue;
+          retained.push(item);
+          redundant.delete(item);
+        }
+        for (const matcher of matching) {
+          const remaining = matcher.hooks.filter((item) => !redundant.has(item));
+          if (remaining.length !== matcher.hooks.length) prunableMatchers.add(matcher);
+          matcher.hooks = remaining;
+        }
+        if (!customized.length && (!current || previousHookRecords.has(JSON.stringify(record)))) {
+          addedHooks.push(record);
         }
       }
     }
-    output[eventName] = existingMatchers;
+    output[eventName] = existingMatchers.filter((matcher) =>
+      !prunableMatchers.has(matcher) || matcher.hooks.length > 0
+    );
   }
   return output;
 }
