@@ -342,14 +342,29 @@ class GranolaIngestTest(unittest.TestCase):
         [(registry_id, link)] = self.granola_registry_entries()
         old_link = f'[[Sources/Interviews/granola-{MEETING_ID}]]'
         registry = re.sub(r' <!-- source-key: [^>]+ -->', '', self.registry.read_text(encoding='utf-8'))
-        self.registry.write_text(registry.replace(link, old_link), encoding='utf-8')
+        row = next(line for line in registry.splitlines() if link in line)
+        other_paths = (f'Sources/Interviews/granola-{SECOND_ID}.md', 'Sources/Interviews/Another discussion.md')
+        other_links = [f'[[{path.removesuffix(".md")}]]' for path in other_paths]
+        other_ids = ['interview-998', 'interview-999']
+        unrelated_rows = [row.replace(registry_id, key, 1).replace(link, other)
+                          for key, other in zip(other_ids, other_links)]
+        self.registry.write_text(registry.replace(row, '\n'.join([row.replace(link, old_link), *unrelated_rows])),
+                                 encoding='utf-8')
         renamed = self.note.rename(self.note.with_name('Research discussion.md'))
-        before = renamed.read_bytes()
+        before = {file: file.read_bytes() for file in (renamed, self.registry, self.index)}
+
+        for path, error in zip(other_paths, ('different meeting UUID', 'conflicts with a legacy filename')):
+            with self.subTest(previous_note=path):
+                rejected = self.run_cli(GRANOLA_HELPER, '--input', '-', '--previous-note', path,
+                                        stdin=json.dumps(self.meeting()), check=False)
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertIn(error, rejected.stderr)
+                self.assertEqual({file: file.read_bytes() for file in before}, before)
 
         self.assertEqual(self.ingest()['status'], 'existing')
-
-        self.assertEqual(renamed.read_bytes(), before)
-        self.assertEqual(self.granola_registry_entries(), [(registry_id, '[[Sources/Interviews/Research discussion]]')])
+        self.assertEqual(renamed.read_bytes(), before[renamed])
+        expected = [(registry_id, '[[Sources/Interviews/Research discussion]]'), *zip(other_ids, other_links)]
+        self.assertEqual(self.granola_registry_entries(), expected)
 
     def test_cross_category_reimport_preserves_status_and_reserves_id(self) -> None:
         first = self.ingest()

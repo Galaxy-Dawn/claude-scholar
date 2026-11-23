@@ -220,14 +220,24 @@ def saved_title(note: Path, fallback: str) -> str:
     return title
 
 
+def legacy_filename_meeting_id(stem: str) -> str | None:
+    if stem.casefold().startswith('granola-') and stem[-37:-36] == '-':
+        try:
+            return str(UUID(stem[-36:]))
+        except ValueError:
+            return None
+    return None
+
+
 def legacy_registry_link(
     root: Path, note: Path, meeting_id: str, previous_note: Path | None,
 ) -> str | None:
     """Find the displaced registry row by UUID or the caller's explicit old path."""
-    if previous_note is not None and (
-        previous_note.is_absolute() or '..' in previous_note.parts or previous_note.suffix != '.md'
-    ):
-        raise ValueError('--previous-note requires a project-relative Markdown path')
+    if previous_note is not None:
+        if previous_note.is_absolute() or '..' in previous_note.parts or previous_note.suffix != '.md':
+            raise ValueError('--previous-note requires a project-relative Markdown path')
+        if legacy_filename_meeting_id(previous_note.stem) not in (None, meeting_id):
+            raise ValueError('--previous-note contains a different meeting UUID')
 
     registry = common.parse_registry_md(common.registry_path(root))
     key = f'granola:{meeting_id}'
@@ -245,17 +255,18 @@ def legacy_registry_link(
         if old_note.resolve().is_relative_to(root) and not old_note.is_symlink() and not old_note.exists():
             missing_links.append(link)
 
+    candidates = [
+        link for link in missing_links
+        if legacy_filename_meeting_id(Path(link[2:-2]).name) == meeting_id
+    ]
     if previous_note is not None:
         previous_link = common.wikilink(previous_note.as_posix())
         if missing_links.count(previous_link) != 1:
             raise ValueError('--previous-note must identify one unmarked Granola registry entry with a missing file')
+        if candidates and previous_link not in candidates:
+            raise ValueError('--previous-note conflicts with a legacy filename carrying this meeting UUID')
         return previous_link
 
-    candidates = []
-    for link in missing_links:
-        name = Path(link[2:-2]).name.casefold()
-        if name.startswith('granola-') and name.endswith('-' + meeting_id):
-            candidates.append(link)
     if len(candidates) > 1:
         raise ValueError('multiple missing legacy Granola registry entries carry this meeting UUID')
     if candidates:
