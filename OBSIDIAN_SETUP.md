@@ -40,7 +40,7 @@ Some optional graph-oriented helpers may still exist in the repo, but the defaul
 
 ## Default behavior
 
-When Codex Scholar is running inside a repository that contains `.codex/project-memory/registry.yaml`, it should treat the repository as bound to an Obsidian project knowledge base and update it by default.
+Codex Scholar uses the existing [repository-local binding](#repository-local-memory-binding) to maintain the project's Obsidian knowledge base.
 
 If the repository is not yet bound, but it looks like a research project (for example it contains `.git`, `README.md`, `docs/`, `notes/`, `plan/`, `results/`, `outputs/`, `src/`, or `scripts/`), Codex Scholar should bootstrap a project knowledge base automatically.
 
@@ -78,15 +78,15 @@ Key generated files commonly include:
 - `_system/registry.md`
 - `_system/schema.md`
 - `_system/lint-report.md`
-- `.codex/project-memory/{project_id}.md`
+- `{project_id}.md` beside the active binding registry in the repository
 - `Maps/literature.canvas` when literature workflow needs it
 
 ## Repository-local memory binding
 
-Each research repo gets a local binding under:
+New research repos use this layout:
 
 ```text
-.codex/project-memory/
+.claude/project-memory/
   registry.yaml
   {project_id}.md
 ```
@@ -94,10 +94,14 @@ Each research repo gets a local binding under:
 - `registry.yaml` stores the repo ↔ vault binding
 - `{project_id}.md` stores the assistant-facing project memory for incremental syncs
 
+Ordinary KB commands prefer `.claude/project-memory/registry.yaml`. If it is
+absent, they use an existing `.codex/project-memory/registry.yaml` from an
+earlier setup. Sync writes the project memory beside the selected registry.
+
 ## Note language
 
 Generated and synced notes resolve their language with this priority:
-1. project config in `.codex/project-memory/registry.yaml`
+1. project config in the active binding registry
 2. environment variable `OBSIDIAN_NOTE_LANGUAGE`
 3. default `en`
 
@@ -136,11 +140,11 @@ Codex does not assume Claude Code-style slash commands. Use the same KB flows th
 
 ## Minimum bound-repo maintenance
 
-When a repo is already bound through `.codex/project-memory/registry.yaml`, Codex Scholar should keep automatic maintenance conservative:
+When a repo is already bound, Codex Scholar should keep automatic maintenance conservative:
 
 - always verify `Daily/YYYY-MM-DD.md` when the turn changes research state,
 - update `00-Hub.md` only when top-level project status actually changes,
-- update `.codex/project-memory/{project_id}.md` whenever project state changes,
+- update `{project_id}.md` beside the active registry whenever project state changes,
 - keep `Knowledge/`, `Experiments/`, `Results/`, and `Writing/` agent-first rather than automatically rewriting them every turn.
 
 ## Optional Obsidian CLI installation
@@ -201,7 +205,7 @@ obsidian://search?vault=My%20Vault&query=%23experiment
 | Issue | Solution |
 |-------|----------|
 | Bootstrap fails with missing vault path | Set `OBSIDIAN_VAULT_PATH` or pass a vault path explicitly |
-| Project keeps re-importing | Check `.codex/project-memory/registry.yaml` exists and points to the correct repo root |
+| Project keeps re-importing | Check that the active binding registry points to the correct repo root |
 | The vault still shows older topologies | Those are from older docs or older project generations; the current default workflow uses the structure above and only keeps `Maps/literature.canvas` by default |
 | CLI commands fail | Check that `Settings -> General -> Advanced -> Command line interface` is enabled; otherwise continue with filesystem-only sync |
 | “Remove project knowledge” is too destructive | Use archive or detach; purge is only for permanent deletion |

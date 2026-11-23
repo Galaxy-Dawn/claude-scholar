@@ -40,7 +40,7 @@ Codex Scholar には project-scoped な Obsidian KB workflow が含まれてい�
 
 ## 既定の挙動
 
-Codex Scholar が `.codex/project-memory/registry.yaml` を含むリポジトリ内で実行されている場合、そのリポジトリを Obsidian プロジェクトナレッジベースにバインド済みとして扱い、既定で更新を行います。
+Codex Scholar は[リポジトリ内のバインド情報](#repo-local-binding-metadata)を使って、プロジェクトの Obsidian ナレッジベースを更新します。
 
 まだバインドされていなくても、`.git`、`README.md`、`docs/`、`notes/`、`plan/`、`results/`、`outputs/`、`src/`、`scripts/` などから研究リポジトリらしいと判断できる場合は、自動で bootstrap します。
 
@@ -78,15 +78,15 @@ Research/{project-slug}/
 - `_system/registry.md`
 - `_system/schema.md`
 - `_system/lint-report.md`
-- `.codex/project-memory/{project_id}.md`
+- リポジトリ内の使用中のバインドファイルと同じディレクトリにある `{project_id}.md`
 - 文献ワークフローで必要な場合の `Maps/literature.canvas`
 
 ## Repo-local binding metadata
 
-各研究リポジトリは次を持ちます。
+新しい研究リポジトリでは次の構成を使います。
 
 ```text
-.codex/project-memory/
+.claude/project-memory/
   registry.yaml
   {project_id}.md
 ```
@@ -94,10 +94,12 @@ Research/{project-slug}/
 - `registry.yaml` は repo ↔ vault の binding を保持
 - `{project_id}.md` は assistant-facing な runtime project memory を保持
 
+通常の KB コマンドは `.claude/project-memory/registry.yaml` を優先します。このファイルがなければ、既存の `.codex/project-memory/registry.yaml` を使います。同期時には、選んだバインドファイルと同じディレクトリにプロジェクトメモリを書き込みます。
+
 ## ノート言語
 
 生成・同期ノートの言語は次の優先順位で決まります。
-1. `.codex/project-memory/registry.yaml` の project config
+1. 使用中のバインドファイルにあるプロジェクト設定
 2. 環境変数 `OBSIDIAN_NOTE_LANGUAGE`
 3. 既定値 `en`
 
@@ -116,11 +118,11 @@ Codex では Claude Code 風の slash command を前提にしません。同じ 
 
 ## バインド済み repo の最小メンテナンス面
 
-リポジトリが `.codex/project-memory/registry.yaml` で既にバインドされている場合、Codex Scholar は保守を保守的に行います。
+バインド済みのリポジトリでは、Codex Scholar は次の項目を保守します。
 
 - 研究状態が変わったら `Daily/YYYY-MM-DD.md` を確認する
 - project のトップレベル状態が本当に変わったときだけ `00-Hub.md` を更新する
-- project 状態が変わったら `.codex/project-memory/{project_id}.md` を更新する
+- プロジェクトの状態が変わったら、使用中のバインドファイルと同じディレクトリの `{project_id}.md` を更新する
 - `Knowledge/`、`Experiments/`、`Results/`、`Writing/` は毎回自動で書き換えず agent-first を維持する
 
 ## オプション: Obsidian CLI のインストール

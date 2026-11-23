@@ -225,6 +225,22 @@ codex mcp list
 [`skills/post-acceptance/references/xquik-promotion.md`](./skills/post-acceptance/references/xquik-promotion.md)。
 当前客户端配置见 [Xquik MCP 指南](https://docs.xquik.com/mcp/overview)。
 
+### Granola 会议笔记（可选）
+
+如果 Codex 已能使用 Granola 连接器，可以直接复用。需要给本机 Codex CLI
+添加连接时，配置 [Granola 官方 MCP](https://www.granola.ai/blog/granola-mcp)，
+并按提示在浏览器登录。
+
+```bash
+codex mcp add granola --url https://mcp.granola.ai/mcp
+codex mcp login granola
+```
+
+在已绑定 Obsidian 的项目中，给 `$granola-meeting-ingest` 一场会议的
+链接，请它整理已定事项、待办和未决问题。笔记进入该项目的
+`Sources/Interviews/`。具体输入和重复导入行为见
+[会议导入说明](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)。
+
 ## 验证
 
 配置完成后，重启 CLI 并验证 MCP 服务器已连接：

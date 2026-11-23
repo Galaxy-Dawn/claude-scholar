@@ -15,6 +15,6 @@ Backup copy kept in repo:
 
 Notes:
 
-- The repo-local binding in `.codex/project-memory/registry.yaml` should point to your configured external vault.
+- The [active repository-local binding](./OBSIDIAN_SETUP.md#repository-local-memory-binding) should point to your configured external vault.
 - The in-repo `obsidian-vault/` directory is optional and should not be treated as the default source of truth.
 - Prefer opening the vault from your native desktop environment if cross-OS windowing is unreliable.

@@ -43,6 +43,10 @@ test_roundtrip_existing_config() {
   test -f "$home/.codex/AGENTS.md"
   test -f "$home/.codex/skills/research-ideation/references/research-contract.md"
   test -f "$home/.codex/skills/post-acceptance/references/xquik-promotion.md"
+  test -f "$home/.codex/skills/granola-meeting-ingest/SKILL.md"
+  test -f "$home/.codex/skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md"
+  test -f "$home/.codex/skills/granola-meeting-ingest/scripts/ingest_granola.py"
+  python3 -B "$home/.codex/skills/granola-meeting-ingest/scripts/ingest_granola.py" --help >/dev/null
   test -f "$home/.codex/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   python3 -B "$home/.codex/scripts/doctor.py" --codex-home "$home/.codex" --cwd "$home" --json |
     python3 -c 'import json, sys; d = json.load(sys.stdin); assert d["installation"]["status"] == "installed"'

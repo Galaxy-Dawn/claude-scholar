@@ -228,6 +228,22 @@ codex mcp list
 を参照してください。最新のクライアント設定は
 [Xquik MCPガイド](https://docs.xquik.com/mcp/overview)で確認してください。
 
+### Granola の会議ノート（オプション）
+
+Codex で利用可能な Granola コネクターを使います。CLI で接続する場合は
+[Granola 公式 MCP](https://www.granola.ai/blog/granola-mcp) を追加し、
+ブラウザーで認証します。
+
+```bash
+codex mcp add granola --url https://mcp.granola.ai/mcp
+codex mcp login granola
+```
+
+Obsidian にバインドしたプロジェクトで、対象の会議リンクを
+`$granola-meeting-ingest` に指定します。入力形式と再インポートの
+動作は [会議インポート手順](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
+を参照してください。
+
 ## 検証
 
 設定後、CLIを再起動してMCPサーバーの接続を確認:

@@ -40,7 +40,7 @@ Codex Scholar 内置了面向项目作用域的 Obsidian KB 工作流。
 
 ## 默认行为
 
-当 Codex Scholar 运行在一个包含 `.codex/project-memory/registry.yaml` 的仓库里时，应默认把这个仓库视为已经绑定到 Obsidian 项目知识库，并在任务过程中自动维护它。
+Codex Scholar 通过[仓库内的绑定记录](#repo-local-binding-metadata)识别并维护该项目的 Obsidian 知识库。
 
 如果仓库还没有绑定，但看起来像研究项目（例如包含 `.git`、`README.md`、`docs/`、`notes/`、`plan/`、`results/`、`outputs/`、`src/` 或 `scripts/`），Codex Scholar 应自动 bootstrap 一个项目知识库。
 
@@ -78,15 +78,15 @@ Research/{project-slug}/
 - `_system/registry.md`
 - `_system/schema.md`
 - `_system/lint-report.md`
-- `.codex/project-memory/{project_id}.md`
+- 仓库中与当前绑定文件同目录的 `{project_id}.md`
 - 文献工作流需要时生成 `Maps/literature.canvas`
 
 ## Repo-local binding metadata
 
-每个研究仓库都会在本地维护：
+新项目使用以下目录。
 
 ```text
-.codex/project-memory/
+.claude/project-memory/
   registry.yaml
   {project_id}.md
 ```
@@ -94,10 +94,12 @@ Research/{project-slug}/
 - `registry.yaml` 存 repo ↔ vault 的绑定关系
 - `{project_id}.md` 存 assistant-facing 的运行时项目记忆
 
+普通知识库命令优先读取 `.claude/project-memory/registry.yaml`。如果该文件不存在，就读取旧版使用的 `.codex/project-memory/registry.yaml`。同步时，项目记忆会写回选中的绑定文件所在目录。
+
 ## 笔记语言
 
 生成和同步笔记时，语言按以下优先级解析：
-1. `.codex/project-memory/registry.yaml` 中的项目配置
+1. 当前绑定文件中的项目配置
 2. 环境变量 `OBSIDIAN_NOTE_LANGUAGE`
 3. 默认 `en`
 
@@ -120,11 +122,11 @@ Codex 不假设 Claude Code 风格的 slash commands。请通过自然语言请�
 
 ## 已绑定仓库的最小维护面
 
-当仓库已经通过 `.codex/project-memory/registry.yaml` 绑定时，Codex Scholar 应保持保守维护：
+仓库完成绑定后，Codex Scholar 应保持保守维护：
 
 - 只要研究状态发生变化，就检查 `Daily/YYYY-MM-DD.md`
 - 只有项目顶层状态真正变化时才更新 `00-Hub.md`
-- 只要项目状态变化，就更新 `.codex/project-memory/{project_id}.md`
+- 只要项目状态变化，就更新当前绑定文件所在目录的 `{project_id}.md`
 - `Knowledge/`、`Experiments/`、`Results/`、`Writing/` 默认保持 agent-first，而不是每轮都自动重写
 
 ## 可选的 Obsidian CLI 安装
@@ -172,7 +174,7 @@ Codex Scholar 可选使用官方 Obsidian CLI 与 URI：
 | 问题 | 解决方式 |
 |------|----------|
 | Bootstrap 缺少 vault path | 设置 `OBSIDIAN_VAULT_PATH` 或显式传入 vault path |
-| 项目反复重新导入 | 检查 `.codex/project-memory/registry.yaml` 是否存在且 repo root 正确 |
+| 项目反复重新导入 | 检查当前绑定文件是否指向正确的仓库根目录 |
 | vault 里仍出现旧目录拓扑 | 那通常来自旧文档或旧项目生成；当前默认结构以上述目录为准，默认只自动维护 `Maps/literature.canvas` |
 | CLI 命令失败 | 检查 `Settings -> General -> Advanced -> Command line interface` 是否已打开；否则继续使用 filesystem-only sync |
 | “删除项目知识” 看起来过于危险 | 优先使用 archive 或 detach；purge 仅用于永久删除 |

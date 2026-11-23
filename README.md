@@ -120,6 +120,7 @@ It can still help in other research settings, but its current workflow design is
 - (Optional) Python + [uv](https://docs.astral.sh/uv/) for Python development
 - (Optional) [Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) for literature workflows
 - (Optional) [Obsidian](https://obsidian.md/) for project knowledge-base workflows
+- (Optional) [Granola](#granola) to review a meeting and save its decisions and action items in Obsidian
 
 ### Option 1: Full Installation (Recommended)
 
@@ -333,6 +334,15 @@ Use Obsidian when you want Claude Scholar to maintain a filesystem-first researc
 
 See [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md).
 
+### Granola
+
+1. **Choose the project and vault.** The full installation includes `granola-meeting-ingest`. Connect Granola in Codex, open the research project and use the vault you normally open in Obsidian. Codex checks the bound vault's folder and project and asks which to use if several could match. [Connect Granola](./MCP_SETUP.md#granola-meeting-notes-optional) · [Bind an Obsidian project](./OBSIDIAN_SETUP.md)
+2. **Capture the meeting.** Start taking notes in Granola and let it finish the note. An existing Granola note from a meeting, interview or talk also works. [Recording in Granola](https://docs.granola.ai/help-center/taking-notes/transcription)
+3. **Ask Codex to import it.** In the bound project, say “Save this Granola meeting to this project's Obsidian vault” and include the note link. A meeting title and date also work. Codex asks which meeting you meant if several match. The connector reads the note for you.
+4. **Open the note.** Codex saves the summary, decisions and follow-ups and returns the vault folder, the path inside it and an Obsidian link. The default folder is `Research/<project-slug>/Sources/Interviews/`. The project's `02-Index.md` links to the note. If Desktop has not registered this vault yet, choose **Manage vaults → Open folder as vault**, select the returned vault folder, then follow the link.
+
+Notes go in the bound project's `Sources/Interviews/` folder, for example `Granola-26-11-21-Baseline-review.md`. If the filename is taken, a new meeting gets a suffix such as `-2` or `-3`. The importer uses the meeting UUID in the note properties to find the same note on repeat imports. Without a connector, supply a local Granola export and its meeting UUID. [Import guide and example note](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
+
 ### Xquik (optional)
 
 Use Xquik when the `post-acceptance` skill needs bounded public X research,
@@ -521,7 +531,7 @@ Legacy Codex-era Obsidian skill shims such as `obsidian-project-memory`, `obsidi
 **Note language configuration**
 
 Generated and synced Obsidian notes now resolve their language with this priority:
-1. project config: `.codex/project-memory/registry.yaml` -> `note_language`
+1. `note_language` in the project's [active binding registry](./OBSIDIAN_SETUP.md#repository-local-memory-binding)
 2. environment variable: `OBSIDIAN_NOTE_LANGUAGE`
 3. default: `en`
 

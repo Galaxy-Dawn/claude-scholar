@@ -120,6 +120,7 @@ Claude Scholar 当前尤其适合：
 - （可选）Python + [uv](https://docs.astral.sh/uv/) 用于 Python 开发
 - （可选）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) 用于文献工作流
 - （可选）[Obsidian](https://obsidian.md/) 用于项目知识库工作流
+- （可选）[Granola](#granola) 用于会议复盘，并把讨论内容整理到 Obsidian
 
 ### 选项 1：完整安装（推荐）
 
@@ -316,6 +317,15 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.codex/AGENTS.zh-CN.md
 - 管理 `Writing/` 与 `Daily/`
 
 详见 [OBSIDIAN_SETUP.zh-CN.md](./OBSIDIAN_SETUP.zh-CN.md)。
+
+### Granola
+
+1. **选择项目和库。** 完整安装包含 `granola-meeting-ingest`。在 Codex 中连接 Granola，进入研究项目，使用你平时在 Obsidian 打开的库。Codex 会核对绑定的库路径和项目。如果有多个可能的目标，会请你选择。[连接 Granola](./MCP_SETUP.zh-CN.md#granola-会议笔记可选) · [绑定 Obsidian 项目](./OBSIDIAN_SETUP.zh-CN.md)
+2. **记录会议。** 在 Granola 中开始记录，会后结束记录，等笔记生成。组会、访谈或讲座已有 Granola 笔记时，可以直接导入。[Granola 记录说明](https://docs.granola.ai/help-center/taking-notes/transcription)
+3. **会后导入。** 在已绑定的项目里把笔记链接发给 Codex，说“把这场 Granola 会议整理进当前项目的 Obsidian”。连接器会读取正文。也可以给会议标题和日期，如果有多场符合，Codex 会请你选一场。
+4. **打开笔记。** Codex 将摘要、决定和后续事项写入访谈笔记，返回库文件夹、库内路径和 Obsidian 直达链接。默认目录是 `Research/<项目名>/Sources/Interviews/`，项目的 `02-Index.md` 也会列出笔记。如果桌面端尚未登记这个库，在「管理仓库 → 打开本地仓库」选择返回的库文件夹，再点链接。
+
+笔记保存在已绑定项目的 `Sources/Interviews/` 下，例如 `Granola-26-11-21-基线实验复盘.md`。同名文件已存在时，新会议的文件名依次加上 `-2`、`-3`。导入器通过笔记属性中的会议 UUID 识别同一场会议，重复导入会返回已有笔记。没有连接器时，可以提供本地导出的笔记和会议 UUID。[导入流程与笔记示例](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
 
 ### Xquik（可选）
 
