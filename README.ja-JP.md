@@ -143,7 +143,7 @@ bash /tmp/claude-scholar/scripts/setup.sh
 **手動で設定した旧版フックの更新。** インストーラーを再実行すると、`settings.json` をバックアップし、Scholar の既定の起動コマンドを5つ更新します。新しいコマンドは空白を含むホームパスに対応し、フックの終了コードを保持します。
 
 - 同じイベントとマッチャーでは、異なるユーザー設定を1つずつ残します。`async`、`timeout`、`statusMessage` も保持され、再インストールしても結果は同じです。
-- 独自のコマンドや別のマッチャーの設定は保持されます。アンインストール後もカスタマイズした項目は残ります。
+- セットアップでは独自のコマンドや別のマッチャーの設定を保持します。
 - 選択インストールでは、起動コマンドを [`settings.json.template`](settings.json.template) と照合してください。
 
 アップデート方法:
@@ -165,7 +165,7 @@ bash scripts/uninstall.sh
 - `~/.claude/.claude-scholar-manifest.txt`: Claude Scholar が実際に管理するファイル一覧
 - `~/.claude/.claude-scholar-install-state`: 安全なアンインストールに使う ownership メタデータ
 
-アンインストーラーは install state に記録されたファイルと settings エントリだけを削除し、現在のリポジトリ内容から所有権を推測しません。
+アンインストーラーはインストール記録に従って管理対象のファイルと設定項目を削除します。スクリプトや共通ヘルパーが削除された Scholar 起動コマンドも取り除き、元の設定は `~/.claude/.claude-scholar-backups/uninstall-*/settings.json` に保存します。
 
 ### オプション2: ミニマルインストール
 

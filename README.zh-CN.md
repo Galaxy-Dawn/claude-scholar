@@ -148,7 +148,7 @@ bash /tmp/claude-scholar/scripts/setup.sh
 **更新旧版手动 Hook 配置。** 重新运行安装器会备份 `settings.json`，并更新五个 Scholar 默认启动命令。新命令支持含空格的用户目录，并保留 Hook 的退出码。
 
 - 在同一事件和匹配条件下，每种不同的用户配置各保留一份，包括 `async`、`timeout` 和 `statusMessage`。重复安装会得到相同结果。
-- 自定义命令和其他匹配条件保留原配置。卸载时也会保留用户定制项。
+- 安装时保留自定义命令和其他匹配条件。
 - 选择性安装时，可对照 [`settings.json.template`](settings.json.template) 检查启动命令。
 
 以后做增量更新时：
@@ -170,7 +170,7 @@ bash scripts/uninstall.sh
 - `~/.claude/.claude-scholar-manifest.txt`：记录 Claude Scholar 实际管理的文件
 - `~/.claude/.claude-scholar-install-state`：记录安全卸载所需的 ownership 元数据
 
-卸载脚本只会删除 install state 中明确记录的文件和 settings 条目，不会再根据当前 repo 工作树去猜测所有权。
+卸载脚本根据安装记录移除受管理的文件和配置项。脚本或共享模块被卸载的 Scholar 启动命令也会被移除，原配置保存在 `~/.claude/.claude-scholar-backups/uninstall-*/settings.json`。
 
 ### 选项 2：最小化安装
 

@@ -113,7 +113,7 @@ assert [m["matcher"] for m in hooks["PreToolUse"]] == ["Read", "Bash|Write|Edit"
 PY
   run_uninstall "$home"
 
-  python3 - "$home/.claude/settings.json" "$REPO_ROOT/scripts/test-fixtures/manual-hooks-v1.json" <<'PY'
+  python3 - "$home/.claude/settings.json" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
 assert data["mcpServers"]["zotero"]["command"] == "custom-zotero"
@@ -122,8 +122,7 @@ assert "env" not in data["mcpServers"]["zotero"]
 assert data["enabledPlugins"]["superpowers@claude-plugins-official"] is False
 hooks = data["hooks"]["Stop"][0]["hooks"]
 assert len(hooks) == 1 and hooks[0]["command"] == "echo .claude/hooks/stop-summary.js"
-legacy = json.load(open(sys.argv[2], encoding="utf-8"))["PreToolUse"][0]
-assert data["hooks"]["PreToolUse"] == [{**legacy, "matcher": "Read"}]
+assert "PreToolUse" not in data["hooks"]
 PY
   pass "preserve pre-existing settings entries with overlapping keys"
 }
@@ -182,28 +181,21 @@ assert sorted((h["event"], h["matcher"]) for h in owned) == [
 PY
 
   run_uninstall "$home"
-  python3 - "$REPO_ROOT" "$home/.claude/settings.json" <<'PY'
+  python3 - "$home/.claude/settings.json" <<'PY'
 import json, sys
 from pathlib import Path
 
-root, target = map(Path, sys.argv[1:])
-settings = json.loads(target.read_text())
-current = json.loads((root / "settings.json.template").read_text())["hooks"]
+settings_path = Path(sys.argv[1])
+settings = json.loads(settings_path.read_text())
 assert settings["model"] == "user-model"
-stop = current["Stop"][0]["hooks"][0]
-current["SessionStart"][0]["hooks"][0]["async"] = True
-original = json.loads((target.parent.parent / "settings-before-upgrade.json").read_text())
-assert settings["hooks"] == {
-    "PreToolUse": [original["hooks"]["PreToolUse"][-1]],
-    "SessionEnd": current["SessionEnd"],
-    "SessionStart": current["SessionStart"],
-    "Stop": [{"matcher": "*", "hooks": [{**stop, "timeout": 33}, {**stop, "async": False, "statusMessage": "Saving"}]}],
-}
+assert "hooks" not in settings, settings["hooks"]
+backup, = (settings_path.parent / ".claude-scholar-backups").glob("uninstall-*/settings.json")
+assert backup.read_bytes() == (settings_path.parent.parent / "settings-after-upgrade.json").read_bytes()
 PY
-  pass "upgrade replaces stock manual Hooks, is repeatable, and preserves user Hooks"
+  pass "upgrade migrates stock Hooks and uninstall backs up their customizations"
 }
 
-test_customized_installed_hooks_are_preserved() {
+test_customized_installed_hooks_are_backed_up() {
   local home reinstall
   for reinstall in no yes; do
     home="$(make_home)"
@@ -216,6 +208,7 @@ settings = Path(sys.argv[1])
 data = json.loads(settings.read_text())
 data["hooks"]["SessionStart"][0]["hooks"][0]["async"] = True
 data["hooks"]["Stop"][0]["hooks"][0]["timeout"] = 41
+data["hooks"]["Stop"][0]["hooks"].append({"type": "command", "command": "echo .claude/hooks/stop-summary.js"})
 settings.write_text(json.dumps(data))
 PY
 
@@ -229,19 +222,23 @@ assert all(hook["event"] not in {"SessionStart", "Stop"} for hook in state["sett
 PY
     fi
 
+    cp "$home/.claude/settings.json" "$home/settings-before-uninstall.json"
     run_uninstall "$home"
-    python3 - "$REPO_ROOT" "$home/.claude/settings.json" <<'PY'
+    test ! -e "$home/.claude/hooks/session-start.js"
+    test ! -e "$home/.claude/hooks/stop-summary.js"
+    python3 - "$home/.claude/settings.json" <<'PY'
 import json, sys
 from pathlib import Path
 
-root, settings = map(Path, sys.argv[1:])
-current = json.loads((root / "settings.json.template").read_text())["hooks"]
-current["SessionStart"][0]["hooks"][0]["async"] = True
-current["Stop"][0]["hooks"][0]["timeout"] = 41
-assert json.loads(settings.read_text())["hooks"] == {event: current[event] for event in ("SessionStart", "Stop")}
+settings_path = Path(sys.argv[1])
+assert json.loads(settings_path.read_text())["hooks"] == {
+    "Stop": [{"matcher": "*", "hooks": [{"type": "command", "command": "echo .claude/hooks/stop-summary.js"}]}],
+}
+backup, = (settings_path.parent / ".claude-scholar-backups").glob("uninstall-*/settings.json")
+assert backup.read_bytes() == (settings_path.parent.parent / "settings-before-uninstall.json").read_bytes()
 PY
   done
-  pass "uninstall preserves customized installed Hooks with or without reinstall"
+  pass "uninstall backs up customized Scholar Hooks with or without reinstall"
 }
 
 test_manifest_missing_fails_safe() {
@@ -349,32 +346,55 @@ PY
 }
 
 test_overlapping_mcp_keys_do_not_trigger_legacy_adoption() {
-  local home
-  home="$(make_home)"
-  mkdir -p "$home/.claude/hooks"
-  cp "$REPO_ROOT/hooks/security-guard.js" "$home/.claude/hooks/security-guard.js"
-  python3 - "$home/.claude/settings.json" <<'PY'
+  local home preexisting_common
+  for preexisting_common in no yes; do
+    home="$(make_home)"
+    mkdir -p "$home/.claude/hooks"
+    cp "$REPO_ROOT/hooks/security-guard.js" "$home/.claude/hooks/"
+    if [ "$preexisting_common" = yes ]; then
+      cp "$REPO_ROOT/hooks/hook-common.js" "$home/.claude/hooks/"
+    fi
+    python3 - "$home/.claude/settings.json" <<'PY'
 import json, sys
-data = {
-    "mcpServers": {
-        "zotero": {
-            "command": "custom-zotero"
-        }
-    },
-    "enabledPlugins": {
-        "superpowers@claude-plugins-official": False
-    }
-}
-with open(sys.argv[1], "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2)
-    f.write("\n")
+from pathlib import Path
+
+Path(sys.argv[1]).write_text(json.dumps({
+    "mcpServers": {"zotero": {"command": "custom-zotero"}},
+    "enabledPlugins": {"superpowers@claude-plugins-official": False},
+}))
 PY
 
-  run_setup "$home"
-  run_uninstall "$home"
+    run_setup "$home"
+    python3 - "$home/.claude/settings.json" <<'PY'
+import json, sys
+from pathlib import Path
 
-  test -f "$home/.claude/hooks/security-guard.js"
-  pass "overlapping MCP keys alone do not trigger legacy adoption"
+settings = Path(sys.argv[1])
+data = json.loads(settings.read_text())
+matcher = data["hooks"]["PreToolUse"][0]
+data["hooks"]["PreToolUse"].append({**matcher, "matcher": "Read"})
+settings.write_text(json.dumps(data))
+PY
+    run_uninstall "$home"
+
+    test -f "$home/.claude/hooks/security-guard.js"
+    python3 - "$home/.claude/settings.json" "$preexisting_common" <<'PY'
+import json, sys
+from pathlib import Path
+
+settings = Path(sys.argv[1])
+hooks = json.loads(settings.read_text()).get("hooks", {})
+matchers = [matcher["matcher"] for matcher in hooks.get("PreToolUse", [])]
+common = settings.parent / "hooks/hook-common.js"
+if sys.argv[2] == "yes":
+    assert common.is_file()
+    assert matchers == ["Read"], hooks
+else:
+    assert not common.exists()
+    assert not matchers, hooks
+PY
+  done
+  pass "uninstall preserves existing hook scripts and cleans launchers missing their shared helper"
 }
 
 main() {
@@ -384,7 +404,7 @@ main() {
   test_writing_memory_survives_update_and_legacy_uninstall
   test_preserve_preexisting_settings_keys
   test_stock_manual_hooks_migrate_on_upgrade
-  test_customized_installed_hooks_are_preserved
+  test_customized_installed_hooks_are_backed_up
   test_manifest_missing_fails_safe
   test_state_records_direct_claude_targets
   test_identical_preexisting_file_is_not_owned

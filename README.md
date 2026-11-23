@@ -149,7 +149,7 @@ The installer is **backup-aware and incremental-update friendly**:
 **Updating older manual hooks.** Run the installer to back up `settings.json` and migrate the five stock Scholar launchers. The updated commands work with spaces in the home path and preserve the hook's exit code.
 
 - For the same event and matcher, setup keeps one copy of each distinct user configuration, including `async`, `timeout`, and `statusMessage`. Reinstalling preserves the result.
-- User commands and other matchers keep their settings. Uninstalling preserves customized entries.
+- Setup preserves custom commands and other matchers.
 - For a selective installation, compare the launchers with [`settings.json.template`](settings.json.template).
 
 To update later:
@@ -171,7 +171,7 @@ The installer now writes:
 - `~/.claude/.claude-scholar-manifest.txt` for the exact files managed by Claude Scholar
 - `~/.claude/.claude-scholar-install-state` for install ownership metadata used by safe uninstall
 
-The uninstaller removes only files and settings entries recorded in that install state. It does not guess ownership from the current repo checkout.
+The uninstaller uses the install records to remove managed files and settings entries. It also removes exact Scholar launchers whose scripts or shared helper were removed, with the original settings in `~/.claude/.claude-scholar-backups/uninstall-*/settings.json`.
 
 ### Option 2: Minimal Installation
 

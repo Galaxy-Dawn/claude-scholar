@@ -121,8 +121,9 @@ cleanup_settings() {
     return 0
   fi
 
-  SETTINGS_PATH="$settings" STATE_PATH="$STATE_FILE" node <<'NODE'
+  SETTINGS_PATH="$settings" STATE_PATH="$STATE_FILE" MANIFEST_PATH="$MANIFEST_FILE" node <<'NODE'
 const fs = require('fs');
+const path = require('path');
 
 const settingsPath = process.env.SETTINGS_PATH;
 const statePath = process.env.STATE_PATH;
@@ -135,6 +136,36 @@ const addedMcpServerFields = state.settings?.addedMcpServerFields && typeof stat
   ? state.settings.addedMcpServerFields
   : {};
 const addedEnabledPlugins = new Set(Array.isArray(state.settings?.addedEnabledPlugins) ? state.settings.addedEnabledPlugins : []);
+
+const configDir = path.dirname(settingsPath);
+const managedPaths = new Set(fs.readFileSync(process.env.MANIFEST_PATH, 'utf8').split(/\r?\n/));
+
+function managedScriptIsGone(script) {
+  return managedPaths.has(script) && !fs.existsSync(path.join(configDir, script));
+}
+
+function usesHookCommon(scriptPath) {
+  try {
+    return fs.statSync(scriptPath).isFile() && fs.readFileSync(scriptPath, 'utf8').includes("require('./hook-common')");
+  } catch {
+    return false;
+  }
+}
+
+// Match shipped commands exactly, regardless of their options or matcher.
+const removedHookCommands = new Set();
+const hookCommonIsGone = managedScriptIsGone('hooks/hook-common.js');
+const hookScripts = [
+  'security-guard.js', 'session-summary.js', 'session-start.js', 'stop-summary.js', 'skill-forced-eval.js',
+];
+const legacyPrefix = 'node -e "const{execSync}=require(\'child_process\'),p=require(\'path\'),h=require(\'os\').homedir();';
+for (const filename of hookScripts) {
+  const script = `hooks/${filename}`;
+  if (!managedScriptIsGone(script) && !(hookCommonIsGone && usesHookCommon(path.join(configDir, script)))) continue;
+  const hookPath = `.claude/${script}`;
+  removedHookCommands.add(`node -e "require(require('path').join(require('os').homedir(),'${hookPath}'))"`);
+  removedHookCommands.add(legacyPrefix + String.raw`execSync(\"node \"+p.join(h,'${hookPath}'),{stdio:'inherit'})"`);
+}
 
 function hookSignature(hook) {
   return JSON.stringify({
@@ -186,10 +217,10 @@ if (settings.hooks && typeof settings.hooks === 'object') {
       if (!Array.isArray(matcher?.hooks)) return [matcher];
       const key = `${eventName}::${matcher.matcher || '*'}`;
       const owned = ownedHookMatchers.get(key);
-      if (!owned) return [matcher];
       const hooks = matcher.hooks.filter((hook) => {
+        if (hook?.type === 'command' && removedHookCommands.has(hook.command)) return false;
         const stock = hook && Object.keys(hook).every((key) => ['type', 'command', 'timeout'].includes(key));
-        return !stock || !owned.has(hookSignature(hook));
+        return !stock || !owned?.has(hookSignature(hook));
       });
       if (hooks.length === matcher.hooks.length) return [matcher];
       return hooks.length > 0 ? [{ ...matcher, hooks }] : [];
