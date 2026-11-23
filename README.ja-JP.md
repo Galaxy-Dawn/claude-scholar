@@ -27,6 +27,8 @@
 
 ## 最新ニュース
 
+- **2026-09-23** · `paper-miner` が抽出した執筆パターンを複数の執筆スキルで再利用でき、アップグレードやアンインストール後も保持されます。 [#52](https://github.com/Galaxy-Dawn/claude-scholar/pull/52)
+- **2026-08-27** · `/promote` で論文の広報に Xquik を任意で利用できるようにしました。 [#47](https://github.com/Galaxy-Dawn/claude-scholar/pull/47)
 - **2026-06-03**: **Kimi Code CLI ブランチを追加し、Kimi からの力強い支援に感謝** — `kimi` ブランチを Claude Scholar の Kimi Code CLI 版として追加しました。本プロジェクトへの Kimi チームの継続的で力強い支援に感謝します。
 - **2026-05-14**: **`expression-skill` を中核のコミュニケーション層に据え、`planning-with-files` を既定の永続 planning 層として戻し、Nature 執筆スタックも拡張** — [`expression-skill`](./skills/expression-skill/README.md) を、報告・計画・ファイル操作・多段の技術作業における結論先行の表現規律として明示しました。さらに [`planning-with-files`](./skills/planning-with-files/SKILL.md) を、複雑な作業で `task_plan.md` / `notes.md` を使う既定の on-disk planning / progress-tracking workflow として再導入しました。あわせて、章構成の起草と論証構築向けに [`nature-writing`](./skills/nature-writing/README.md) を導入し、[`nature-polishing`](./skills/nature-polishing/README.md) を上流の最新 article-pattern 版へ更新し、[`nature-response`](./skills/nature-response/README.md) と [`nature-data`](./skills/nature-data/README.md) も journal-writing スタックに維持しています。
 - **2026-05-13**: **根拠ゲート付き研究ワークフローと `Sources/Papers` ルーティングを整理** — Evidence Records、claim strength、Claim Promotion Gate を共有する `research-contract.md` を追加しました。研究アイデア出し、Zotero 取り込み、文献統合、結果レポート、論文執筆、rebuttal ワークフローを同じ根拠契約に接続し、プロジェクトの論文ソースノートはまず `Sources/Papers` に置き、根拠ゲートを通った主張だけを `Knowledge` や `Writing` へ進める方針を明確にしました。
