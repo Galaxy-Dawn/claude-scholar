@@ -150,7 +150,10 @@ path in the app. [Obsidian URI](https://obsidian.md/help/uri)
 | `archived` | The helper returns the archived note's path. The note stays in the archive. |
 
 Keep the `source_provider` and `granola_meeting_id` fields when editing the
-note. If multiple notes have the same meeting UUID, the helper reports the
+note. The importer reads saved Markdown with or without a UTF-8 BOM. The
+registry stores the meeting UUID in a hidden row comment. After a manual
+rename, re-import directly to keep the source ID and refresh the index link.
+If multiple notes have the same meeting UUID, the helper reports the
 conflict so you can choose which copy to keep.
 
 New notes use the [source interview template](../../../templates/notes/source-interview.md).

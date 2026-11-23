@@ -211,6 +211,39 @@ def saved_title(note: Path, fallback: str) -> str:
     return title
 
 
+def legacy_registry_link(root: Path, note: Path, meeting_id: str, title: str) -> str | None:
+    """Identify an unmarked, missing link from an earlier version of the importer."""
+    registry = common.parse_registry_md(common.registry_path(root))
+    key = f'granola:{meeting_id}'
+    if any(row.get('Source Key') == key for rows in registry.values() for row in rows):
+        return None
+    rows = registry['Sources']
+    date = common.read_frontmatter_fields(note, 'meeting_date').get('meeting_date')
+    stem = Path(meeting_filename(date, title)).stem
+    old_name = re.compile(rf'{re.escape(stem)}(?:-\d+)?', re.IGNORECASE)
+    current_link = common.wikilink(note.relative_to(root).as_posix())
+    if old_name.fullmatch(note.stem) and any(row['Path'] == current_link for row in rows):
+        return None  # A different same-title meeting may also have a missing link.
+    candidates = []
+    for row in rows:
+        if row.get('Source Key') or row.get('Origin') != 'Granola':
+            continue
+        link = row['Path']
+        if not link.startswith('[[Sources/') or not link.endswith(']]'):
+            continue
+        relative = link[2:-2]
+        name = Path(relative).name
+        uuid_name = name.lower().endswith('-' + meeting_id)
+        if not (uuid_name or old_name.fullmatch(name)):
+            continue
+        old_note = root / (relative + '.md')
+        if old_note.resolve().is_relative_to(root) and not old_note.is_symlink() and not old_note.exists():
+            candidates.append(link)
+    if len(candidates) > 1:
+        raise ValueError('multiple missing legacy Granola registry entries could match this note')
+    return candidates[0] if candidates else None
+
+
 def import_target(binding: common.Binding) -> dict[str, str]:
     if binding.status != 'active' or not binding.project_root.is_dir():
         raise ValueError('Granola import requires an active, existing Obsidian project binding')
@@ -248,7 +281,11 @@ def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
                 needs_registry_rebuild = True
             if needs_registry_rebuild:
                 sync_registry(root)
-            result = common.registry_add_or_update(root, relative, title=title, origin='Granola')
+            old_link = legacy_registry_link(root, note, meeting_id, title) if status == 'existing' else None
+            result = common.registry_add_or_update(
+                root, relative, title=title, origin='Granola',
+                source_key=f'granola:{meeting_id}', previous_link=old_link,
+            )
             if not result['updated']:
                 raise ValueError(f'the existing note cannot be registered at {relative}')
             common.update_index(root)

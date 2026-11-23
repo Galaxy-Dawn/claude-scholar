@@ -239,7 +239,8 @@ def read_frontmatter_fields(path: Path, *fields: str) -> dict[str, str]:
     values: dict[str, str] = {}
     root_indent = None
     with path.open('rb') as stream:
-        if stream.readline(5).rstrip(b'\r\n') != b'---':
+        # The longest valid opener is a UTF-8 BOM followed by "---\r\n".
+        if stream.readline(8).removeprefix(b'\xef\xbb\xbf').rstrip(b'\r\n') != b'---':
             return {}
         for line in stream:
             if line.rstrip(b'\r\n') in {b'---', b'...'}:
@@ -564,6 +565,10 @@ def parse_registry_md(path: Path) -> dict[str, list[dict[str, str]]]:
                 rows[current_section].append(row)
             continue
         if row.get(columns[0], ''):
+            stamp, marker, key = row['Updated'].rpartition(' <!-- source-key: ')
+            if marker and re.fullmatch(r'[\w.:-]+ -->', key):
+                row['Updated'] = stamp
+                row['Source Key'] = key.removesuffix(' -->')
             rows[current_section].append(row)
     return rows
 
@@ -577,7 +582,11 @@ def render_registry_md(rows: dict[str, list[dict[str, str]]], last_updated: str 
         lines.append('| ' + ' | '.join(columns) + ' |')
         lines.append('|' + '|'.join(['---'] * len(columns)) + '|')
         for row in rows.get(section, []):
-            lines.append('| ' + ' | '.join(row.get(col, '') for col in columns) + ' |')
+            cells = [row.get(col, '') for col in columns]
+            if row.get('Source Key'):
+                # Keep the visible columns readable by older KB installations.
+                cells[columns.index('Updated')] += f" <!-- source-key: {row['Source Key']} -->"
+            lines.append('| ' + ' | '.join(cells) + ' |')
         lines.append('')
     return '\n'.join(lines).rstrip() + '\n'
 
@@ -684,7 +693,8 @@ def _metadata_cell(value: str) -> str | None:
 
 def registry_add_or_update(
     project_root: Path, rel_path: str, *, status: str | None = None,
-    title: str | None = None, origin: str | None = None,
+    title: str | None = None, origin: str | None = None, source_key: str | None = None,
+    previous_link: str | None = None,
 ) -> dict[str, Any]:
     metadata = None
     payload = section_and_row_for_relpath(rel_path)
@@ -699,8 +709,27 @@ def registry_add_or_update(
     rows = parse_registry_md(registry_path(project_root))
     existing = None
     for item in rows[section]:
-        if item.get('Path') == wikilink(rel_path):
+        if item.get('Path') == row['Path'] and (source_key is None or item.get('Source Key') in (None, source_key)):
             existing = item
+            break
+    if source_key:
+        for old_section, entries in rows.items():
+            prior = next((item for item in entries if item.get('Source Key') == source_key), None)
+            if prior is None and previous_link is not None:
+                prior = next((item for item in entries
+                              if item.get('Path') == previous_link and not item.get('Source Key')), None)
+            if prior is None:
+                continue
+            if prior is existing:
+                break
+            if existing is not None:
+                rows[section].remove(existing)
+            if old_section == section:
+                existing = prior
+            else:
+                entries.remove(prior)
+                existing = {**row, 'ID': prior['ID']}
+                rows[section].append(existing)
             break
     if existing is None:
         row['ID'] = next_registry_id(rows[section], prefix_for_section_row(section, row))
@@ -726,6 +755,8 @@ def registry_add_or_update(
         row['Title'] = title.replace('|', '｜')
     if origin is not None and section == 'Sources':
         row['Origin'] = origin.replace('|', '｜')
+    if source_key is not None:
+        row['Source Key'] = source_key
     write_registry(project_root, rows)
     return {'updated': True, 'section': section, 'path': rel_path}
 

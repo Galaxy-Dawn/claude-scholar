@@ -217,6 +217,89 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertEqual(note.read_bytes(), before)
         self.assertIn('source_kind: notes', before.decode('utf-8'))
 
+    def granola_registry_entries(self) -> list[tuple[str, str]]:
+        rows = self.registry.read_text(encoding='utf-8').splitlines()
+        cells = [row.split('|') for row in rows if '| Granola |' in row]
+        return [(row[1].strip(), row[4].strip()) for row in cells]
+
+    def test_bom_on_saved_markdown_preserves_note_registry_id_and_link(self) -> None:
+        first = self.ingest()
+        entries = self.granola_registry_entries()
+        self.assertEqual(len(entries), 1)
+        edited = ('\ufeff' + self.note.read_text(encoding='utf-8') + '\nMy follow-up.\n').replace('\n', '\r\n')
+        self.note.write_bytes(edited.encode('utf-8'))
+        retry = self.ingest(title='Updated title in Granola')
+        self.assertEqual((retry['status'], retry['note']), ('existing', first['note']))
+        self.assertEqual(list(self.note.parent.glob('*.md')), [self.note])
+        self.assertEqual(self.note.read_bytes(), edited.encode('utf-8'))
+        self.assertEqual(self.granola_registry_entries(), entries)
+        self.assertEqual(self.index.read_text(encoding='utf-8').count(entries[0][1]), 1)
+
+    def test_immediate_reimport_after_manual_rename_preserves_original_id(self) -> None:
+        first = self.ingest()
+        [(original_id, original_link)] = self.granola_registry_entries()
+        renamed = self.note.rename(self.note.with_name('My edited meeting.md'))
+        edited = renamed.read_bytes() + b'\nHandwritten follow-up.\n'
+        renamed.write_bytes(edited)
+        retry = self.ingest(title='A different remote title')
+        expected = renamed.relative_to(self.root).as_posix()
+        self.assertNotEqual(first['note'], expected)
+        self.assertEqual((retry['status'], retry['note']), ('existing', expected))
+        self.assertEqual(renamed.read_bytes(), edited)
+        self.assertEqual(list(renamed.parent.glob('*.md')), [renamed])
+        current_link = f'[[{expected.removesuffix(".md")}]]'
+        self.assertEqual(self.granola_registry_entries(), [(original_id, current_link)])
+        index = self.index.read_text(encoding='utf-8')
+        self.assertNotIn(original_link, index)
+        self.assertEqual(index.count(current_link), 1)
+
+    def test_same_title_manual_renames_keep_distinct_registry_ids(self) -> None:
+        expected = {}
+        for uid in (MEETING_ID, SECOND_ID):
+            result = self.ingest(meeting_id=uid)
+            original = self.root / result['note']
+            link = f'[[{result["note"].removesuffix(".md")}]]'
+            registry_id = next(key for key, path in self.granola_registry_entries() if path == link)
+            expected[uid] = (original, registry_id)
+        for original, registry_id in expected.values():
+            original.rename(original.with_name(f'Manual {registry_id}.md'))
+        for uid in (SECOND_ID, MEETING_ID):
+            self.assertEqual(self.ingest(meeting_id=uid)['status'], 'existing')
+        links = [(key, f'[[Sources/Interviews/Manual {key}]]') for _, key in expected.values()]
+        self.assertCountEqual(self.granola_registry_entries(), links)
+        for _, link in links:
+            self.assertEqual(self.index.read_text(encoding='utf-8').count(link), 1)
+
+    def test_legacy_registry_repairs_stale_retry_without_rewriting_the_note(self) -> None:
+        self.ingest()
+        [(key, old_link)] = self.granola_registry_entries()
+        old_registry = re.sub(r' <!-- source-key: [^>]+ -->', '', self.registry.read_text(encoding='utf-8'))
+        row = next(row for row in old_registry.splitlines() if old_link in row)
+        renamed = self.note.rename(self.note.with_name('Review.md'))
+        before = renamed.read_bytes()
+        link = '[[Sources/Interviews/Review]]'
+        # Older retries could already have appended a second row.
+        duplicate = row.replace(key, 'interview-999', 1).replace(old_link, link)
+        self.registry.write_text(old_registry.replace(row, row + '\n' + duplicate), encoding='utf-8')
+        self.assertEqual(self.ingest()['status'], 'existing')
+        self.assertEqual(renamed.read_bytes(), before)
+        self.assertEqual(self.granola_registry_entries(), [(key, link)])
+        self.assertNotIn(old_link, self.index.read_text(encoding='utf-8'))
+        self.assertEqual(self.index.read_text(encoding='utf-8').count(link), 1)
+
+    def test_legacy_retry_keeps_other_same_title_source(self) -> None:
+        self.ingest()
+        second = self.root / self.ingest(meeting_id=SECOND_ID)['note']
+        entries = self.granola_registry_entries()
+        self.registry.write_text(re.sub(r' <!-- source-key: [^>]+ -->', '',
+                                        self.registry.read_text(encoding='utf-8')), encoding='utf-8')
+        second.rename(second.with_name('Other meeting.md'))
+        self.ingest()
+        self.assertEqual(self.granola_registry_entries(), entries)
+        self.ingest(meeting_id=SECOND_ID)
+        self.assertEqual(self.granola_registry_entries(),
+                         [entries[0], (entries[1][0], '[[Sources/Interviews/Other meeting]]')])
+
     def test_retry_preserves_edits_and_repairs_registry(self) -> None:
         title = 'Pilot "A" \\ branch'
         self.note = self.root / self.ingest(title=title)['note']
