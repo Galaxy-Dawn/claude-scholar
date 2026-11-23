@@ -195,7 +195,7 @@ class DoctorTest(unittest.TestCase):
         self.assertEqual(report['mcp']['status'], 'toml_reader_missing')
         self.assertIsNone(report['mcp']['servers'])
         self.assertEqual(report['installation']['status'], 'not_detected')
-        self.assertEqual(report['obsidian']['status'], 'unbound')
+        self.assertEqual(report['obsidian']['status'], 'helper_unavailable')
 
     def test_documented_command_preserves_installation_and_project(self):
         source = Path(doctor.__file__).resolve()
@@ -226,30 +226,93 @@ class DoctorTest(unittest.TestCase):
         self.assertFalse(report['mcp']['servers']['granola']['configured'])
         self.assertEqual(snapshot(), before)
 
+    def copy_install_file(self, directory, relative):
+        destination = directory / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(Path(doctor.__file__).resolve().parents[1] / relative, destination)
+        return destination
+
+    def invoke(self, entry, cwd, *options, encoding='utf-8'):
+        return subprocess.run(
+            [sys.executable, str(entry), '--codex-home', str(self.codex_home), '--cwd', str(cwd), *options],
+            capture_output=True, env={**os.environ, 'PYTHONIOENCODING': encoding}, check=True,
+        ).stdout.decode('utf-8')
+
+    def test_alternate_installation_uses_its_own_obsidian_helper(self):
+        launcher = self.root / 'launcher'
+        entry = self.copy_install_file(launcher, 'scripts/doctor.py')
+        helper = 'skills/obsidian-project-kb-core/scripts/kb_common.py'
+        selected_helper = self.copy_install_file(self.codex_home, helper)
+        report = json.loads(self.invoke(entry, self.root, '--json'))
+        self.assertEqual(report['obsidian']['status'], 'unbound')
+        selected_helper.unlink()
+        self.copy_install_file(launcher, helper)
+        report = json.loads(self.invoke(entry, self.root, '--json'))
+        self.assertEqual(report['obsidian']['status'], 'helper_unavailable')
+
+    def test_codex_only_binding_and_claude_precedence(self):
+        entry = self.copy_install_file(self.codex_home, 'scripts/doctor.py')
+        self.copy_install_file(self.codex_home, 'skills/obsidian-project-kb-core/scripts/kb_common.py')
+        research = self.root / 'research'
+        project = self.root / 'vault/Research/shared'
+        project.mkdir(parents=True)
+        for prefix, name in (('.codex', 'preview'), ('.claude', 'standard')):
+            registry = research / prefix / 'project-memory/registry.yaml'
+            registry.parent.mkdir(parents=True)
+            registry.write_text(json.dumps({'projects': {
+                'other': {'repo_roots': [str(self.root / 'other')], 'vault_root': str(self.root / 'other-vault')},
+                name: {'repo_roots': [str(research)], 'vault_root': str(project)},
+            }}), encoding='utf-8')
+            with self.subTest(prefix=prefix):
+                binding = json.loads(self.invoke(entry, research, '--json'))['obsidian']
+                self.assertEqual(binding['status'], 'bound')
+                self.assertEqual(binding['project_id'], name)
+                self.assertEqual(Path(binding['registry']), registry.resolve())
+
+    def test_incompatible_helper_preserves_installation_and_mcp_report(self):
+        entry = self.copy_install_file(self.codex_home, 'scripts/doctor.py')
+        for path in doctor.COMPONENTS:
+            self.install_file(path)
+        self.record_paths(doctor.COMPONENTS)
+        helper = self.codex_home / 'skills/obsidian-project-kb-core/scripts/kb_common.py'
+        for content in ('', 'def find_repo_root(cwd):\n    return cwd\n', 'resolve_binding = None\n'):
+            with self.subTest(helper=content):
+                helper.write_text(content, encoding='utf-8')
+                report = json.loads(self.invoke(entry, self.root, '--json'))
+                self.assertEqual(report['obsidian']['status'], 'helper_incompatible')
+                self.assertEqual(report['installation']['status'], 'installed')
+                self.assertEqual(report['mcp']['status'], 'configured_servers_read')
+
+    def test_redirected_cp1252_outputs_preserve_localized_paths(self):
+        self.codex_home = self.codex_home.rename(self.root / '中文安装')
+        entry = self.copy_install_file(self.codex_home, 'scripts/doctor.py')
+        for options in ((), ('--json',)):
+            with self.subTest(options=options):
+                output = self.invoke(entry, self.root, *options, encoding='cp1252')
+                if options:
+                    self.assertEqual(json.loads(output)['codex_home'], str(self.codex_home.resolve()))
+                else:
+                    self.assertIn(str(self.codex_home.resolve()), output)
+
     def test_binding_uses_actual_kb_helper_path(self):
+        self.copy_install_file(self.codex_home, 'skills/obsidian-project-kb-core/scripts/kb_common.py')
         cwd = self.root / 'research'
         cwd.mkdir()
-        self.assertEqual(doctor.obsidian_binding(cwd)['status'], 'unbound')
-        documented = cwd / '.codex/project-memory/registry.yaml'
-        documented.parent.mkdir(parents=True)
+        self.assertEqual(doctor.obsidian_binding(cwd, self.codex_home)['status'], 'unbound')
+        registry = cwd / '.claude/project-memory/registry.yaml'
+        registry.parent.mkdir(parents=True)
         project = self.root / 'vault/Research/test-project'
         project.mkdir(parents=True)
         data = json.dumps({'projects': {'test-project': {'vault_root': str(project)}}})
-        documented.write_text(data, encoding='utf-8')
-        registry = documented
-        result = doctor.obsidian_binding(cwd)
-        if result['status'] == 'registry_not_used_by_helper':
-            registry = cwd / '.claude/project-memory/registry.yaml'
-            registry.parent.mkdir(parents=True)
-            registry.write_text(data, encoding='utf-8')
-            result = doctor.obsidian_binding(cwd)
+        registry.write_text(data, encoding='utf-8')
+        result = doctor.obsidian_binding(cwd, self.codex_home)
         self.assertEqual(result['status'], 'bound')
         self.assertEqual(result['project_id'], 'test-project')
 
         for lifecycle in ('archived', 'detached'):
             binding = {'vault_root': str(project), 'status': lifecycle}
             registry.write_text(json.dumps({'projects': {'test-project': binding}}), encoding='utf-8')
-            result = doctor.obsidian_binding(cwd)
+            result = doctor.obsidian_binding(cwd, self.codex_home)
             self.assertEqual(result['status'], lifecycle)
             self.assertEqual(result['binding_status'], lifecycle)
         stdout = io.StringIO()
@@ -261,14 +324,15 @@ class DoctorTest(unittest.TestCase):
 
         registry.write_text(data, encoding='utf-8')
         project.rmdir()
-        self.assertEqual(doctor.obsidian_binding(cwd)['status'], 'vault_path_missing')
+        self.assertEqual(doctor.obsidian_binding(cwd, self.codex_home)['status'], 'vault_path_missing')
 
     def test_invalid_binding_registry_returns_unresolved(self):
+        self.copy_install_file(self.codex_home, 'skills/obsidian-project-kb-core/scripts/kb_common.py')
         for prefix in ('.codex', '.claude'):
             registry = self.root / prefix / 'project-memory/registry.yaml'
             registry.parent.mkdir(parents=True)
             registry.write_text(json.dumps({'projects': ['not-a-project-map']}), encoding='utf-8')
-        result = doctor.obsidian_binding(self.root)
+        result = doctor.obsidian_binding(self.root, self.codex_home)
         self.assertEqual(result['status'], 'binding_unresolved')
 
 

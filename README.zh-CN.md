@@ -172,7 +172,7 @@ python3 ~/.codex/scripts/doctor.py --cwd . --json
 ```
 
 也可以在源码目录运行 `python3 scripts/doctor.py`。命令会检查核心组件，包括预先安装的 `project_kb.py` 及其配套脚本 `kb_common.py`。安装回执和清单一致时，还会检查清单中的每个文件。
-`--codex-home` 可指定自定义 Codex 目录。
+`--codex-home` 可指定要检查的安装目录，包括该目录中的 Obsidian 辅助脚本。诊断优先读取项目的 `.claude/project-memory/registry.yaml`，缺少该文件时会读取旧版 `.codex/project-memory/registry.yaml`。辅助脚本缺失或不兼容时，`obsidian.status` 会说明原因，同时输出安装和 MCP 检查结果。重定向的文本和 JSON 使用 UTF-8 编码。
 
 | `installation.status` | 含义 |
 | --- | --- |

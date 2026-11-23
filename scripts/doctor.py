@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import re
+import runpy
 import sys
 from pathlib import Path, PureWindowsPath
 
@@ -121,38 +122,66 @@ def mcp_status(codex_home: Path) -> dict:
     return {**result, 'status': 'configured_servers_read', 'servers': reported}
 
 
-def obsidian_binding(cwd: Path) -> dict:
-    helpers = Path(__file__).resolve().parents[1] / 'skills/obsidian-project-kb-core/scripts'
-    if not (helpers / 'kb_common.py').is_file():
-        return {'status': 'helper_unavailable'}
-    sys.path.insert(0, str(helpers))
-    try:
-        import kb_common as kb
-    finally:
-        sys.path.pop(0)
-
-    repo = kb.find_repo_root(cwd)
-    registry = kb.binding_registry_path(repo)
-    documented = repo / '.codex/project-memory/registry.yaml'
-    if not registry.is_file():
-        if registry != documented and documented.is_file():
-            return {'status': 'registry_not_used_by_helper', 'registry': str(documented)}
-        return {'status': 'unbound'}
-    try:
-        binding = kb.resolve_binding(repo)
-    except (OSError, ValueError, KeyError, TypeError, AttributeError, SystemExit):
-        return {'status': 'binding_unresolved', 'registry': str(registry)}
-    if binding.status == 'active':
-        status = 'bound' if binding.project_root.is_dir() else 'vault_path_missing'
-    elif binding.status in ('archived', 'detached'):
-        status = binding.status
+def preview_binding(repo: Path, projects: dict) -> tuple[str, str, Path]:
+    # Older helpers only resolve the .claude registry. Apply the same
+    # single-project or matching-repository selection to their .codex data.
+    if len(projects) == 1:
+        project_id, entry = next(iter(projects.items()))
     else:
+        project_id, entry = next(
+            (key, entry) for key, entry in projects.items()
+            if repo in (Path(path).expanduser().resolve() for path in entry.get('repo_roots') or [])
+        )
+    project_root = Path(entry['vault_root']).expanduser().resolve()
+    return entry.get('project_id', project_id), entry.get('status', 'active'), project_root
+
+
+def obsidian_binding(cwd: Path, codex_home: Path) -> dict:
+    helper = codex_home / 'skills/obsidian-project-kb-core/scripts/kb_common.py'
+    if not helper.is_file():
+        return {'status': 'helper_unavailable'}
+    try:
+        # Load this installation only. Another inspection in the same process
+        # may have used a different version of the helper.
+        kb = runpy.run_path(str(helper))
+        required = ('find_repo_root', 'binding_registry_path', 'resolve_binding', 'load_binding_registry')
+        if not all(callable(kb.get(name)) for name in required):
+            return {'status': 'helper_incompatible'}
+        repo = kb['find_repo_root'](cwd)
+        registry = kb['binding_registry_path'](repo)
+        if not isinstance(repo, Path) or not isinstance(registry, Path):
+            return {'status': 'helper_incompatible'}
+    except (Exception, SystemExit):
+        return {'status': 'helper_incompatible'}
+    try:
+        if registry.is_file():
+            binding = kb['resolve_binding'](repo)
+            project_id = binding.project_id
+            binding_status = binding.status
+            project_root = binding.project_root
+        elif registry.exists() or registry.is_symlink():
+            return {'status': 'binding_unresolved', 'registry': str(registry)}
+        else:
+            registry = repo / '.codex/project-memory/registry.yaml'
+            if not registry.is_file():
+                return {'status': 'unbound'}
+            projects = kb['load_binding_registry'](registry)['projects']
+            project_id, binding_status, project_root = preview_binding(repo, projects)
+        if not isinstance(project_id, str):
+            return {'status': 'binding_unresolved', 'registry': str(registry)}
+        if binding_status == 'active':
+            status = 'bound' if project_root.is_dir() else 'vault_path_missing'
+        elif binding_status in ('archived', 'detached'):
+            status = binding_status
+        else:
+            return {'status': 'binding_unresolved', 'registry': str(registry)}
+    except (Exception, SystemExit):
         return {'status': 'binding_unresolved', 'registry': str(registry)}
     return {
         'status': status,
         'registry': str(registry),
-        'project_id': binding.project_id,
-        'binding_status': binding.status,
+        'project_id': project_id,
+        'binding_status': binding_status,
     }
 
 
@@ -169,7 +198,7 @@ def main() -> None:
         'codex_home': str(codex_home),
         'installation': installation(codex_home),
         'mcp': mcp_status(codex_home),
-        'obsidian': obsidian_binding(cwd),
+        'obsidian': obsidian_binding(cwd, codex_home),
     }
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
@@ -194,4 +223,8 @@ def main() -> None:
 
 if __name__ == '__main__':
     sys.dont_write_bytecode = True  # Keep the installed KB helper directory read-only.
+    if sys.stdout.isatty():
+        sys.stdout.reconfigure(errors='backslashreplace')
+    else:
+        sys.stdout.reconfigure(encoding='utf-8')
     main()
