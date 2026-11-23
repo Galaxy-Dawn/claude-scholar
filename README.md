@@ -175,11 +175,13 @@ You can also run `python3 scripts/doctor.py` from a checkout. The doctor checks
 the core components, including `project_kb.py` and its helper `kb_common.py`, and every file
 listed in the matching receipt and manifest. Core components are checked even
 when they predate the installer.
-Use `--codex-home` to inspect a different installation, including its Obsidian helper.
+Use `--codex-home` to inspect a different Codex installation you trust. The doctor
+runs that installation's Python helper to check the Obsidian binding.
 The doctor reads the project's `.claude/project-memory/registry.yaml` first and
-falls back to the older `.codex/project-memory/registry.yaml`. A missing or
+falls back to the older `.codex/project-memory/registry.yaml`. An unavailable or
 incompatible helper has its own `obsidian.status`. The report still includes
-installation and MCP results. Redirected text and JSON are written as UTF-8.
+installation and MCP results. Helper messages go to standard error. Redirected
+text and JSON reports are written as UTF-8.
 
 | `installation.status` | Meaning |
 | --- | --- |

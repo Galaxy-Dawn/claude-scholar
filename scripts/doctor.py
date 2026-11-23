@@ -8,6 +8,7 @@ import os
 import re
 import runpy
 import sys
+from contextlib import redirect_stdout
 from pathlib import Path, PureWindowsPath
 
 
@@ -138,7 +139,10 @@ def preview_binding(repo: Path, projects: dict) -> tuple[str, str, Path]:
 
 def obsidian_binding(cwd: Path, codex_home: Path) -> dict:
     helper = codex_home / 'skills/obsidian-project-kb-core/scripts/kb_common.py'
-    if not helper.is_file():
+    try:
+        if not helper.is_file():
+            return {'status': 'helper_unavailable'}
+    except OSError:
         return {'status': 'helper_unavailable'}
     try:
         # Load this installation only. Another inspection in the same process
@@ -187,7 +191,10 @@ def obsidian_binding(cwd: Path, codex_home: Path) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--codex-home', type=Path, default=Path(os.environ.get('CODEX_HOME') or Path.home() / '.codex'))
+    parser.add_argument(
+        '--codex-home', type=Path, default=Path(os.environ.get('CODEX_HOME') or Path.home() / '.codex'),
+        help='Trusted Codex installation to inspect. The check runs its Obsidian helper.',
+    )
     parser.add_argument('--cwd', type=Path, default=Path.cwd(), help='Research repository to check.')
     parser.add_argument('--json', action='store_true', help='Print structured status.')
     args = parser.parse_args()
@@ -198,8 +205,10 @@ def main() -> None:
         'codex_home': str(codex_home),
         'installation': installation(codex_home),
         'mcp': mcp_status(codex_home),
-        'obsidian': obsidian_binding(cwd, codex_home),
     }
+    # A local helper may print messages while loading or resolving a binding.
+    with redirect_stdout(sys.stderr):
+        report['obsidian'] = obsidian_binding(cwd, codex_home)
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return

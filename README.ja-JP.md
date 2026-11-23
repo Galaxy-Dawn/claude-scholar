@@ -174,7 +174,7 @@ python3 ~/.codex/scripts/doctor.py --cwd . --json
 ソースのチェックアウトからは `python3 scripts/doctor.py` を実行します。
 主要な構成ファイルには `project_kb.py` とその補助スクリプト `kb_common.py` が含まれ、ユーザーが事前に用意したものも確認します。
 インストール記録とマニフェストの内容が一致する場合は、そこに記載された全ファイルも確認します。
-`--codex-home` で検査対象のインストール先を指定すると、そのディレクトリの Obsidian ヘルパーを確認します。プロジェクトの `.claude/project-memory/registry.yaml` を優先し、このファイルがなければ旧形式の `.codex/project-memory/registry.yaml` を読みます。ヘルパーが見つからない場合や互換性がない場合も、`obsidian.status` に結果を示し、インストールと MCP の診断を続けます。リダイレクトしたテキストと JSON は UTF-8 で出力します。
+`--codex-home` で、検査する信頼済みの Codex インストール先を指定できます。診断コマンドは、そのインストール先の Python ヘルパーを実行して Obsidian バインドを確認します。プロジェクトの `.claude/project-memory/registry.yaml` を優先し、このファイルがなければ旧形式の `.codex/project-memory/registry.yaml` を読みます。ヘルパーが利用できない場合や互換性がない場合も、`obsidian.status` に結果を示し、インストールと MCP の診断を続けます。ヘルパーのメッセージは標準エラーに出力します。リダイレクトしたテキストと JSON のレポートは UTF-8 で出力します。
 
 | `installation.status` | 意味 |
 | --- | --- |

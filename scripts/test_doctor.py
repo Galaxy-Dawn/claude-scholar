@@ -283,6 +283,46 @@ class DoctorTest(unittest.TestCase):
                 self.assertEqual(report['installation']['status'], 'installed')
                 self.assertEqual(report['mcp']['status'], 'configured_servers_read')
 
+    def test_inaccessible_helper_preserves_installation_and_mcp_report(self):
+        helper = self.codex_home.resolve() / 'skills/obsidian-project-kb-core/scripts/kb_common.py'
+        is_file = Path.is_file
+
+        def probe(path):
+            if path == helper:
+                raise PermissionError('helper directory is inaccessible')
+            return is_file(path)
+
+        with patch.object(Path, 'is_file', probe):
+            report = json.loads(self.run_doctor('--json'))
+        self.assertEqual(report['obsidian']['status'], 'helper_unavailable')
+        self.assertEqual(report['installation']['status'], 'not_detected')
+        self.assertEqual(report['mcp']['status'], 'configured_servers_read')
+
+    def test_helper_output_stays_out_of_json(self):
+        entry = self.copy_install_file(self.codex_home, 'scripts/doctor.py')
+        helper = self.copy_install_file(self.codex_home, 'skills/obsidian-project-kb-core/scripts/kb_common.py')
+        with helper.open('a', encoding='utf-8') as script:
+            script.write(
+                '\nprint("Loading the binding helper")\n'
+                '_resolve_binding = resolve_binding\n'
+                '\ndef resolve_binding(*args, **kwargs):\n'
+                '    print("Resolving the project binding")\n'
+                '    return _resolve_binding(*args, **kwargs)\n'
+            )
+        registry = self.root / '.claude/project-memory/registry.yaml'
+        registry.parent.mkdir(parents=True)
+        project = self.root / 'vault/Research/test-project'
+        project.mkdir(parents=True)
+        registry.write_text(json.dumps({'projects': {'test-project': {'vault_root': str(project)}}}), encoding='utf-8')
+
+        result = subprocess.run(
+            [sys.executable, str(entry), '--codex-home', str(self.codex_home), '--cwd', str(self.root), '--json'],
+            capture_output=True, check=True,
+        )
+        self.assertEqual(json.loads(result.stdout)['obsidian']['status'], 'bound')
+        self.assertIn(b'Loading the binding helper', result.stderr)
+        self.assertIn(b'Resolving the project binding', result.stderr)
+
     def test_redirected_cp1252_outputs_preserve_localized_paths(self):
         self.codex_home = self.codex_home.rename(self.root / '中文安装')
         entry = self.copy_install_file(self.codex_home, 'scripts/doctor.py')
