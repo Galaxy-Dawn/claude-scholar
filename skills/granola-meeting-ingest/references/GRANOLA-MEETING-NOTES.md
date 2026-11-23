@@ -153,6 +153,15 @@ Keep the `source_provider` and `granola_meeting_id` fields when editing the
 note. The importer reads saved Markdown with or without a UTF-8 BOM. The
 registry stores the meeting UUID in a hidden row comment. After a manual
 rename, re-import directly to keep the source ID and refresh the index link.
+If the new path is registered to a different meeting, re-import that meeting
+at its current path first. A new import skips filenames still used in the
+registry.
+
+For a legacy registry entry that has no UUID comment, re-import can recover
+the ID from its current path or an old filename containing the UUID. If the old
+path cannot be confirmed automatically, add `--previous-note Sources/Interviews/<old-name>.md`
+to the import command. Use the exact old path of that meeting's missing file.
+
 If multiple notes have the same meeting UUID, the helper reports the
 conflict so you can choose which copy to keep.
 

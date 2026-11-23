@@ -65,9 +65,15 @@ class GranolaIngestTest(unittest.TestCase):
             **updates,
         }
 
-    def ingest(self, *, project_id: str | None = None, **updates: object) -> dict:
-        selection = ('--project-id', project_id) if project_id is not None else ()
-        response = self.run_cli(GRANOLA_HELPER, '--input', '-', *selection, stdin=json.dumps(self.meeting(**updates)))
+    def ingest(
+        self, *, project_id: str | None = None, previous_note: str | None = None, **updates: object,
+    ) -> dict:
+        args = ['--input', '-']
+        if project_id is not None:
+            args.extend(('--project-id', project_id))
+        if previous_note is not None:
+            args.extend(('--previous-note', previous_note))
+        response = self.run_cli(GRANOLA_HELPER, *args, stdin=json.dumps(self.meeting(**updates)))
         return json.loads(response.stdout)
 
     def test_import_writes_note_registry_and_index(self) -> None:
@@ -270,8 +276,8 @@ class GranolaIngestTest(unittest.TestCase):
         for _, link in links:
             self.assertEqual(self.index.read_text(encoding='utf-8').count(link), 1)
 
-    def test_legacy_registry_repairs_stale_retry_without_rewriting_the_note(self) -> None:
-        self.ingest()
+    def test_explicit_old_path_repairs_stale_retry_without_rewriting_the_note(self) -> None:
+        first = self.ingest()
         [(key, old_link)] = self.granola_registry_entries()
         old_registry = re.sub(r' <!-- source-key: [^>]+ -->', '', self.registry.read_text(encoding='utf-8'))
         row = next(row for row in old_registry.splitlines() if old_link in row)
@@ -281,7 +287,20 @@ class GranolaIngestTest(unittest.TestCase):
         # Older retries could already have appended a second row.
         duplicate = row.replace(key, 'interview-999', 1).replace(old_link, link)
         self.registry.write_text(old_registry.replace(row, row + '\n' + duplicate), encoding='utf-8')
-        self.assertEqual(self.ingest()['status'], 'existing')
+        before_registry = self.registry.read_bytes()
+        before_index = self.index.read_bytes()
+        for invalid in ('../outside.md', str(renamed), 'Sources/Interviews/Review.md', 'Sources/Interviews/wrong.md'):
+            with self.subTest(previous_note=invalid):
+                rejected = self.run_cli(GRANOLA_HELPER, '--input', '-', '--previous-note', invalid,
+                                        stdin=json.dumps(self.meeting()), check=False)
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertIn('--previous-note', rejected.stderr)
+                self.assertEqual(self.registry.read_bytes(), before_registry)
+                self.assertEqual(self.index.read_bytes(), before_index)
+        self.assertEqual(self.ingest(previous_note=first['note'])['status'], 'existing')
+        # An interrupted index update must be repairable with the same command.
+        self.index.write_bytes(before_index)
+        self.assertEqual(self.ingest(previous_note=first['note'])['status'], 'existing')
         self.assertEqual(renamed.read_bytes(), before)
         self.assertEqual(self.granola_registry_entries(), [(key, link)])
         self.assertNotIn(old_link, self.index.read_text(encoding='utf-8'))
@@ -296,9 +315,94 @@ class GranolaIngestTest(unittest.TestCase):
         second.rename(second.with_name('Other meeting.md'))
         self.ingest()
         self.assertEqual(self.granola_registry_entries(), entries)
-        self.ingest(meeting_id=SECOND_ID)
+        self.ingest(meeting_id=SECOND_ID, previous_note=second.relative_to(self.root).as_posix())
         self.assertEqual(self.granola_registry_entries(),
                          [entries[0], (entries[1][0], '[[Sources/Interviews/Other meeting]]')])
+
+    def test_unmarked_rename_cannot_claim_another_meeting_with_the_same_title(self) -> None:
+        first = self.ingest()
+        second = self.root / self.ingest(meeting_id=SECOND_ID)['note']
+        custom = 'Sources/Interviews/Retitled meeting.md'
+        self.kb('note-lifecycle', '--mode', 'rename', '--note', first['note'], '--dest', custom)
+        self.registry.write_text(re.sub(r' <!-- source-key: [^>]+ -->', '',
+                                        self.registry.read_text(encoding='utf-8')), encoding='utf-8')
+        before = {file: file.read_bytes() for file in (self.registry, self.index)}
+        renamed = (self.root / custom).rename(self.note.with_name('Renamed again.md'))
+        second.rename(second.with_name('Different meeting.md'))
+
+        rejected = self.run_cli(GRANOLA_HELPER, '--input', '-', stdin=json.dumps(self.meeting()), check=False)
+
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn('--previous-note', rejected.stderr)
+        self.assertEqual({file: file.read_bytes() for file in before}, before)
+        self.assertEqual(self.ingest(previous_note=custom)['note'], renamed.relative_to(self.root).as_posix())
+
+    def test_legacy_uuid_filename_repairs_a_missing_link(self) -> None:
+        self.ingest()
+        [(registry_id, link)] = self.granola_registry_entries()
+        old_link = f'[[Sources/Interviews/granola-{MEETING_ID}]]'
+        registry = re.sub(r' <!-- source-key: [^>]+ -->', '', self.registry.read_text(encoding='utf-8'))
+        self.registry.write_text(registry.replace(link, old_link), encoding='utf-8')
+        renamed = self.note.rename(self.note.with_name('Research discussion.md'))
+        before = renamed.read_bytes()
+
+        self.assertEqual(self.ingest()['status'], 'existing')
+
+        self.assertEqual(renamed.read_bytes(), before)
+        self.assertEqual(self.granola_registry_entries(), [(registry_id, '[[Sources/Interviews/Research discussion]]')])
+
+    def test_cross_category_reimport_preserves_status_and_reserves_id(self) -> None:
+        first = self.ingest()
+        [(registry_id, old_link)] = self.granola_registry_entries()
+        registry = self.registry.read_text(encoding='utf-8')
+        lines = [row.replace('| active |', '| draft |') if old_link in row else row for row in registry.splitlines()]
+        self.registry.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+        moved = 'Knowledge/Review meeting.md'
+        (self.root / first['note']).rename(self.root / moved)
+
+        self.assertEqual(self.ingest()['note'], moved)
+        self.ingest(meeting_id=SECOND_ID)
+
+        registry = self.registry.read_text(encoding='utf-8')
+        row = next(line for line in registry.splitlines() if '[[Knowledge/Review meeting]]' in line)
+        self.assertIn(f'| {registry_id} |', row)
+        self.assertIn('| draft |', row)
+        self.assertNotEqual(self.granola_registry_entries()[0][0], registry_id)
+        coverage = json.loads(self.run_cli(KB_HELPER.with_name('kb_registry_check.py')).stdout)
+        self.assertTrue(coverage['coverage_ok'], coverage)
+
+    def test_new_meeting_reserves_a_missing_registered_path_case_insensitively(self) -> None:
+        first = self.ingest(title='Pilot Review')
+        previous = self.root / first['note']
+        renamed = previous.rename(previous.with_name('Review notes.md'))
+
+        second = self.ingest(meeting_id=SECOND_ID, title='pilot review')
+        self.assertTrue(second['note'].endswith('-2.md'), second)
+        self.assertEqual(self.ingest()['note'], renamed.relative_to(self.root).as_posix())
+
+        self.assertFalse(previous.exists())
+        entries = self.granola_registry_entries()
+        self.assertEqual(len(entries), 2)
+        index = self.index.read_text(encoding='utf-8')
+        self.assertNotIn(f'[[{first["note"].removesuffix(".md")}]]', index)
+        self.assertTrue(all(index.count(link) == 1 for _, link in entries))
+
+    def test_existing_meeting_cannot_take_a_path_registered_to_another_meeting(self) -> None:
+        first = self.root / self.ingest(title='First meeting')['note']
+        second = self.root / self.ingest(meeting_id=SECOND_ID, title='Another meeting')['note']
+        first.rename(first.with_name('First meeting edited.md'))
+        second.rename(first)
+        before = {file: file.read_bytes() for file in (first, self.registry, self.index)}
+
+        rejected = self.run_cli(GRANOLA_HELPER, '--input', '-',
+                                stdin=json.dumps(self.meeting(meeting_id=SECOND_ID)), check=False)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn('already registered to another source', rejected.stderr)
+        self.assertEqual({file: file.read_bytes() for file in before}, before)
+
+        self.ingest()
+        self.assertEqual(self.ingest(meeting_id=SECOND_ID)['note'], first.relative_to(self.root).as_posix())
+        self.assertEqual(len(self.granola_registry_entries()), 2)
 
     def test_retry_preserves_edits_and_repairs_registry(self) -> None:
         title = 'Pilot "A" \\ branch'
@@ -573,9 +677,9 @@ import ingest_granola
 
 ingest = ingest_granola.ingest_meeting
 
-def report_started(binding, payload):
+def report_started(binding, payload, **options):
     print('importing', flush=True)
-    return ingest(binding, payload)
+    return ingest(binding, payload, **options)
 
 ingest_granola.ingest_meeting = report_started
 sys.argv = [script, '--cwd', cwd, '--input', meeting]

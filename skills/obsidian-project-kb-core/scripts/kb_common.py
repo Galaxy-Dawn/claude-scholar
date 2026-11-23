@@ -707,11 +707,20 @@ def registry_add_or_update(
         return {'updated': False, 'reason': 'path-not-registrable'}
     section, row = payload
     rows = parse_registry_md(registry_path(project_root))
-    existing = None
-    for item in rows[section]:
-        if item.get('Path') == row['Path'] and (source_key is None or item.get('Source Key') in (None, source_key)):
-            existing = item
-            break
+    if source_key:
+        link = row['Path'].casefold()
+        path_rows = [(name, item) for name, entries in rows.items() if name != 'Archive'
+                     for item in entries if item['Path'].casefold() == link]
+        if len(path_rows) > 1 or any(
+            name != section
+            or item.get('Source Key') not in (None, source_key)
+            or (item.get('Source Key') is None and item['Path'] not in (row['Path'], previous_link))
+            for name, item in path_rows
+        ):
+            return {'updated': False, 'reason': 'path-owned-by-another-source'}
+        existing = path_rows[0][1] if path_rows else None
+    else:
+        existing = next((item for item in rows[section] if item.get('Path') == row['Path']), None)
     if source_key:
         for old_section, entries in rows.items():
             prior = next((item for item in entries if item.get('Source Key') == source_key), None)
@@ -723,16 +732,19 @@ def registry_add_or_update(
             if prior is existing:
                 break
             if existing is not None:
+                if prior.get('Source Key') and not existing.get('Source Key'):
+                    return {'updated': False, 'reason': 'path-owned-by-another-source'}
                 rows[section].remove(existing)
             if old_section == section:
                 existing = prior
             else:
                 entries.remove(prior)
-                existing = {**row, 'ID': prior['ID']}
+                existing = {**row, 'ID': prior['ID'], 'Status': prior['Status']}
                 rows[section].append(existing)
             break
     if existing is None:
-        row['ID'] = next_registry_id(rows[section], prefix_for_section_row(section, row))
+        active_rows = [item for name, entries in rows.items() if name != 'Archive' for item in entries]
+        row['ID'] = next_registry_id(active_rows, prefix_for_section_row(section, row))
         if status:
             row['Status'] = status
         rows[section].append(row)

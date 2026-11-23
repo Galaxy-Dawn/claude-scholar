@@ -73,17 +73,26 @@ def meeting_filename(meeting_date: str | None, title: str) -> str:
     return f'Granola-{short_date}-{topic}.md'
 
 
-def create_meeting_note(path: Path, content: bytes) -> Path:
+def create_meeting_note(project_root: Path, path: Path, content: bytes) -> Path:
+    rows = common.parse_registry_md(common.registry_path(project_root))
+    registered_links = {
+        row['Path'].casefold()
+        for section, entries in rows.items() if section != 'Archive'
+        for row in entries
+    }
     path.parent.mkdir(parents=True, exist_ok=True)
     stem = path.stem
     number = 1
     while True:
-        try:
-            stream = path.open('xb')
-            break
-        except FileExistsError:
-            number += 1
-            path = path.with_name(f'{stem}-{number}.md')
+        link = common.wikilink(path.relative_to(project_root).as_posix()).casefold()
+        if link not in registered_links:
+            try:
+                stream = path.open('xb')
+                break
+            except FileExistsError:
+                pass
+        number += 1
+        path = path.with_name(f'{stem}-{number}.md')
     try:
         with stream:
             stream.write(content)
@@ -211,37 +220,51 @@ def saved_title(note: Path, fallback: str) -> str:
     return title
 
 
-def legacy_registry_link(root: Path, note: Path, meeting_id: str, title: str) -> str | None:
-    """Identify an unmarked, missing link from an earlier version of the importer."""
+def legacy_registry_link(
+    root: Path, note: Path, meeting_id: str, previous_note: Path | None,
+) -> str | None:
+    """Find the displaced registry row by UUID or the caller's explicit old path."""
+    if previous_note is not None and (
+        previous_note.is_absolute() or '..' in previous_note.parts or previous_note.suffix != '.md'
+    ):
+        raise ValueError('--previous-note requires a project-relative Markdown path')
+
     registry = common.parse_registry_md(common.registry_path(root))
     key = f'granola:{meeting_id}'
     if any(row.get('Source Key') == key for rows in registry.values() for row in rows):
         return None
-    rows = registry['Sources']
-    date = common.read_frontmatter_fields(note, 'meeting_date').get('meeting_date')
-    stem = Path(meeting_filename(date, title)).stem
-    old_name = re.compile(rf'{re.escape(stem)}(?:-\d+)?', re.IGNORECASE)
-    current_link = common.wikilink(note.relative_to(root).as_posix())
-    if old_name.fullmatch(note.stem) and any(row['Path'] == current_link for row in rows):
-        return None  # A different same-title meeting may also have a missing link.
-    candidates = []
-    for row in rows:
+
+    missing_links = []
+    for row in registry['Sources']:
         if row.get('Source Key') or row.get('Origin') != 'Granola':
             continue
         link = row['Path']
         if not link.startswith('[[Sources/') or not link.endswith(']]'):
             continue
-        relative = link[2:-2]
-        name = Path(relative).name
-        uuid_name = name.lower().endswith('-' + meeting_id)
-        if not (uuid_name or old_name.fullmatch(name)):
-            continue
-        old_note = root / (relative + '.md')
+        old_note = root / (link[2:-2] + '.md')
         if old_note.resolve().is_relative_to(root) and not old_note.is_symlink() and not old_note.exists():
+            missing_links.append(link)
+
+    if previous_note is not None:
+        previous_link = common.wikilink(previous_note.as_posix())
+        if missing_links.count(previous_link) != 1:
+            raise ValueError('--previous-note must identify one unmarked Granola registry entry with a missing file')
+        return previous_link
+
+    candidates = []
+    for link in missing_links:
+        name = Path(link[2:-2]).name.casefold()
+        if name.startswith('granola-') and name.endswith('-' + meeting_id):
             candidates.append(link)
     if len(candidates) > 1:
-        raise ValueError('multiple missing legacy Granola registry entries could match this note')
-    return candidates[0] if candidates else None
+        raise ValueError('multiple missing legacy Granola registry entries carry this meeting UUID')
+    if candidates:
+        return candidates[0]
+
+    current_link = common.wikilink(note.relative_to(root).as_posix())
+    if missing_links and not any(row.get('Path') == current_link for rows in registry.values() for row in rows):
+        raise ValueError('cannot identify the old Granola registry entry; use --previous-note with its old path')
+    return None
 
 
 def import_target(binding: common.Binding) -> dict[str, str]:
@@ -253,7 +276,9 @@ def import_target(binding: common.Binding) -> dict[str, str]:
     }
 
 
-def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
+def ingest_meeting(
+    binding: common.Binding, meeting: Any, *, previous_note: Path | None = None,
+) -> dict[str, str]:
     target = import_target(binding)
     meeting_id, title, meeting_date, content = render_meeting(meeting, binding)
     note_bytes = content.encode('utf-8')
@@ -265,28 +290,33 @@ def ingest_meeting(binding: common.Binding, meeting: Any) -> dict[str, str]:
             raise ValueError('the import path must stay inside the bound Obsidian project')
     with common.project_write_lock(root):
         existing = existing_meeting(root, meeting_id)
+        if previous_note is not None and (existing is None or existing.is_relative_to(root / 'Archive')):
+            raise ValueError('--previous-note requires an existing, unarchived meeting note')
         if existing is None:
-            note = create_meeting_note(interviews / meeting_filename(meeting_date, title), note_bytes)
+            note = create_meeting_note(root, interviews / meeting_filename(meeting_date, title), note_bytes)
             status = 'created'
         else:
             note = existing
             status = 'archived' if note.is_relative_to(root / 'Archive') else 'existing'
         relative = note.relative_to(root).as_posix()
         if status != 'archived':
+            old_link = None
             if status == 'existing':
                 title = saved_title(note, title)
+                old_link = legacy_registry_link(root, note, meeting_id, previous_note)
             try:
                 needs_registry_rebuild = registry.stat().st_size == 0
             except FileNotFoundError:
                 needs_registry_rebuild = True
             if needs_registry_rebuild:
                 sync_registry(root)
-            old_link = legacy_registry_link(root, note, meeting_id, title) if status == 'existing' else None
             result = common.registry_add_or_update(
                 root, relative, title=title, origin='Granola',
                 source_key=f'granola:{meeting_id}', previous_link=old_link,
             )
             if not result['updated']:
+                if result['reason'] == 'path-owned-by-another-source':
+                    raise ValueError(f'the note path is already registered to another source: {relative}')
                 raise ValueError(f'the existing note cannot be registered at {relative}')
             common.update_index(root)
         return {
@@ -325,10 +355,13 @@ def main() -> None:
     parser.add_argument('--cwd', type=Path, default=Path.cwd(), help='Repository bound to the Obsidian project.')
     parser.add_argument('--project-id', help='Select a specific registered project.')
     parser.add_argument('--expect-vault', type=Path, help='Require this vault folder to match the project binding.')
+    parser.add_argument('--previous-note', type=Path, help='Missing project-relative path of an unmarked Granola entry.')
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument('--show-target', action='store_true', help='Show the bound vault and project without writing.')
     action.add_argument('--input', help='Meeting JSON file, or - for standard input.')
     args = parser.parse_args()
+    if args.previous_note is not None and args.show_target:
+        parser.error('--previous-note requires --input')
 
     try:
         repo_root = common.find_repo_root(args.cwd.expanduser().resolve())
@@ -343,7 +376,7 @@ def main() -> None:
             else:
                 with Path(args.input).expanduser().open('rb') as stream:
                     meeting = json.load(stream)
-            result = ingest_meeting(binding, meeting)
+            result = ingest_meeting(binding, meeting, previous_note=args.previous_note)
     except (OSError, ValueError) as exc:
         raise SystemExit(f'Granola import failed: {exc}') from exc
     output = json.dumps(result, ensure_ascii=False, indent=2)
