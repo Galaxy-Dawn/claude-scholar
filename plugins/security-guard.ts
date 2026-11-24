@@ -2,9 +2,7 @@
  * Security Guard Plugin
  * Hook: tool.execute.before
  */
-import * as path from "path";
-import * as os from "os";
-import type { Plugin } from "@opencode-ai/plugin";
+import { Plugin } from "@opencode/plugin";
 
 const BLOCK_PATTERNS = [
   /rm\s+-rf\s+\/(\s|$)/,
@@ -22,36 +20,37 @@ const WARN_PATTERNS = [
   /DROP\s+(DATABASE|TABLE)/i,
 ];
 
-export const SecurityGuardPlugin: Plugin = async (ctx) => {
-  return {
-    async "tool.execute.before"(input, output) {
-      const args = output.args;
+export default Plugin.define({
+  id: "scholar-security-guard",
+  async setup(ctx) {
+    await ctx.tool.hook("execute.before", (event) => {
+      const args = event.input as { command?: unknown; filePath?: unknown; file_path?: unknown } | undefined;
 
-      if (input.tool === "bash" && args?.command) {
+      if ((event.tool === "shell" || event.tool === "bash") && typeof args?.command === "string") {
         for (const p of BLOCK_PATTERNS) {
           if (p.test(args.command)) {
-            console.warn(`[security-guard] BLOCKED: ${args.command}`);
+            console.warn("[security-guard] Blocked a shell command");
             args.command = "echo 'Blocked by security guard'";
             return;
           }
         }
         for (const p of WARN_PATTERNS) {
           if (p.test(args.command)) {
-            console.warn(`[security-guard] WARNING: ${args.command}`);
+            console.warn("[security-guard] A shell command matched a warning pattern");
           }
         }
       }
 
-      if ((input.tool === "write" || input.tool === "edit") && args?.file_path) {
-        const fp = args.file_path;
+      const fp = args?.filePath ?? args?.file_path;
+      if ((event.tool === "write" || event.tool === "edit") && typeof fp === "string") {
         const sensitive = ["/etc/", "/usr/bin/", "/sbin/", "/System/"];
         for (const sp of sensitive) {
           if (fp.startsWith(sp)) {
-            console.warn(`[security-guard] BLOCKED: system path ${sp}`);
+            console.warn(`[security-guard] WARNING: system path ${sp}`);
             return;
           }
         }
       }
-    },
-  };
-};
+    });
+  },
+});

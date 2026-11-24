@@ -31,14 +31,14 @@ When determining which package manager to use, the following order is checked:
 2. **Project config**: `.opencode/package-manager.json`
 3. **package.json**: `packageManager` field
 4. **Lock file**: Presence of package-lock.json, yarn.lock, pnpm-lock.yaml, or bun.lockb
-5. **Global config**: `~/.opencode/package-manager.json`
+5. **Global config**: `package-manager.json` in the active OpenCode V2 configuration directory (normally `~/.config/opencode`)
 6. **Fallback**: First available package manager (pnpm > bun > yarn > npm)
 
 ## Configuration Files
 
 ### Global Configuration
 ```json
-// ~/.opencode/package-manager.json
+// ~/.config/opencode/package-manager.json
 {
   "packageManager": "pnpm"
 }

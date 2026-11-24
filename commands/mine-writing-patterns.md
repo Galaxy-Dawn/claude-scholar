@@ -18,10 +18,10 @@ Read the paper source "$source" and update the active installed **paper-miner wr
 
 ## Default target
 
-Always write mined knowledge into the active installed OpenCode skill memory, not the repository checkout copy:
+Locate the active global `ml-paper-writing` skill. Write mined knowledge next to its `SKILL.md`, not into the repository checkout copy:
 
 ```text
-~/.opencode/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md
+references/knowledge/paper-miner-writing-memory.md
 ```
 
 This command does **not** create project-specific writing memory unless the user explicitly asks for a project-local writing memory.
@@ -92,10 +92,10 @@ Interpret `$focus` as follows:
 
 ### Step 4: Update the canonical memory only
 
-The canonical write target is the active installed OpenCode skill memory:
+The canonical write target is relative to the installed `ml-paper-writing` skill directory:
 
 ```text
-~/.opencode/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md
+references/knowledge/paper-miner-writing-memory.md
 ```
 
 Update one or more of these sections:

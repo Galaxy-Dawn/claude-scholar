@@ -18,10 +18,12 @@ tags: [Research, Obsidian, KB, Lifecycle]
 
 Use this command for KB lifecycle actions.
 
+Load `obsidian-project-kb-core`; `skill_dir` is the directory of its active `SKILL.md`.
+
 ## Project-level lifecycle
 
 ```bash
-python3 "${OPENCODE_DIR:-$HOME/.opencode}/skills/obsidian-project-kb-core/scripts/project_kb.py" lifecycle --cwd "$PWD" --mode "$action"
+python3 "$skill_dir/scripts/project_kb.py" lifecycle --cwd "$PWD" --mode "$action"
 ```
 
 Project archive means moving the whole project to:
@@ -33,7 +35,7 @@ Research/_archived/{project-slug}-{date}/
 ## Note-level lifecycle
 
 ```bash
-python3 "${OPENCODE_DIR:-$HOME/.opencode}/skills/obsidian-project-kb-core/scripts/project_kb.py" note-lifecycle --cwd "$PWD" --mode "$action" --note "$target"
+python3 "$skill_dir/scripts/project_kb.py" note-lifecycle --cwd "$PWD" --mode "$action" --note "$target"
 ```
 
 If `action=rename`, also pass `--dest "$dest"`.

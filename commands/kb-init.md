@@ -21,10 +21,18 @@ Use the new KB scaffold under `Research/{project-slug}/`.
 
 ## Run
 
+Load `obsidian-project-kb-core` and set `skill_dir` to the directory of its active `SKILL.md`. Use the repository root as `--cwd` and the vault's absolute path as `--vault-path`.
+
 ```bash
-python3 "${OPENCODE_DIR:-$HOME/.opencode}/skills/obsidian-project-kb-core/scripts/project_kb.py" bootstrap \
+python3 "$skill_dir/scripts/project_kb.py" bootstrap \
   --cwd "$PWD" \
   --vault-path "$vault_path"
+```
+
+For PowerShell with Python on `PATH`:
+
+```powershell
+python (Join-Path $skill_dir 'scripts/project_kb.py') bootstrap --cwd $PWD.Path --vault-path $vault_path
 ```
 
 If `project` is provided, add:

@@ -116,90 +116,46 @@ Claude Scholar 当前尤其适合：
 
 ### 系统要求
 
-- [OpenCode](https://github.com/sst/opencode)
-- Git
+- [OpenCode V2](https://opencode.ai/)（已验证 `v2.4.0`；这套插件不在 V1 上运行）
+- Git 和 Node.js 22 或更新版本
 - （可选）Python + [uv](https://docs.astral.sh/uv/) 用于 Python 开发
 - （可选）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) 用于文献工作流
 - （可选）[Obsidian](https://obsidian.md/) 用于项目知识库工作流
 
-### 选项 1：完整安装（推荐）
+### 完整安装（推荐）
 
-```bash
-git clone -b opencode https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-bash /tmp/claude-scholar/scripts/setup.sh
+在当前 V2 版本的仓库根目录，Windows 用户运行：
+
+```powershell
+.\scripts\setup.ps1
 ```
 
-安装器现在支持**带备份的安全增量更新**：
-- 更新仓库托管的 `skills/commands/plugins/scripts/utils/`
-- 将被覆盖的文件备份到 `~/.opencode/.opencode-scholar-backups/<timestamp>/`
-- 同时把 `opencode.jsonc` 备份为 `opencode.jsonc.bak`
-- 如果已存在 `~/.opencode/AGENTS.md`，则保留原文件，并把仓库版本另存为 `~/.opencode/AGENTS.scholar.md`
-- 如果已存在 `~/.opencode/AGENTS.zh-CN.md`，则保留原文件，并把仓库中文版本另存为 `~/.opencode/AGENTS.zh-CN.scholar.md`
-- 保留已有的 `env`、模型/provider 配置、API key、permissions、auth，以及当前 `mcp` 的现有取值
-- 对仓库托管的 `agent/mcp/permission/plugin` 条目采用追加缺失项的方式，而不是整体替换
-
-**重要 AGENTS 说明**：如果你原来就有自己的 `~/.opencode/AGENTS.md`，安装后请查看 `~/.opencode/AGENTS.scholar.md` 和 `~/.opencode/AGENTS.zh-CN.scholar.md`，并将其中你需要的 Claude Scholar 内容按需 merge 到你自己的文件里；不要假设这个 sidecar 文件会自动生效。
-
-以后做增量更新时：
+macOS/Linux 或 Git Bash 用户运行：
 
 ```bash
-cd /tmp/claude-scholar
-git pull --ff-only
 bash scripts/setup.sh
 ```
 
-以后如果需要卸载：
+PowerShell 安装不依赖 Git Bash 或 WSL；部分可选工作流仍需要 Bash 或 Python。用 `opencode debug paths config` 查看 V2 配置目录。安装器优先使用 `OPENCODE_CONFIG_DIR`，否则使用 `~/.config/opencode`（设置 `XDG_CONFIG_HOME` 后为 `$XDG_CONFIG_HOME/opencode`）。`OPENCODE_DIR` 只覆盖安装目标。安装后重启 OpenCode。
 
-```bash
-cd /tmp/claude-scholar
-bash scripts/uninstall.sh
-```
+- **更新**：在新版仓库中重新运行同一个安装命令。
+- **卸载**：可在仓库或安装目录运行 `.\scripts\uninstall.ps1` 或 `bash scripts/uninstall.sh`，沿用安装时的目标设置。用户修改过的文件、写作记忆和备份都会保留。如果配置改名后又被编辑，卸载会停止，不改动任何文件。按报错恢复原文件名（保留编辑内容）后重试。
+- **已有配置**：用户原有规则优先。`*` 等宽泛规则可能覆盖 Scholar 的命令、编辑和外部目录限制。需要修改 JSONC 时会重新生成文件，带注释的原件保存在 `.opencode-scholar-backups/`。已有 `AGENTS.md` 时，按需将 `AGENTS.scholar.md` 或 `AGENTS.zh-CN.scholar.md` 的内容合并进去，旁置文件不会自动生效。
 
-安装器会写入：
-- `~/.opencode/.opencode-scholar-manifest.txt`：记录 Claude Scholar 管理的文件
-- `~/.opencode/.opencode-scholar-install-state`：记录安全卸载所需的 metadata，包括实际写入的 `AGENTS*.md` 目标和新增的 `opencode.jsonc` 条目
+### 从 V1 升级
 
-卸载器只删除 install state 中记录的文件和配置条目，不会根据当前 repo checkout 猜测所有权。
+如果旧版安装在 `~/.opencode`，保留原目录。安装前可将其中的 `skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md` 复制到 V2 配置目录下的相同相对位置。如果目标已有文件，请先手动核对和合并，不要覆盖任一份。安装器不会自动迁移或清理旧目录。
 
-**Windows**：请使用 Git Bash / WSL 运行安装脚本。
+如果 V1 和 V2 使用同一配置目录，运行新版安装器即可更新已知的旧版插件。若提示无法核验某个插件文件，先备份并将提示中的文件移出该目录，再重试；安装器不会覆盖无法核验的插件。旧绑定仍可读取，新建的 Obsidian 绑定写入项目的 `.opencode/project-memory/`。
 
-### 选项 2：最小化安装
+如果早期 V1 安装既没有安装清单和状态记录，配置中也没有本地插件注册项，请使用干净的 V2 配置目录，不要原地覆盖。否则，无法识别的旧插件可能仍留在原目录。
 
-只安装一组较小的研究工作流子集：
+OpenCode V2 会自动发现四个迁移后的插件。原 `stop-summary` 没有实际输出，不再安装；V2 没有等价的全局斜杠命令钩子，因此不保留旧的命令技能匹配日志。主会话中的 Obsidian 上下文提示仍保留。
+在 v2.4.0 中，插件激活前创建的会话可能没有启动提示；删除会话时若拿不到可信位置，插件会跳过摘要，而不是写到错误的项目。
 
-```bash
-git clone -b opencode https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.opencode/plugins/lib ~/.opencode/skills
-cp /tmp/claude-scholar/plugins/*.ts ~/.opencode/plugins/
-cp /tmp/claude-scholar/plugins/lib/common.ts ~/.opencode/plugins/lib/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/git-workflow ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/bug-detective ~/.opencode/skills/
-```
+### 按需安装
 
-**安装后**：最小化/手动安装**不会自动合并** `opencode.jsonc`；请按需从 `opencode.jsonc` 复制你需要的 plugin 或 MCP 条目。如果你已经有自己的 `~/.opencode/AGENTS.md`，也请把仓库 `AGENTS.md` 中相关内容按需 merge 到你的文件里，而不是直接覆盖。
-
-### 选项 3：选择性安装
-
-只复制你需要的部分：
-
-```bash
-git clone -b opencode https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-cd /tmp/claude-scholar
-
-cp plugins/*.ts ~/.opencode/plugins/
-cp -r skills/latex-conference-template-organizer ~/.opencode/skills/
-cp -r skills/architecture-design ~/.opencode/skills/
-cp AGENTS.md ~/.opencode/AGENTS.md
-cp AGENTS.zh-CN.md ~/.opencode/AGENTS.zh-CN.md
-```
-
-**安装后**：选择性/手动安装**不会自动合并** `opencode.jsonc`；请按需从 `opencode.jsonc` 复制你真正需要的 plugin 或 MCP 条目。如果你已经有自己的 `~/.opencode/AGENTS.md`，也请把仓库 `AGENTS.md` 中相关内容按需 merge 到你的文件里，而不是直接覆盖。
+将需要的技能目录和 Markdown 命令复制到 V2 全局配置目录或项目的 `.opencode/`。如需插件，复制包含 `lib/` 子目录的整个 `plugins/`，无需在配置里注册单文件 URL。手动安装不会合并配置，也不生成卸载记录。
 
 ## 上手场景
 
@@ -517,7 +473,6 @@ OpenCode plugins 通过 runtime guards 提供日常检查与提醒。
 - `skill-eval.ts`
 - `session-start.ts`
 - `session-summary.ts`
-- `stop-summary.ts`
 - `security-guard.ts`
 
 **工作方式**

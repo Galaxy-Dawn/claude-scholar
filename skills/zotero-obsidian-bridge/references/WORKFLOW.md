@@ -80,10 +80,10 @@ After batch ingestion or schema refactors:
 3. verify all covered notes use the same canonical section schema
 4. update the project `Daily/` note and project memory with what changed
 
-Recommended verification command:
+Set `skill_dir` to the directory of the active `zotero-obsidian-bridge` skill:
 
 ```bash
-python3 "${OPENCODE_DIR:-$HOME/.opencode}/skills/zotero-obsidian-bridge/scripts/verify_paper_notes.py" \
+python3 "$skill_dir/scripts/verify_paper_notes.py" \
   --papers-dir "/absolute/path/to/Sources/Papers" \
   --expected-zotero-keys "KEY1,KEY2,KEY3" \
   --inventory-note "/absolute/path/to/Knowledge/Zotero-Collection-collection-slug-Inventory.md"

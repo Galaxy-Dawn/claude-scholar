@@ -165,11 +165,17 @@ test_reinstall_preserves_ownership() {
 
 test_legacy_install_adopts_existing_files() {
   local home="$TEST_ROOT/legacy"
+  local native_home="$home"
   mkdir -p "$home/skills/daily-coding"
   cp "$REPO_DIR/skills/daily-coding/SKILL.md" "$home/skills/daily-coding/SKILL.md"
-  cat > "$home/opencode.jsonc" <<JSON
-{ "plugin": ["file://$home/plugins/session-summary.ts"] }
-JSON
+  if command -v cygpath >/dev/null; then native_home="$(cygpath -w "$home")"; fi
+  SCHOLAR_TEST_LEGACY_HOME="$native_home" node <<'NODE' > "$home/opencode.jsonc"
+const { join } = require('node:path');
+const { pathToFileURL } = require('node:url');
+console.log(JSON.stringify({
+  plugin: [pathToFileURL(join(process.env.SCHOLAR_TEST_LEGACY_HOME, 'plugins', 'session-summary.ts')).href],
+}));
+NODE
 
   run_setup "$home"
   grep -Fxq "skills/daily-coding/SKILL.md" "$home/.opencode-scholar-manifest.txt" || fail "legacy identical file was not adopted"
