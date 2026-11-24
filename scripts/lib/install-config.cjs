@@ -69,8 +69,20 @@ function removeOwned(config, ownership, warn) {
       if (index !== -1) config.permissions.splice(index, 1);
     }
   }
-  for (const section of ownership.sections || []) {
-    if (config[section] && Object.keys(config[section]).length === 0) delete config[section];
+  if (Array.isArray(config.instructions)) {
+    for (const item of ownership.instructions || []) {
+      const index = config.instructions.indexOf(item);
+      if (index !== -1) config.instructions.splice(index, 1);
+    }
+  }
+  for (const section of [...(ownership.sections || [])].reverse()) {
+    const keys = Array.isArray(section) ? section : [section];
+    const parent = keys.slice(0, -1).reduce((node, key) => record(node) && own(node, key) ? node[key] : undefined, config);
+    const key = keys.at(-1);
+    if (!record(parent) || !own(parent, key)) continue;
+    const value = parent[key];
+    if ((Array.isArray(value) && value.length === 0) ||
+      (record(value) && Object.keys(value).length === 0)) delete parent[key];
   }
 }
 
@@ -107,10 +119,12 @@ function removeLegacyConfig(config, template, meta, warn) {
   removeOwned(config, { entries }, warn);
 }
 
-function mergeConfig(config, template, root, previous, legacy, warn) {
-  const ownership = { entries: [], sections: [], rules: [] };
+function mergeConfig(config, template, root, previous, legacy, instructions, warn) {
+  // Keep the exact V1 defaults for ownership checks and reuse the existing agent prompts.
+  const oldTemplate = require("./legacy-config.json");
+  const ownership = { entries: [], sections: [], instructions: [] };
   removeOwned(config, previous.config || {}, warn);
-  if (!previous.version && previous.config) removeLegacyConfig(config, template, previous.config, warn);
+  if (!previous.version && previous.config) removeLegacyConfig(config, oldTemplate, previous.config, warn);
 
   // Migrate only local URLs explicitly associated with the five old Scholar plugins.
   for (const section of ["plugin", "plugins"]) {
@@ -124,13 +138,13 @@ function mergeConfig(config, template, root, previous, legacy, warn) {
     }
   }
 
-  function section(name) {
-    if (!own(config, name)) {
-      config[name] = Object.create(null);
-      ownership.sections.push(name);
+  function section(parent, name, keys = [name]) {
+    if (!own(parent, name)) {
+      parent[name] = Object.create(null);
+      ownership.sections.push(keys);
     }
-    if (!record(config[name])) throw new Error(`Expected ${name} to be an object`);
-    return config[name];
+    if (!record(parent[name])) throw new Error(`Expected ${keys.join(".")} to be an object`);
+    return parent[name];
   }
   function add(parent, key, value, keys) {
     parent[key] = value;
@@ -140,65 +154,37 @@ function mergeConfig(config, template, root, previous, legacy, warn) {
     add(config, "$schema", template.$schema, ["$schema"]);
   }
 
-  const agents = section("agent");
-  for (const [key, definition] of Object.entries(template.agent)) {
-    if (record(config.agents) && own(config.agents, key)) {
+  for (const [key, definition] of Object.entries(oldTemplate.agent)) {
+    if ([config.agents, config.agent, config.mode].some((map) => record(map) && own(map, key))) {
       warn(`Keeping existing agent: ${key}`);
       continue;
     }
-    const value = typeof definition.prompt === "string"
-      ? { ...definition, prompt: definition.prompt.replaceAll("~/.opencode/", () => `${root.split(path.sep).join("/")}/`) }
-      : definition;
-    if (!own(agents, key)) add(agents, key, value, ["agent", key]);
-    else if (!same(agents[key], value)) warn(`Keeping existing agent: ${key}`);
+    const { description, prompt } = definition;
+    let system = prompt.replaceAll("~/.opencode/", () => `${root.split(path.sep).join("/")}/`);
+    if (key === "paper-miner") {
+      system = system.replace("Do **not** maintain project-specific writing memory.\nDo **not** create per-project writing notes for mined patterns.",
+        "Do **not** write to a global installation or create a second writing-memory file in this project.")
+        .replace("and not into per-project writing stores.", "and not into any second project writing store.");
+    }
+    add(section(config, "agents"), key, { description, system }, ["agents", key]);
   }
 
-  const mcp = section("mcp");
-  for (const [key, definition] of Object.entries(template.mcp)) {
-    if (record(mcp.servers) && own(mcp.servers, key)) continue;
-    if (!own(mcp, key)) add(mcp, key, definition, ["mcp", key]);
-    else if (record(mcp[key])) {
-      for (const [field, value] of Object.entries(definition)) {
-        if (!own(mcp[key], field)) add(mcp[key], field, value, ["mcp", key, field]);
-      }
-    }
+  const mcp = section(config, "mcp");
+  for (const [key, definition] of Object.entries(template.mcp.servers)) {
+    if (own(mcp, key) || (record(mcp.servers) && own(mcp.servers, key))) continue;
+    add(section(mcp, "servers", ["mcp", "servers"]), key, definition, ["mcp", "servers", key]);
   }
 
-  // The V1 write denies are a subset of edit. V2 maps both to the same tool.
-  const { bash, write, ...defaults } = template.permission;
-  defaults.shell = bash;
-  defaults.edit = { ...write, ...defaults.edit };
-  if (own(config, "permissions")) {
-    if (!Array.isArray(config.permissions)) throw new Error("Expected permissions to be an array");
-    const userRules = config.permissions;
-    for (const [action, value] of Object.entries(defaults)) {
-      for (const [resource, effect] of record(value) ? Object.entries(value) : [["*", value]]) {
-        const rule = { action, resource, effect };
-        if (!userRules.some((entry) => same(entry, rule))) ownership.rules.push(rule);
-      }
+  if (instructions) {
+    if (!own(config, "instructions")) {
+      config.instructions = [];
+      ownership.sections.push("instructions");
     }
-    if (userRules.length) warn("Existing permissions take precedence; wildcard rules can override Scholar denies (shell, edit, external_directory)");
-    config.permissions = [...ownership.rules, ...userRules];
-  } else if (typeof config.permission === "string") {
-    warn("Keeping existing permission policy without adding Scholar defaults");
-  } else {
-    const userRules = section("permission");
-    // Keep both action and resource order: OpenCode applies the last match.
-    const result = Object.create(null);
-    for (const [action, value] of Object.entries(defaults)) {
-      const alias = action === "shell" && own(userRules, "bash") ? "bash" :
-        action === "edit" && !own(userRules, "edit") && own(userRules, "write") ? "write" : action;
-      if (!own(userRules, alias)) add(result, action, value, ["permission", action]);
-      else if (record(value) && record(userRules[alias])) {
-        const merged = Object.create(null);
-        for (const [resource, effect] of Object.entries(value)) {
-          if (!own(userRules[alias], resource)) add(merged, resource, effect, ["permission", alias, resource]);
-        }
-        userRules[alias] = { ...merged, ...userRules[alias] };
-      }
+    if (!Array.isArray(config.instructions)) throw new Error("Expected instructions to be an array");
+    if (!config.instructions.includes(instructions)) {
+      config.instructions.push(instructions);
+      ownership.instructions.push(instructions);
     }
-    if (Object.keys(userRules).length) warn("Existing permissions take precedence; wildcard rules can override Scholar denies (shell, edit, external_directory)");
-    config.permission = Object.assign(result, userRules);
   }
   return ownership;
 }

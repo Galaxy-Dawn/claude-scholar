@@ -76,7 +76,23 @@ test("bootstrap writes a V2 binding without modifying the old registry or hiding
 });
 
 test("OpenCode V2 discovers Scholar and handles real created and moved/deleted sessions", { timeout: 40_000 }, async (t) => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), "scholar-runtime-v2-"));
+  const home = fs.mkdtempSync(path.join(process.env.SCHOLAR_TEST_TMPDIR || os.tmpdir(), "scholar-runtime-v2-"));
+  const cleanup = () => fs.rmSync(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 150 });
+  let child;
+  t.after(() => { if (!child) cleanup(); });
+  // V2 also discovers project configuration above the fixture, including empty
+  // .opencode directories. Refuse nonempty ambient sources before starting it.
+  const emptyAncestors = new Set();
+  for (let dir = path.dirname(home); ; dir = path.dirname(dir)) {
+    const ambient = path.join(dir, ".opencode");
+    const stat = fs.lstatSync(ambient, { throwIfNoEntry: false });
+    if (stat?.isDirectory() && fs.readdirSync(ambient).length === 0) emptyAncestors.add(ambient);
+    else assert.ok(!stat, `Ambient config at ${ambient}; set SCHOLAR_TEST_TMPDIR outside that tree`);
+    for (const name of ["opencode.json", "opencode.jsonc", "AGENTS.md", "CLAUDE.md"]) {
+      assert.ok(!fs.existsSync(path.join(dir, name)), `Ambient ${name} at ${dir}; set SCHOLAR_TEST_TMPDIR outside that tree`);
+    }
+    if (dir === path.parse(dir).root) break;
+  }
   const repo = path.join(home, "research");
   const moved = path.join(home, "moved");
   const vault = path.join(home, "vault");
@@ -101,20 +117,29 @@ test("OpenCode V2 discovers Scholar and handles real created and moved/deleted s
   env.OPENCODE_DISABLE_MODELS_FETCH = "true";
   env.OPENCODE_TEST_HOME = home;
   env.OPENCODE_DISABLE_CLAUDE_CODE = "1";
-  env.OPENCODE_CONFIG_PROJECT_DISABLE = "1";
   env.OPENCODE_CONFIG_CONTENT = JSON.stringify({
     update: "disable",
-    policies: ["mcp.use", "provider.use"].map((action) => ({ action, resource: "*", effect: "deny" })),
+    policies: [{ action: "provider.use", resource: "*", effect: "deny" }],
   });
   env.OPENCODE_PASSWORD = randomBytes(24).toString("hex");
   const authorization = "Basic " + Buffer.from(`opencode:${env.OPENCODE_PASSWORD}`).toString("base64");
-  const install = path.join(env.XDG_CONFIG_HOME, "opencode");
-  run(process.execPath, ["scripts/install.cjs", "install"], { cwd: root, env: { ...env, OPENCODE_DIR: install } });
+  const globalConfig = path.join(env.XDG_CONFIG_HOME, "opencode");
+  fs.mkdirSync(globalConfig, { recursive: true });
+  const globalFile = path.join(globalConfig, "opencode.jsonc");
+  const globalData = JSON.stringify({ update: "disable" });
+  fs.writeFileSync(globalFile, globalData);
+  const install = path.join(repo, ".opencode");
+  run(process.execPath, ["scripts/install.cjs", "install", repo], { cwd: root, env });
+  assert.deepEqual(fs.readdirSync(globalConfig), ["opencode.jsonc"]);
+  assert.equal(fs.readFileSync(globalFile, "utf8"), globalData);
   const cfg = path.join(install, "opencode.jsonc");
   const config = JSON.parse(fs.readFileSync(cfg, "utf8"));
-  for (const server of Object.values(config.mcp)) server.enabled = false;
+  assert.equal(config.permission, undefined);
+  assert.equal(config.permissions, undefined);
+  // Exercise V2 discovery without starting Zotero or contacting the local HTTP endpoint.
+  for (const server of Object.values(config.mcp.servers)) server.disabled = true;
   fs.writeFileSync(cfg, JSON.stringify(config));
-  const child = spawn(opencode, ["serve", "--hostname", "127.0.0.1", "--port", "0", "--print-logs"], { cwd: repo, env });
+  child = spawn(opencode, ["serve", "--hostname", "127.0.0.1", "--port", "0", "--print-logs"], { cwd: repo, env });
   let logs = "";
   for (const stream of [child.stdout, child.stderr]) stream.on("data", (chunk) => logs += chunk);
   let spawnError;
@@ -133,7 +158,7 @@ test("OpenCode V2 discovers Scholar and handles real created and moved/deleted s
     }
     child.stdout.destroy();
     child.stderr.destroy();
-    fs.rmSync(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 150 });
+    cleanup();
   });
   const base = await until(() => {
     if (spawnError) throw spawnError;
@@ -151,12 +176,13 @@ test("OpenCode V2 discovers Scholar and handles real created and moved/deleted s
     const decoded = JSON.parse(text);
     return decoded.data ?? decoded;
   }
-  const at = `?location%5Bdirectory%5D=${encodeURIComponent(repo)}`;
+  const atDirectory = (dir) => `?location%5Bdirectory%5D=${encodeURIComponent(dir)}`;
+  const at = atDirectory(repo);
   const sources = await api("config" + at);
   t.diagnostic(`config sources: ${sources.map((item) => item.path || "(inline)").join(", ")}`);
   assert.ok(sources.some((item) => item.path === cfg), "installed configuration missing");
   for (const { path: file } of sources) {
-    if (!file) continue;
+    if (!file || emptyAncestors.has(file)) continue;
     const rel = path.relative(home, file);
     assert.ok(!path.isAbsolute(rel) && !rel.startsWith(`..${path.sep}`) && rel !== "..", `external config source: ${file}`);
   }
@@ -180,27 +206,35 @@ test("OpenCode V2 discovers Scholar and handles real created and moved/deleted s
   for (const name of ["kb-init", "mine-writing-patterns", "promote"]) {
     assert.ok(commands.some((command) => command.name === name), `missing ${name}`);
   }
-  const expectedAgents = Object.keys(config.agent);
+  const expectedAgents = Object.keys(config.agents);
   assert.equal(expectedAgents.length, 6);
   for (const id of expectedAgents) assert.ok(agents.some((agent) => agent.id === id), `missing ${id}`);
-  t.diagnostic(`catalogs: ${plugins.length} Scholar plugins, ${installedSkills.length} installed skills, ${commands.length} commands total, ${expectedAgents.length} Scholar agents`);
+  const expectedMcp = Object.keys(config.mcp.servers).sort();
+  assert.deepEqual(expectedMcp, ["streamable-mcp-server", "zotero"]);
+  const mcp = await api("mcp" + at);
+  assert.deepEqual(mcp.map(({ name, id }) => name ?? id).sort(), expectedMcp, JSON.stringify(mcp));
+  const otherLocation = atDirectory(other);
+  assert.ok(!(await api("config" + otherLocation)).some(({ path: file }) => file === cfg));
+  assert.ok(!(await api("plugin" + otherLocation)).some(({ id }) => expectedPlugins.includes(id)));
+  assert.ok(!(await api("agent" + otherLocation)).some(({ id }) => expectedAgents.includes(id)));
+  assert.ok(!(await api("skill" + otherLocation)).some(({ id }) => id === "obsidian-project-kb-core"));
+  assert.ok(!(await api("command" + otherLocation)).some(({ name }) => name === "kb-init"));
+  assert.deepEqual(await api("mcp" + otherLocation), []);
+  t.diagnostic(`catalogs: ${plugins.length} Scholar plugins, ${installedSkills.length} installed skills, ${commands.length} commands total, ${expectedAgents.length} Scholar agents, ${expectedMcp.length} MCP entries`);
   const session = await api("session", "POST", { title: "V2 migration smoke", location: { directory: repo } });
   await until(() => logs.includes("Obsidian project memory: bound (runtime-project)"), () => logs);
   assert.equal(logs.split("Obsidian project memory: bound (runtime-project)").length, 2);
   const requested = `session/${session.id}/permission`;
   for (const [action, resources, expected] of [
     ["read", ["README.md"], "allow"],
-    ["edit", ["sample.txt"], "ask"],
-    ["edit", ["sample.pem"], "deny"],
-    ["shell", ["git status"], "ask"],
-    ["shell", ["npm publish"], "deny"],
-    ["external_directory", [vault], "deny"],
+    ["edit", ["sample.txt"], "allow"],
+    ["external_directory", [vault], "allow"],
   ]) {
     const result = await api(requested, "POST", { action, resources });
     assert.equal(result.effect, expected, `${action}: ${resources[0]}`);
     if (expected === "ask") await api(`${requested}/${result.id}/reply`, "POST", { decision: "reject" });
   }
-  t.diagnostic("server permission decisions: read=allow, edit .txt=ask, edit .pem=deny, shell git status=ask, shell npm publish=deny, external directory=deny");
+  t.diagnostic("No Scholar permission policy was injected; native V2 defaults apply");
   await api(`session/${session.id}/move`, "POST", { directory: moved });
   await until(async () => (await api(`session/${session.id}`)).location.directory.toLowerCase() === moved.toLowerCase(), () => logs);
   await api(`session/${session.id}`, "DELETE");
@@ -211,16 +245,18 @@ test("OpenCode V2 discovers Scholar and handles real created and moved/deleted s
   assert.match(worklog, /Obsidian Minimum Write-back/);
   assert.match(worklog, /moved-project\.md/);
   assert.ok(!fs.existsSync(path.join(repo, ".opencode", "logs")));
-  fs.writeFileSync(cfg, JSON.stringify({ ...config, permission: { "*": "allow" } }));
-  run(process.execPath, ["scripts/install.cjs", "install"], { cwd: root, env: { ...env, OPENCODE_DIR: install } });
+  const userRules = [{ action: "edit", resource: "*.txt", effect: "deny" }];
+  fs.writeFileSync(cfg, JSON.stringify({ ...config, permissions: userRules }));
+  run(process.execPath, ["scripts/install.cjs", "install", repo], { cwd: root, env });
+  assert.deepEqual(JSON.parse(fs.readFileSync(cfg, "utf8")).permissions, userRules);
   const override = await api("session", "POST", { title: "User permission override", location: { directory: repo } });
   const overridePath = `session/${override.id}/permission`;
   await until(async () => {
-    const result = await api(overridePath, "POST", { action: "shell", resources: ["npm publish"] });
+    const result = await api(overridePath, "POST", { action: "edit", resources: ["sample.txt"] });
     if (result.effect === "ask") await api(`${overridePath}/${result.id}/reply`, "POST", { decision: "reject" });
-    return result.effect === "allow";
-  }, () => `OpenCode did not apply the explicit user wildcard:\n${logs}`);
-  t.diagnostic("server permission decision after user override: shell npm publish=allow (checked only, not executed)");
+    return result.effect === "deny";
+  }, () => `OpenCode did not apply the explicit user rule:\n${logs}`);
+  t.diagnostic("User-owned project permissions continue to apply after reinstall");
   const evidence = process.env.SCHOLAR_TEST_EVIDENCE_DIR;
   if (evidence) {
     fs.mkdirSync(evidence, { recursive: true });

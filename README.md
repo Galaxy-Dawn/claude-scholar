@@ -116,40 +116,40 @@ It can still help in other research settings, but its current workflow design is
 
 ### Requirements
 
-- [OpenCode V2](https://opencode.ai/) (tested with `v2.4.0`; these plugins do not run on V1)
+- [OpenCode V2](https://opencode.ai/) (tested with `v2.4.1`; these plugins do not run on V1)
 - Git and Node.js 22+
 - (Optional) Python + [uv](https://docs.astral.sh/uv/) for Python development
 - (Optional) [Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) for literature workflows
 - (Optional) [Obsidian](https://obsidian.md/) for project knowledge-base workflows
 
-### Full installation (recommended)
+### Project installation (recommended)
 
-From the root of this V2 checkout, on Windows run:
+From the Scholar checkout, pass the path to an existing project outside the checkout. On Windows:
 
 ```powershell
-.\scripts\setup.ps1
+.\scripts\setup.ps1 'C:\Work\my-research'
 ```
 
 On macOS/Linux (or Git Bash), run:
 
 ```bash
-bash scripts/setup.sh
+bash scripts/setup.sh "/path/to/my-research"
 ```
 
 The PowerShell installer needs no Git Bash or WSL. Some optional workflows still require Bash or Python.
-Run `opencode debug paths config` to check the V2 configuration directory. The installer uses `OPENCODE_CONFIG_DIR` if set, otherwise `~/.config/opencode` (or `$XDG_CONFIG_HOME/opencode`). Use `OPENCODE_DIR` to override the installer target only. Restart OpenCode after installation.
+The installer puts skills, commands, and plugins in the target project's `.opencode/` directory. It adds V2 `agents` and `mcp.servers` to the project's existing `opencode.json` or `opencode.jsonc` (in the project root or `.opencode/`). If neither exists, it creates `.opencode/opencode.jsonc`. If more than one exists, it stops before writing. Global settings are not changed. Open the target project in OpenCode, or use `/reload` if it's already open.
 
 - **Update:** Run the same setup command from the newer checkout.
-- **Uninstall:** Run `.\scripts\uninstall.ps1` or `bash scripts/uninstall.sh` from the checkout or from the installation directory, using the same target settings as during installation. User-modified files, writing memory, and backups are retained. If you renamed and edited the config, uninstall stops without changing files. Restore the original filename shown in the error, keeping your edits, and retry.
-- **Existing configuration:** Your rules take precedence. Broad rules such as `*` can override Scholar's shell, edit, and external-directory denies. A changed JSONC file is reserialized; the original, including comments, is kept under `.opencode-scholar-backups/`. If you have your own `AGENTS.md`, review `AGENTS.scholar.md` (or `AGENTS.zh-CN.scholar.md`) and merge the sections you want. Sidecars are not applied automatically.
+- **Uninstall:** Run `.\scripts\uninstall.ps1 'C:\Work\my-research'` or `bash scripts/uninstall.sh "/path/to/my-research"` from the checkout. The target project's `.opencode/scripts/` also contains these scripts if the checkout is unavailable; pass the project path to them as well. User-modified files, writing memory, and backups are retained. If you moved or renamed the config and then edited it, restore its original path (keeping your edits) before installing or uninstalling.
+- **Existing configuration:** The installer preserves your agent and MCP definitions, and does not add permission rules. [OpenCode defaults](https://opencode.ai/docs/permissions#defaults) and your own rules apply; without a custom rule, OpenCode permits most tools and external directory access. Changed JSONC is reserialized; the original with its comments is backed up in `.opencode/.opencode-scholar-backups/`. Scholar's `.opencode/AGENTS.md` is referenced only when the project doesn't already have its own root instructions or a user-owned `.opencode/AGENTS.md`. Otherwise, review the Scholar instructions and merge them manually if desired.
 
 ### Upgrade from a V1 install
 
-If you used the old `~/.opencode` install, leave it untouched. Before installing, copy `skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md` from the old root to the same relative path under your V2 configuration directory. If the destination already exists, review and merge the two files yourself; do not overwrite either copy. The installer does not migrate the old directory or delete its contents.
+The project installer neither upgrades nor deletes earlier global installations. To bring over writing memory, copy `skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md` from the old install to the same relative path under the target project's `.opencode/`. If the destination exists, compare and merge the two files rather than overwriting either copy.
 
-If V1 and V2 share one config directory, run the new installer to upgrade recognized legacy plugins. If it cannot verify a plugin file, back up and move the reported file out of that directory before retrying. Existing Obsidian bindings remain readable; new bindings are written to the project's `.opencode/project-memory/`.
+For an earlier installation in the same project, setup replaces verified legacy plugins and removes old Scholar config and permission entries it can verify. It keeps user settings and changed entries. If it cannot verify a legacy plugin, back up and move the reported file out of that directory before retrying. Existing Obsidian bindings remain readable; new bindings use `.opencode/project-memory/`.
 
-For an early V1 install with neither ownership records nor local plugin registrations, use a clean V2 configuration directory rather than installing over it. The installer may otherwise keep old plugins it cannot identify.
+For an early V1 install with neither ownership records nor local plugin registrations, start with a clean project `.opencode/` directory. Back up the old files first.
 
 OpenCode V2 discovers the four ported server plugins automatically. The old `stop-summary` did nothing and is not installed. The V1 slash-command-only skill-match diagnostic is omitted because V2 has no equivalent global hook; Obsidian guidance still runs in the main agent context.
 On v2.4.0, a session created before plugins activate may not produce a startup message. A deletion with no location from OpenCode or from the plugin's current session tracking is skipped rather than logging to the wrong repository.
@@ -541,7 +541,7 @@ Claude Scholar also contains a self-improvement loop for its own skills.
 - [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) — Chinese companion for the lightweight core instructions
 - [README.zh-CN.md](./README.zh-CN.md) — Chinese version of this README
 - [README.ja-JP.md](./README.ja-JP.md) — Japanese version of this README
-- [opencode.jsonc](./opencode.jsonc) — optional OpenCode config template for plugin/MCP/agent/permission entries
+- [opencode.jsonc](./opencode.jsonc) — OpenCode V2 MCP template used by the project installer
 ## Project Rules
 
 Claude Scholar includes project rules for:

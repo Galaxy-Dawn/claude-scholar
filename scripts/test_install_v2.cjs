@@ -5,7 +5,6 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { pathToFileURL } = require("node:url");
 const { test } = require("node:test");
-const { parseConfig } = require("./lib/install-config.cjs");
 
 const root = path.resolve(__dirname, "..");
 const memory = "skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md";
@@ -15,10 +14,12 @@ const config = "opencode.jsonc";
 const legacyURL = (dir) => pathToFileURL(path.join(dir, "plugins/session-summary.ts")).href;
 
 function fixture(t) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "scholar test 测试 "));
-  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const project = fs.mkdtempSync(path.join(os.tmpdir(), "scholar test 测试 "));
+  const dir = path.join(project, ".opencode");
+  t.after(() => fs.rmSync(project, { recursive: true, force: true }));
   return {
     dir,
+    project,
     read: (file) => fs.readFileSync(path.join(dir, file), "utf8"),
     has: (file) => fs.existsSync(path.join(dir, file)),
     put(file, contents) {
@@ -39,9 +40,9 @@ function launch(dir, mode, shell, cwd = root) {
     program = shell;
     args = ["-NoProfile", "-NonInteractive", "-File", `scripts/${name}.ps1`];
   }
-  const result = spawnSync(program, args, {
+  const result = spawnSync(program, [...args, path.dirname(dir)], {
     cwd,
-    env: { ...process.env, OPENCODE_DIR: dir },
+    env: process.env,
     encoding: "utf8",
   });
   assert.ifError(result.error);
@@ -52,6 +53,64 @@ function ok(result) {
   assert.equal(result.status, 0, result.stderr + result.stdout);
 }
 
+test("an explicit project gets native Scholar config; a different project and global config are untouched", (t) => {
+  const f = fixture(t);
+  f.put("global/opencode.jsonc", '{ "model": "personal/model" }\n');
+  f.put("other/opencode.jsonc", '{ "theme": "other" }\n');
+  f.put("target/README.md", "test project");
+  const env = {
+    ...process.env, HOME: f.dir, USERPROFILE: f.dir, XDG_CONFIG_HOME: f.dir,
+    OPENCODE_CONFIG_DIR: path.join(f.dir, "global"), OPENCODE_DIR: path.join(f.dir, "global"),
+  };
+  const run = (mode, ...args) => spawnSync(process.execPath, ["scripts/install.cjs", mode, ...args], {
+    cwd: root, env, encoding: "utf8",
+  });
+  const project = path.join(f.dir, "target");
+  for (const mode of ["install", "uninstall"]) assert.notEqual(run(mode).status, 0);
+  assert.notEqual(run("install", path.join(f.dir, "global")).status, 0);
+  ok(run("install", project));
+  const data = JSON.parse(f.read("target/.opencode/opencode.jsonc"));
+  assert.equal(Object.keys(data.agents).length, 6);
+  assert.equal(typeof data.agents["paper-miner"].system, "string");
+  for (const definition of Object.values(data.agents)) {
+    assert.equal(definition.prompt, undefined);
+    assert.equal(definition.tools, undefined);
+  }
+  assert.equal(data.mcp.servers.zotero.type, "local");
+  assert.equal(data.mcp.servers.zotero.enabled, undefined);
+  assert.equal(data.mcp.zotero, undefined);
+  for (const key of ["agent", "permission", "permissions", "plugin"]) assert.equal(data[key], undefined);
+  assert.equal(f.has("target/opencode.jsonc"), false);
+  assert.equal(f.has(`target/.opencode/${skill}`), true);
+  ok(run("uninstall", project));
+  assert.equal(f.has("target/.opencode/opencode.jsonc"), false);
+  assert.equal(f.has("other/.opencode"), false);
+  assert.deepEqual(fs.readdirSync(path.join(f.dir, "global")), ["opencode.jsonc"]);
+  assert.equal(f.read("global/opencode.jsonc"), '{ "model": "personal/model" }\n');
+  assert.equal(f.read("other/opencode.jsonc"), '{ "theme": "other" }\n');
+});
+
+test("a single existing project-root configuration is reused; two locations are refused", (t) => {
+  const f = fixture(t);
+  const project = path.join(f.dir, "target");
+  const user = '{"permissions":[{"action":"edit","resource":"*","effect":"ask"}],"mcp":{"servers":{"zotero":{"type":"local","command":["custom-zotero"],"disabled":true}}}}';
+  f.put("target/opencode.json", user);
+  f.put("target/.opencode/opencode.jsonc", "{}");
+  const run = (mode) => spawnSync(process.execPath, ["scripts/install.cjs", mode, project], {
+    cwd: root, env: { ...process.env, OPENCODE_DIR: path.join(f.dir, "global") }, encoding: "utf8",
+  });
+  assert.notEqual(run("install").status, 0);
+  assert.equal(f.has(`target/.opencode/${skill}`), false);
+  fs.unlinkSync(path.join(project, ".opencode", config));
+  ok(run("install"));
+  assert.equal(f.has("target/.opencode/opencode.jsonc"), false);
+  const installed = JSON.parse(f.read("target/opencode.json"));
+  assert.deepEqual(installed.mcp.servers.zotero, JSON.parse(user).mcp.servers.zotero);
+  assert.deepEqual(installed.permissions, JSON.parse(user).permissions);
+  ok(run("uninstall"));
+  assert.deepEqual(JSON.parse(f.read("target/opencode.json")), JSON.parse(user));
+});
+
 const shells = ["bash"];
 if (process.platform === "win32") shells.push("powershell.exe", "pwsh.exe");
 for (const shell of shells) {
@@ -59,10 +118,10 @@ for (const shell of shells) {
     const f = fixture(t);
     ok(launch(f.dir, "install", shell));
     const data = JSON.parse(f.read(config));
-    assert.equal(data.permission.external_directory, "deny");
-    assert.equal(data.permission.shell["git reset --hard *"], "deny");
-    assert.equal(data.permission.write, undefined);
+    assert.equal(data.permission, undefined);
+    assert.equal(data.permissions, undefined);
     assert.equal(data.plugin, undefined);
+    assert.deepEqual(data.instructions, [".opencode/AGENTS.md"]);
     assert.equal(f.has(skill), true);
     assert.equal(f.has(memory), true);
     assert.equal(f.read("AGENTS.md"), fs.readFileSync(path.join(root, "AGENTS.md"), "utf8"));
@@ -85,17 +144,18 @@ test("JSONC, user rules, same-name agent and changed managed content survive rei
   ok(launch(f.dir, "install"));
   const first = JSON.parse(f.read(config));
   assert.equal(first.agent["code-reviewer"].description, "custom");
-  assert.equal(first.permission.edit["*"], "ask");
-  assert.equal(Object.keys(first.permission.edit).at(-1), "*");
-  assert.equal(first.permission["*"], "allow");
-  assert.equal(first.mcp.zotero.enabled, false);
+  assert.equal(first.agents["code-reviewer"], undefined);
+  assert.deepEqual(first.permission, { "*": "allow", edit: { "*": "ask" } });
+  assert.deepEqual(first.mcp.zotero, { enabled: false });
+  assert.equal(first.mcp.servers.zotero, undefined);
   assert.equal(first.plugin[0], "file:///user/keep.ts");
   assert.equal(f.read("opencode.jsonc.bak"), user);
   assert.equal(f.read("AGENTS.md"), "my own instructions");
   assert.equal(f.has("AGENTS.scholar.md"), true);
+  assert.equal(first.instructions, undefined);
   f.put(skill, "custom skill contents");
   f.put(memory, "user research");
-  first.agent["paper-miner"].description = "mine now";
+  first.agents["paper-miner"].description = "mine now";
   f.put(config, JSON.stringify(first));
   ok(launch(f.dir, "install"));
   ok(launch(f.dir, "uninstall"));
@@ -104,10 +164,11 @@ test("JSONC, user rules, same-name agent and changed managed content survive rei
   assert.equal(f.read("AGENTS.md"), "my own instructions");
   assert.equal(f.has("AGENTS.scholar.md"), false);
   const remaining = JSON.parse(f.read(config));
-  assert.equal(remaining.agent["paper-miner"].description, "mine now");
+  assert.equal(remaining.agents["paper-miner"].description, "mine now");
   assert.equal(remaining.agent["code-reviewer"].description, "custom");
   assert.deepEqual(remaining.permission, { "*": "allow", edit: { "*": "ask" } });
   assert.deepEqual(remaining.mcp.zotero, { enabled: false });
+  assert.equal(remaining.mcp.servers, undefined);
   assert.deepEqual(remaining.plugin, ["file:///user/keep.ts"]);
 });
 
@@ -129,20 +190,22 @@ for (const variant of ["nested", "different case", "linked ancestor"]) {
       "scripts/lib/utils.js", config, "AGENTS.md", "AGENTS.zh-CN.md"]) {
       f.put(`source/${rel}`, fs.readFileSync(path.join(root, rel)));
     }
-    let destination = path.join(source, "new", "config");
+    let destination = path.join(source, "new");
+    fs.mkdirSync(destination);
     if (variant === "different case") {
       destination = path.join(f.dir, "SOURCE");
       if (!fs.existsSync(destination)) return t.skip("case-sensitive filesystem");
     } else if (variant === "linked ancestor") {
       const link = path.join(f.dir, "source-link");
       fs.symlinkSync(source, link, process.platform === "win32" ? "junction" : "dir");
-      destination = path.join(link, "new", "config");
+      destination = path.join(link, "new");
     }
-    const result = launch(destination, "install", undefined, source);
+    const result = launch(path.join(destination, ".opencode"), "install", undefined, source);
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /outside the source checkout/);
     assert.equal(f.has(`source/${state}`), false);
-    assert.equal(f.has("source/new"), false);
+    assert.equal(f.has("source/new/.opencode"), false);
+    assert.equal(f.has("source/.opencode"), false);
   });
 }
 
@@ -168,6 +231,9 @@ test("uninstall preserves assets and ownership when a renamed config was edited"
   const edited = JSON.stringify({ ...JSON.parse(f.read(config)), theme: "user-edit" });
   fs.renameSync(path.join(f.dir, config), path.join(f.dir, renamed));
   f.put(renamed, edited);
+  const reinstall = launch(f.dir, "install");
+  assert.notEqual(reinstall.status, 0);
+  assert.match(reinstall.stderr, /opencode\.json.+opencode\.jsonc/);
   const result = launch(f.dir, "uninstall");
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /opencode\.json.+opencode\.jsonc/);
@@ -209,7 +275,7 @@ test("same-root V1 upgrade replaces a verified older plugin and uninstalls only 
   const plugin = "plugins/session-start.ts";
   const url = pathToFileURL(path.join(f.dir, plugin)).href;
   const msysURL = process.platform === "win32" ? url.replace(/^file:\/\/\/([a-z]):/i, "file:///$1") : url;
-  const template = parseConfig(fs.readFileSync(path.join(root, config), "utf8"));
+  const template = require("./lib/legacy-config.json");
   const original = {
     $schema: "https://opencode.ai/schema.json",
     agent: { "paper-miner": template.agent["paper-miner"] },
@@ -232,9 +298,12 @@ test("same-root V1 upgrade replaces a verified older plugin and uninstalls only 
   const upgraded = JSON.parse(f.read(config));
   assert.deepEqual(upgraded.plugin, ["file:///unrelated/keep.ts"]);
   assert.equal(upgraded.$schema, "https://opencode.ai/config.json");
-  assert.equal(upgraded.permission.read, "ask");
-  assert.equal(upgraded.permission.bash["git status *"], "allow");
-  assert.equal(upgraded.permission.bash["npm publish*"], "deny");
+  assert.deepEqual(upgraded.permission, { read: "ask", bash: { "git status *": "allow" } });
+  assert.equal(upgraded.permissions, undefined);
+  assert.equal(upgraded.agent["paper-miner"], undefined);
+  assert.equal(typeof upgraded.agents["paper-miner"].system, "string");
+  assert.equal(upgraded.mcp.servers["streamable-mcp-server"].type, "remote");
+  assert.deepEqual(upgraded.mcp.zotero, { enabled: false });
   ok(launch(f.dir, "uninstall"));
   const remaining = JSON.parse(f.read(config));
   assert.equal(f.has(plugin), false);
@@ -254,6 +323,38 @@ test("unverified V1 plugin blocks upgrade before writing assets", (t) => {
   assert.match(result.stderr, /plugins\/session-start\.ts/);
   assert.equal(f.has(skill), false);
   assert.equal(f.read(plugin), "custom old plugin");
+});
+
+test("a previous Scholar project install drops only its recorded V2-era legacy entries and permission rules", (t) => {
+  const f = fixture(t);
+  const oldAgent = { description: "old Scholar definition", prompt: "old prompt" };
+  const oldServer = { type: "local", command: ["zotero-mcp", "serve"], enabled: true };
+  const scholarRule = { action: "external_directory", resource: "*", effect: "deny" };
+  const userRule = { action: "shell", resource: "git status", effect: "ask" };
+  const permission = { read: "ask", edit: { "*": "ask", "private.txt": "deny" } };
+  f.put(config, JSON.stringify({
+    agent: { "paper-miner": oldAgent }, mcp: { zotero: oldServer }, permissions: [scholarRule, userRule], permission,
+  }));
+  f.put(".opencode-scholar-manifest.txt", "");
+  f.put(state, JSON.stringify({ version: 2, configFile: config, managedPaths: [], config: {
+    entries: [
+      { keys: ["agent", "paper-miner"], value: oldAgent },
+      { keys: ["mcp", "zotero"], value: oldServer },
+      { keys: ["permission", "edit", "*"], value: "deny" },
+      { keys: ["permission", "edit", "private.txt"], value: "deny" },
+    ],
+    rules: [scholarRule], sections: ["agent", "mcp"],
+  } }));
+  ok(launch(f.dir, "install"));
+  const data = JSON.parse(f.read(config));
+  assert.equal(data.agent, undefined);
+  assert.equal(typeof data.agents["paper-miner"].system, "string");
+  assert.equal(data.mcp.zotero, undefined);
+  assert.equal(data.mcp.servers.zotero.enabled, undefined);
+  assert.deepEqual(data.permissions, [userRule]);
+  assert.deepEqual(data.permission, { read: "ask", edit: { "*": "ask" } });
+  ok(launch(f.dir, "uninstall"));
+  assert.deepEqual(JSON.parse(f.read(config)), { permissions: [userRule], permission: data.permission });
 });
 
 test("V1 ownership survives checkout line endings but not content edits", (t) => {
@@ -294,10 +395,10 @@ test("install follows a renamed config and rejects two coexisting configs on rei
 test("installed agent paths use the active root rather than the V1 default", (t) => {
   const f = fixture(t);
   ok(launch(f.dir, "install"));
-  const { agent } = JSON.parse(f.read(config));
+  const { agents } = JSON.parse(f.read(config));
   for (const key of ["paper-miner", "kaggle-miner", "rebuttal-writer"]) {
-    assert.ok(agent[key].prompt.includes(f.dir.replaceAll("\\", "/")), key);
-    assert.doesNotMatch(agent[key].prompt, /~\/\.opencode\//);
+    assert.ok(agents[key].system.includes(f.dir.replaceAll("\\", "/")), key);
+    assert.doesNotMatch(agents[key].system, /~\/\.opencode\//);
   }
   const current = spawnSync(process.execPath, ["-p", "require('./scripts/lib/utils').getOpenCodeConfigDir()"], {
     cwd: root, env: { ...process.env, OPENCODE_DIR: f.dir }, encoding: "utf8",

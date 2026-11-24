@@ -86,7 +86,7 @@ When the rebuttal task involves:
 
 read the active installed writing memory before drafting:
 
-- On OpenCode, locate the active global `ml-paper-writing` skill and read `references/knowledge/paper-miner-writing-memory.md` alongside its `SKILL.md`.
+- On OpenCode, locate the current project's installed `ml-paper-writing` skill and read `references/knowledge/paper-miner-writing-memory.md` alongside its `SKILL.md`.
 - equivalent installed skill-home paths on other branches
 - otherwise skip this optional memory and continue with the local review-response references
 

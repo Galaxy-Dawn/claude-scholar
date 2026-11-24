@@ -8,8 +8,8 @@ The canonical paper-miner memory is:
 
 - `paper-miner-writing-memory.md`
 
-This is the **only maintained paper-miner writing memory**. All academic writing
-skills in the same client installation may read relevant entries from it.
+This is the **only maintained paper-miner writing memory per project install**.
+Academic writing skills in that project may read relevant entries from it.
 
 It stores:
 - writing patterns mined,
@@ -24,9 +24,8 @@ It stores:
 `paper-miner` always writes mined writing knowledge into `paper-miner-writing-memory.md`.
 
 This memory is:
-- **active installed OpenCode skill memory**,
-- **cross-project within this OpenCode install**,
-- **not project-specific**.
+- stored under the project's installed `ml-paper-writing` skill,
+- shared by writing skills in that project, not by other projects automatically.
 
 The installer must preserve this file across updates, and the uninstaller must
 leave it in place. It contains user-mined data, even though the repository also
@@ -34,7 +33,7 @@ ships a starter template at the same relative path.
 When updating by hand with `cp -r`, back up this file first and restore it
 after the copy. The installer's preservation rule does not apply to manual copies.
 
-If `paper-miner` is invoked inside a project, it may use project context to understand relevance, but it still writes only to the active installed OpenCode skill memory.
+`paper-miner` may use project context to understand relevance. It writes only to the project's installed skill memory, not a separate file at the project root or in a global directory.
 
 ## Legacy files
 

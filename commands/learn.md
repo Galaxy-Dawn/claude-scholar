@@ -33,7 +33,7 @@ Look for:
 
 ## Output Format
 
-Create `<config-dir>/skills/[pattern-name]/SKILL.md` under the active global OpenCode V2 config directory. Use the config path reported by `opencode debug paths`, not the old `~/.opencode` directory:
+Create `.opencode/skills/[pattern-name]/SKILL.md` under the current project root. Do not write to the global OpenCode config directory:
 
 ```markdown
 ---

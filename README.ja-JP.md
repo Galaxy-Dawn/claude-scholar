@@ -116,17 +116,19 @@ Claude Scholar は特に次のような人に向いています。
 
 ### 前提条件
 
-- [OpenCode V2](https://opencode.ai/)（`v2.4.0` で検証済み）
+- [OpenCode V2](https://opencode.ai/)（`v2.4.1` で検証済み）
 - Git と Node.js 22 以降
 - （任意）Python + [uv](https://docs.astral.sh/uv/) — Python 開発用
 - （任意）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) — 文献ワークフロー用
 - （任意）[Obsidian](https://obsidian.md/) — プロジェクト知識ベース用
 
-### インストール
+### プロジェクト単位でインストール
 
-V2 のチェックアウトのルートで、Windows は `.\scripts\setup.ps1`、macOS/Linux は `bash scripts/setup.sh` を実行して OpenCode を再起動します。Windows のインストールに Git Bash や WSL は不要です。
+Scholar のチェックアウトから、チェックアウト外にある既存のプロジェクトディレクトリを指定します。Windows では `.\scripts\setup.ps1 'C:\Work\my-research'`、macOS/Linux または Git Bash では `bash scripts/setup.sh "/path/to/my-research"` を実行します。PowerShell でのインストールに Git Bash や WSL は不要です。
 
-更新は同じコマンドを再実行します。アンインストールは、インストール時と同じ対象設定で、チェックアウトまたはインストール先から `.\scripts\uninstall.ps1` または `bash scripts/uninstall.sh` を実行します。設定ファイルを改名したうえで編集した場合は、変更内容を残したまま元のファイル名に戻してから再実行してください。旧 V1 からの移行については [V2 インストール手順（英語）](README.md#upgrade-from-a-v1-install) を参照してください。
+スキル、コマンド、プラグインはプロジェクトの `.opencode/` に入ります。V2 の `agents` と `mcp.servers` は、プロジェクトルートまたは `.opencode/` にある既存の `opencode.json` / `opencode.jsonc` に追加します。設定がなければ `.opencode/opencode.jsonc` を作成し、複数ある場合は書き込む前に停止します。グローバル設定は変更せず、権限ルールも追加しません。既存のルールと [OpenCode の既定値](https://opencode.ai/docs/permissions#defaults) が適用されます。インストール後は対象プロジェクトを OpenCode で開きます。すでに開いている場合は `/reload` を実行します。
+
+更新は同じコマンドを再実行します。アンインストールは `.\scripts\uninstall.ps1 'C:\Work\my-research'` または `bash scripts/uninstall.sh "/path/to/my-research"` を実行します。チェックアウトがない場合は、対象プロジェクトの `.opencode/scripts/` 内のスクリプトに同じパスを渡します。設定ファイルを移動または改名してから編集した場合は、編集内容を残したまま元の場所と名前に戻してから再実行します。旧グローバル版の自動移行や削除は行いません。[移行手順（英語）](README.md#upgrade-from-a-v1-install)を参照してください。
 
 ## 使い始めのシナリオ
 
@@ -509,7 +511,7 @@ Claude Scholar には self-improving な skill ワークフローも内蔵され
 - [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) — 軽量コア指示の中国語 companion ファイル
 - [README.md](./README.md) — 英語版 README
 - [README.zh-CN.md](./README.zh-CN.md) — 中国語版 README
-- [opencode.jsonc](./opencode.jsonc) — plugin / MCP / agent / permission の任意設定テンプレート
+- [opencode.jsonc](./opencode.jsonc) — プロジェクトインストーラーが使う OpenCode V2 の MCP 設定テンプレート
 
 ## プロジェクトルール
 

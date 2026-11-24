@@ -1,12 +1,13 @@
 const { isUtf8 } = require("node:buffer");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const { createHash } = require("node:crypto");
-const { legacyPluginItem, mergeConfig, parseConfig, removeOwned, same } = require("./lib/install-config.cjs");
-const { getOpenCodeConfigDir } = require("./lib/utils");
+const { legacyPluginItem, mergeConfig, parseConfig, removeOwned } = require("./lib/install-config.cjs");
 
 const source = path.resolve(__dirname, "..");
-const root = getOpenCodeConfigDir();
+let project;
+let root;
 const manifest = ".opencode-scholar-manifest.txt";
 const stateFile = ".opencode-scholar-install-state";
 const memory = "skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md";
@@ -40,6 +41,8 @@ const knownV1 = {
   "skills/obsidian-literature-workflow/references/CANVAS-WORKFLOW.md": "17cae724831174e149df8ffb98f6ae6a5b1b888e",
   "skills/obsidian-literature-workflow/references/GRAPH-WORKFLOW.md": "eb9ffdbffd69ec46f9a964b429e934cdcba4eb51",
   "skills/obsidian-project-kb-core/scripts/kb_common.py": "6801fe7e5756988ad182817959fc90cb0d9fd4a9",
+  "skills/ml-paper-writing/SKILL.md": "e982dbdc6b64630ef291ccb93bbc63fdcaf61052",
+  "skills/ml-paper-writing/references/knowledge/README.md": "4d08e55f8c49bec2345bba17f57fa3237760d3b4",
   "skills/review-response/SKILL.md": "702a8156a0e300d8680c9c458c2d4c4dad7452d9",
   "skills/zotero-obsidian-bridge/references/WORKFLOW.md": "cf193b1eec45cb470dd69ea5140e65178bd38ce5",
 };
@@ -70,21 +73,43 @@ function realDestination(dir) {
   }
 }
 
+function contains(parent, child) {
+  const relative = path.relative(parent, child);
+  return !path.isAbsolute(relative) && relative !== ".." && !relative.startsWith(`..${path.sep}`);
+}
+
+function selectProject(dir) {
+  project = fs.realpathSync.native(path.resolve(dir));
+  if (!stat(project)?.isDirectory() || project === path.parse(project).root) {
+    throw new Error("Choose an existing project directory, not a filesystem root");
+  }
+  root = path.join(project, ".opencode");
+  const home = os.homedir();
+  const globalDirs = [
+    path.join(home, ".config", "opencode"), path.join(home, ".opencode"),
+    process.env.XDG_CONFIG_HOME && path.join(process.env.XDG_CONFIG_HOME, "opencode"),
+    process.env.OPENCODE_CONFIG_DIR, process.env.OPENCODE_DIR,
+  ].filter(Boolean).map((folder) => realDestination(path.resolve(folder)));
+  if (globalDirs.some((dir) => contains(dir, project) || contains(dir, realDestination(root)))) {
+    throw new Error("Choose a project directory outside the global OpenCode configuration");
+  }
+}
+
 function requireOutsideCheckout() {
-  const relative = path.relative(fs.realpathSync.native(source), realDestination(root));
-  if (!relative || (!path.isAbsolute(relative) && relative !== ".." && !relative.startsWith(`..${path.sep}`))) {
+  const checkout = fs.realpathSync.native(source);
+  if (contains(checkout, project) || contains(checkout, realDestination(root))) {
     throw new Error("Choose an installation directory outside the source checkout");
   }
 }
 
 // Never follow links beneath the target, including Windows junctions.
-function target(rel) {
+function target(rel, base = root) {
   const names = rel.split("/");
   if (names.some((name) => !name || name === "." || name === ".." || /[\\:\r\n]/.test(name))) {
     throw new Error(`Invalid install path: ${rel}`);
   }
-  let file = root;
-  if (stat(file)?.isSymbolicLink()) throw new Error(`Refusing linked install directory: ${root}`);
+  let file = base;
+  if (stat(file)?.isSymbolicLink()) throw new Error(`Refusing linked install directory: ${base}`);
   for (const name of names) {
     file = path.join(file, name);
     if (stat(file)?.isSymbolicLink()) throw new Error(`Refusing linked install path: ${file}`);
@@ -92,16 +117,16 @@ function target(rel) {
   return file;
 }
 
-function read(rel) {
-  const file = target(rel);
+function read(rel, base = root) {
+  const file = target(rel, base);
   const meta = stat(file);
   if (!meta) return undefined;
   if (!meta.isFile()) throw new Error(`Not a regular file: ${file}`);
   return fs.readFileSync(file);
 }
 
-function write(rel, value, mode) {
-  const file = target(rel);
+function write(rel, value, mode, base = root) {
+  const file = target(rel, base);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, value, { mode });
 }
@@ -156,39 +181,53 @@ function ownedFile(previous, paths, rel, content) {
     current.toString("utf8").replaceAll("\r\n", "\n") === content.toString("utf8").replaceAll("\r\n", "\n");
 }
 
-function configName(previous) {
-  const candidates = ["opencode.json", "opencode.jsonc"].filter((name) => fs.existsSync(target(name)));
-  if (previous.configFile && !["opencode.json", "opencode.jsonc"].includes(previous.configFile)) {
+const projectConfigs = ["opencode.json", "opencode.jsonc", ".opencode/opencode.json", ".opencode/opencode.jsonc"];
+
+function previousConfig(previous) {
+  if (!previous.configFile) return undefined;
+  const file = previous.version === 3 ? previous.configFile : `.opencode/${previous.configFile}`;
+  if (!projectConfigs.includes(file) || (previous.version !== 3 && !file.startsWith(".opencode/"))) {
     throw new Error("Unexpected configuration path in install state");
   }
-  if (candidates.length > 1) throw new Error("Both opencode.json and opencode.jsonc exist; consolidate them first");
-  return candidates[0] || previous.configFile || "opencode.jsonc";
+  return file;
+}
+
+function configName(previousFile) {
+  const candidates = projectConfigs.filter((name) => stat(target(name, project)));
+  if (candidates.length > 1) throw new Error(`Multiple project configurations exist (${candidates.join(", ")}); consolidate them first`);
+  return candidates[0] || previousFile || ".opencode/opencode.jsonc";
 }
 
 function setConfig(rel, old, value) {
   if (old) {
-    backup(rel, old);
+    backup(rel.replace(/^\.opencode\//, ""), old);
     const sidecar = `${rel}.bak`;
-    if (!stat(target(sidecar))) write(sidecar, old);
+    if (!stat(target(sidecar, project))) write(sidecar, old, undefined, project);
   }
-  if (value === undefined) fs.unlinkSync(target(rel));
-  else write(rel, json(value));
+  if (value === undefined) fs.unlinkSync(target(rel, project));
+  else write(rel, json(value), undefined, project);
+}
+
+function requireKnownConfig(configFile, previousFile, original, previous) {
+  if (previousFile && configFile !== previousFile && original && hash(original) !== previous.configSha256) {
+    throw new Error(`Cannot verify ${configFile} as the original ${previousFile}; restore its original name and location, then retry`);
+  }
 }
 
 function install() {
   requireOutsideCheckout();
   const { previous, paths, hasState } = loadInstall();
-  const configFile = configName(previous);
-  const original = read(configFile);
+  const previousFile = previousConfig(previous);
+  const configFile = configName(previousFile);
+  const original = read(configFile, project);
+  if (hasState) requireKnownConfig(configFile, previousFile, original, previous);
   const config = parseConfig(original?.toString("utf8") ?? "{}");
   const before = JSON.stringify(config);
   const legacy = !hasState && [config.plugin, config.plugins].some(
     (items) => Array.isArray(items) && items.some((item) => legacyPluginItem(item, root)),
   );
   const v1 = hasState && previous.version === undefined;
-  const sameConfig = !previous.configFile || previous.configFile === configFile ||
-    (original && hash(original) === previous.configSha256);
-  const configState = hasState && sameConfig ? previous : {};
+  const configState = hasState ? previous : {};
   const template = parseConfig(fs.readFileSync(path.join(source, "opencode.jsonc"), "utf8"));
   for (const rel of Object.keys(knownV1).filter((name) => name.startsWith("plugins/"))) {
     const existing = read(rel);
@@ -200,7 +239,11 @@ function install() {
       throw new Error(`Cannot verify the legacy file ${rel}; back it up and move it out of ${root} before upgrading`);
     }
   }
-  const ownership = mergeConfig(config, template, root, configState, legacy, warn);
+  const localInstructions = read("AGENTS.md");
+  const userInstructions = ["AGENTS.md", "CLAUDE.md"].some((name) => fs.existsSync(path.join(project, name)));
+  const instructions = !userInstructions && (!localInstructions || ownedFile(previous, paths, "AGENTS.md", localInstructions))
+    ? ".opencode/AGENTS.md" : undefined;
+  const ownership = mergeConfig(config, template, root, configState, legacy, instructions, warn);
   const fileHashes = Object.create(null);
   const agentsTargets = [];
   const managedPaths = [];
@@ -249,22 +292,21 @@ function install() {
   managedPaths.sort();
   write(manifest, managedPaths.length ? managedPaths.join("\n") + "\n" : "");
   write(stateFile, json({
-    version: 2, configFile, configCreated, configSha256: hash(read(configFile)),
+    version: 3, configFile, configCreated, configSha256: hash(read(configFile, project)),
     sourceDir: source, managedPaths, agentsTargets, fileHashes, config: ownership,
   }));
-  info(`Installed OpenCode Scholar into ${root}. Restart OpenCode to activate it.`);
+  info(`Installed OpenCode Scholar for ${project}. Open that project in OpenCode, or use /reload.`);
 }
 
 function uninstall() {
   const { previous, paths, hasState } = loadInstall();
-  if (!hasState || previous.version !== 2) throw new Error("V2 install state not found; refusing to guess ownership");
-  const configFile = configName(previous);
-  const original = read(configFile);
+  if (!hasState || ![2, 3].includes(previous.version)) throw new Error("Scholar install state not found; refusing to guess ownership");
+  const previousFile = previousConfig(previous);
+  const configFile = configName(previousFile);
+  const original = read(configFile, project);
   if (original) {
+    requireKnownConfig(configFile, previousFile, original, previous);
     const unchanged = hash(original) === previous.configSha256;
-    if (configFile !== previous.configFile && !unchanged) {
-      throw new Error(`Cannot verify ${configFile} as the original ${previous.configFile}; restore its original name if you renamed it, then retry uninstall`);
-    }
     const config = parseConfig(original.toString("utf8"));
     if (previous.configCreated && unchanged) setConfig(configFile, original);
     else {
@@ -293,9 +335,13 @@ function uninstall() {
 }
 
 try {
-  if (process.argv[2] === "install") install();
-  else if (process.argv[2] === "uninstall") uninstall();
-  else throw new Error("Usage: node scripts/install.cjs install|uninstall");
+  const [operation, directory, ...extra] = process.argv.slice(2);
+  if (!["install", "uninstall"].includes(operation) || !directory?.trim() || extra.length) {
+    throw new Error("Usage: node scripts/install.cjs install|uninstall <project-directory>");
+  }
+  selectProject(directory);
+  if (operation === "install") install();
+  else uninstall();
 } catch (error) {
   console.error(`[ERROR] ${error.message}`);
   process.exitCode = 1;

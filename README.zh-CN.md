@@ -116,39 +116,39 @@ Claude Scholar 当前尤其适合：
 
 ### 系统要求
 
-- [OpenCode V2](https://opencode.ai/)（已验证 `v2.4.0`；这套插件不在 V1 上运行）
+- [OpenCode V2](https://opencode.ai/)（已验证 `v2.4.1`；这套插件不在 V1 上运行）
 - Git 和 Node.js 22 或更新版本
 - （可选）Python + [uv](https://docs.astral.sh/uv/) 用于 Python 开发
 - （可选）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) 用于文献工作流
 - （可选）[Obsidian](https://obsidian.md/) 用于项目知识库工作流
 
-### 完整安装（推荐）
+### 按项目安装（推荐）
 
-在当前 V2 版本的仓库根目录，Windows 用户运行：
+在 Scholar 仓库根目录运行安装脚本，传入仓库之外一个已有项目的路径。Windows 示例：
 
 ```powershell
-.\scripts\setup.ps1
+.\scripts\setup.ps1 'C:\Work\my-research'
 ```
 
 macOS/Linux 或 Git Bash 用户运行：
 
 ```bash
-bash scripts/setup.sh
+bash scripts/setup.sh "/path/to/my-research"
 ```
 
-PowerShell 安装不依赖 Git Bash 或 WSL；部分可选工作流仍需要 Bash 或 Python。用 `opencode debug paths config` 查看 V2 配置目录。安装器优先使用 `OPENCODE_CONFIG_DIR`，否则使用 `~/.config/opencode`（设置 `XDG_CONFIG_HOME` 后为 `$XDG_CONFIG_HOME/opencode`）。`OPENCODE_DIR` 只覆盖安装目标。安装后重启 OpenCode。
+PowerShell 安装不依赖 Git Bash 或 WSL；部分可选工作流仍需要 Bash 或 Python。技能、命令和插件安装到目标项目的 `.opencode/`。安装器把 V2 原生的 `agents` 和 `mcp.servers` 合并到项目已有的 `opencode.json` 或 `opencode.jsonc`（项目根目录或 `.opencode/` 均可）；没有配置时创建 `.opencode/opencode.jsonc`，发现多份则在写入前停止。不修改全局配置。安装后在 OpenCode 中打开目标项目；如果项目已经打开，运行 `/reload`。
 
 - **更新**：在新版仓库中重新运行同一个安装命令。
-- **卸载**：可在仓库或安装目录运行 `.\scripts\uninstall.ps1` 或 `bash scripts/uninstall.sh`，沿用安装时的目标设置。用户修改过的文件、写作记忆和备份都会保留。如果配置改名后又被编辑，卸载会停止，不改动任何文件。按报错恢复原文件名（保留编辑内容）后重试。
-- **已有配置**：用户原有规则优先。`*` 等宽泛规则可能覆盖 Scholar 的命令、编辑和外部目录限制。需要修改 JSONC 时会重新生成文件，带注释的原件保存在 `.opencode-scholar-backups/`。已有 `AGENTS.md` 时，按需将 `AGENTS.scholar.md` 或 `AGENTS.zh-CN.scholar.md` 的内容合并进去，旁置文件不会自动生效。
+- **卸载**：在仓库中运行 `.\scripts\uninstall.ps1 'C:\Work\my-research'` 或 `bash scripts/uninstall.sh "/path/to/my-research"`。仓库不在时，也可运行项目 `.opencode/scripts/` 下的卸载脚本，同样传入项目路径。用户修改过的文件、写作记忆和备份都会保留。移动或改名配置文件后又编辑过的，先保留编辑内容、恢复原路径，再重试安装或卸载。
+- **已有配置**：保留用户的代理和 MCP 定义，不自动添加权限规则。沿用用户规则和 [OpenCode 默认值](https://opencode.ai/docs/permissions#defaults)；未自定义时，多数工具和外部目录访问默认允许。修改 JSONC 时会重新生成文件，带注释的原件保存在 `.opencode/.opencode-scholar-backups/`。项目根已有指令文件或用户自己的 `.opencode/AGENTS.md` 时，不自动应用 Scholar 的指令，可按需手动合并。
 
 ### 从 V1 升级
 
-如果旧版安装在 `~/.opencode`，保留原目录。安装前可将其中的 `skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md` 复制到 V2 配置目录下的相同相对位置。如果目标已有文件，请先手动核对和合并，不要覆盖任一份。安装器不会自动迁移或清理旧目录。
+项目安装器不会升级或清理旧的全局安装。若要带走写作记忆，把旧安装中的 `skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md` 复制到目标项目 `.opencode/` 下的相同相对位置。如果目标已有文件，请先核对并合并，不要覆盖任一份。
 
-如果 V1 和 V2 使用同一配置目录，运行新版安装器即可更新已知的旧版插件。若提示无法核验某个插件文件，先备份并将提示中的文件移出该目录，再重试；安装器不会覆盖无法核验的插件。旧绑定仍可读取，新建的 Obsidian 绑定写入项目的 `.opencode/project-memory/`。
+在同一项目升级时，安装器替换经核验的旧插件，并移除能核验为 Scholar 写入的旧配置和权限条目；保留用户规则及修改过的条目。若提示无法核验某个旧插件，请先备份并将该文件移出目录再重试。旧 Obsidian 绑定仍可读取，新绑定写入项目的 `.opencode/project-memory/`。
 
-如果早期 V1 安装既没有安装清单和状态记录，配置中也没有本地插件注册项，请使用干净的 V2 配置目录，不要原地覆盖。否则，无法识别的旧插件可能仍留在原目录。
+如果早期 V1 安装既没有归属记录，也没有本地插件注册项，请先备份旧文件，再使用干净的项目 `.opencode/`，不要原地覆盖。
 
 OpenCode V2 会自动发现四个迁移后的插件。原 `stop-summary` 没有实际输出，不再安装；V2 没有等价的全局斜杠命令钩子，因此不保留旧的命令技能匹配日志。主会话中的 Obsidian 上下文提示仍保留。
 在 v2.4.0 中，插件激活前创建的会话可能没有启动提示；删除会话时若拿不到可信位置，插件会跳过摘要，而不是写到错误的项目。
@@ -535,7 +535,7 @@ Claude Scholar 也内置了自我改进的 skill 工作流。
 - [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) — 轻量核心指令的中文 companion 文件
 - [README.md](./README.md) — 英文版 README
 - [README.ja-JP.md](./README.ja-JP.md) — 日文版 README
-- [opencode.jsonc](./opencode.jsonc) — plugin / MCP / agent / permission 的可选配置模板
+- [opencode.jsonc](./opencode.jsonc) — 项目安装器使用的 OpenCode V2 MCP 配置模板
 ## 项目规则
 
 Claude Scholar 包含以下方面的项目规则：

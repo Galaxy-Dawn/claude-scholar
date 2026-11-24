@@ -4,11 +4,11 @@ description: Check and update AGENTS.md memory based on changes to skills, comma
 
 # Update Memory
 
-检查并更新 AGENTS.md 全局记忆文件，确保其内容与 skills、commands、plugins 的源文件保持同步。
+检查并更新当前项目的 `.opencode/AGENTS.md`，确保其内容与已安装的 skills、commands、plugins 保持同步。
 
 ## 功能概述
 
-先通过 `opencode debug paths` 确认当前全局配置目录。以下 `<config-dir>` 均指该目录。
+以下 `<config-dir>` 指当前项目的 `.opencode/`。不要改动项目根目录或全局配置目录中的指令文件。如果 `.opencode/AGENTS.md` 不存在，先报告，不自动创建。
 
 AGENTS.md 是一个汇总记忆文件，包含：
 - 技能目录结构（来自 `<config-dir>/skills/`）
@@ -23,7 +23,7 @@ AGENTS.md 是一个汇总记忆文件，包含：
 1. **扫描源文件修改时间**
    - `<config-dir>/skills/**/SKILL.md`
    - `<config-dir>/commands/**/*.md`
-   - `<config-dir>/opencode.json(c)`（`agent` 或 `agents` 字段）
+   - 项目根目录或 `<config-dir>` 中实际使用的 `opencode.json` / `opencode.jsonc`（`agents` 字段）
    - `<config-dir>/plugins/*.ts`
 
 2. **对比 AGENTS.md 最后修改时间**

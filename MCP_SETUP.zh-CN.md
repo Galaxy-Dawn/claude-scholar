@@ -83,15 +83,16 @@ NO_PROXY = "localhost,127.0.0.1"
 
 ##### OpenCode
 
-运行 `opencode debug paths config` 查看 OpenCode V2 的全局配置目录（默认是 `~/.config/opencode`）。将下方配置合并到该目录中已有的 `opencode.json` 或 `opencode.jsonc`；如果两个文件都不存在，就创建 `opencode.jsonc`。
+项目安装器会把 Zotero 添加到目标项目的 `mcp.servers`。手动配置时，将下方配置合并到项目根目录或 `.opencode/` 中已有的 `opencode.json` 或 `opencode.jsonc`。如果没有配置，创建 `.opencode/opencode.jsonc`；一个项目只保留一份配置。
 
 ```jsonc
 {
   "mcp": {
-    "zotero": {
-      "type": "local",
-      "command": ["zotero-mcp", "serve"],
-      "enabled": true
+    "servers": {
+      "zotero": {
+        "type": "local",
+        "command": ["zotero-mcp", "serve"]
+      }
     }
   }
 }
@@ -158,7 +159,7 @@ export UNSAFE_OPERATIONS="all"
 
 用途: Chrome 浏览器控制、网页交互。
 
-#### 配置
+#### Claude Code 配置
 
 ```json
 {
@@ -170,6 +171,25 @@ export UNSAFE_OPERATIONS="all"
   }
 }
 ```
+
+#### OpenCode V2 配置
+
+项目安装器会将此条目加到 `mcp.servers`：
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "streamable-mcp-server": {
+        "type": "remote",
+        "url": "http://127.0.0.1:12306/mcp"
+      }
+    }
+  }
+}
+```
+
+不需要某个 Scholar MCP 时，在项目配置的对应条目中设置 `"disabled": true`。
 
 ### 3. Xquik MCP（可选）
 
@@ -197,20 +217,22 @@ codex mcp list
 
 #### OpenCode
 
-在 `opencode.json` 中加入：
+合并到同一份项目配置：
 
 ```json
 {
   "mcp": {
-    "xquik": {
-      "type": "remote",
-      "url": "https://xquik.com/mcp"
+    "servers": {
+      "xquik": {
+        "type": "remote",
+        "url": "https://xquik.com/mcp"
+      }
     }
   }
 }
 ```
 
-然后运行 `opencode mcp auth xquik`。
+然后在项目目录中运行 `opencode mcp auth xquik`。
 
 #### 安全边界
 

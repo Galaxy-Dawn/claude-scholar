@@ -18,13 +18,13 @@ Read the paper source "$source" and update the active installed **paper-miner wr
 
 ## Default target
 
-Locate the active global `ml-paper-writing` skill. Write mined knowledge next to its `SKILL.md`, not into the repository checkout copy:
+Locate the current project's installed `ml-paper-writing` skill under `.opencode/skills/`. Write mined knowledge next to its `SKILL.md`, not into the global installation or the Scholar source checkout:
 
 ```text
 references/knowledge/paper-miner-writing-memory.md
 ```
 
-This command does **not** create project-specific writing memory unless the user explicitly asks for a project-local writing memory.
+Use the installed skill's memory. Do not create a second writing-memory file elsewhere in the project.
 
 ## When to use
 
@@ -106,9 +106,8 @@ Update one or more of these sections:
 - `How this helps our writing`
 - `Source index`
 
-If that file is unavailable in the current runtime, use the configured installed skill home for the active runtime and state the exact path in the final summary. Do not silently fall back to the repository checkout.
+If the skill is not installed in the current project, ask the user where to write. Do not fall back to a global directory or the Scholar source checkout.
 
-Do not create project-local writing memory.
 Do not scatter the mined result across multiple maintained knowledge files.
 
 ### Step 5: Return a standardized mining summary
@@ -130,5 +129,5 @@ The final response should follow the `paper-miner` standardized output format:
 - the target paper is read successfully,
 - reusable writing knowledge is merged into the canonical memory,
 - source attribution is preserved,
-- no project-specific writing memory is created,
+- no second writing-memory file is created,
 - the user receives a standardized mining summary.
