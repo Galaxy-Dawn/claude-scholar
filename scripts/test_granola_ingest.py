@@ -48,6 +48,14 @@ class GranolaIngestTest(unittest.TestCase):
     def kb(self, action: str, *args: str) -> subprocess.CompletedProcess:
         return self.run_cli(KB_HELPER, action, *args)
 
+    def place_binding(self, host_directory: str) -> Path:
+        directory = self.repo.resolve() / host_directory / 'project-memory'
+        if self.binding_registry.parent != directory:
+            directory.parent.mkdir(exist_ok=True)
+            self.binding_registry.parent.rename(directory)
+            self.binding_registry = directory / 'registry.yaml'
+        return directory
+
     def meeting(self, **updates: object) -> dict:
         return {
             'meeting_id': MEETING_ID,
@@ -840,6 +848,7 @@ ingest_granola.main()
 
     def test_binding_supports_standard_obsidian_commands(self) -> None:
         registry = self.binding_registry
+        self.assertEqual(registry, self.repo.resolve() / '.opencode/project-memory/registry.yaml')
         memory = registry.with_name('granola-demo.md')
         self.assertTrue(memory.is_file())
         before = registry.read_bytes()
@@ -854,6 +863,71 @@ ingest_granola.main()
         self.assertEqual(json.loads(self.kb('lifecycle', '--mode', 'detach').stdout)['status'], 'detached')
         self.assertEqual(json.loads(self.kb('status').stdout)['status'], 'detached')
         self.assertTrue(self.note.is_file())
+
+    def test_native_binding_is_read_without_a_legacy_registry(self) -> None:
+        self.place_binding('.opencode')
+        target = json.loads(self.run_cli(GRANOLA_HELPER, '--show-target').stdout)
+        self.assertEqual(target['vault_path'], str(self.vault.resolve()))
+        self.assertEqual(self.ingest()['status'], 'created')
+        self.assertEqual(json.loads(self.kb('status').stdout)['sources'], 1)
+        self.assertFalse((self.repo / '.claude/project-memory').exists())
+
+    def test_import_sync_and_lifecycle_follow_a_legacy_binding(self) -> None:
+        legacy = self.place_binding('.claude')
+        memory = legacy / 'granola-demo.md'
+        self.assertEqual(self.ingest()['status'], 'created')
+        self.kb('sync')
+        self.assertIn('scope=auto;', memory.read_text(encoding='utf-8'))
+        self.kb('lifecycle', '--mode', 'detach')
+        self.assertEqual(json.loads(self.kb('status').stdout)['status'], 'detached')
+        self.assertNotEqual(self.run_cli(GRANOLA_HELPER, '--show-target', check=False).returncode, 0)
+        self.assertTrue(self.note.is_file())
+        self.kb('lifecycle', '--mode', 'purge')
+        self.assertFalse(memory.exists())
+        self.assertFalse((self.repo / '.opencode/project-memory').exists())
+
+    def test_mixed_bindings_require_a_choice_and_prefer_native_for_the_same_id(self) -> None:
+        native = self.place_binding('.opencode')
+        primary = native / 'registry.yaml'
+        old = self.repo / '.claude/project-memory/registry.yaml'
+        old.parent.mkdir(parents=True, exist_ok=True)
+        other_root = self.repo.parent / 'Other vault/Research/old-study'
+        other_root.mkdir(parents=True)
+        entry = {'vault_root': str(other_root), 'repo_roots': [str(self.repo.resolve())]}
+        old.write_text(json.dumps({'projects': {'granola-demo': entry, 'old-study': entry}}), encoding='utf-8')
+        before = {path: path.read_bytes() for path in (primary, old)}
+        ambiguous = self.run_cli(GRANOLA_HELPER, '--show-target', check=False)
+        self.assertNotEqual(ambiguous.returncode, 0)
+        self.assertIn('--project-id', ambiguous.stderr)
+        self.assertEqual(self.ingest(project_id='granola-demo')['vault_path'], str(self.vault.resolve()))
+        self.assertEqual(list(other_root.iterdir()), [])
+        self.assertEqual(self.ingest(project_id='old-study')['vault_path'], str(other_root.resolve().parent.parent))
+        self.assertEqual({path: path.read_bytes() for path in before}, before)
+
+    def test_bootstrap_keeps_a_legacy_memory_with_its_original_vault(self) -> None:
+        legacy = self.place_binding('.claude')
+        old_memory = legacy / 'granola-demo.md'
+        old_memory.write_text(old_memory.read_text(encoding='utf-8') + '\nVault-specific notes.\n', encoding='utf-8')
+        old_bytes = old_memory.read_bytes()
+        other = self.repo.parent / 'Other vault'
+        other.mkdir()
+        result = json.loads(self.kb('bootstrap', '--vault-path', str(other), '--project-name', 'Granola Demo').stdout)
+        new_memory = Path(result['memory_path']).read_text(encoding='utf-8')
+        self.assertIn(f"vault_root: {result['project_root']}", new_memory)
+        self.assertNotIn('Vault-specific notes.', new_memory)
+        self.assertEqual(old_memory.read_bytes(), old_bytes)
+        self.assertEqual(self.ingest()['vault_path'], str(other.resolve()))
+
+    def test_rebinding_the_same_vault_retains_legacy_project_notes(self) -> None:
+        memory = self.place_binding('.claude') / 'granola-demo.md'
+        edited = memory.read_bytes() + '\n手动补记。\n'.encode('utf-8')
+        memory.write_bytes(edited)
+        result = json.loads(self.kb('bootstrap', '--vault-path', str(self.vault), '--project-name',
+                                    'Granola Demo', '--note-language', 'zh-CN').stdout)
+        new_memory = Path(result['memory_path'])
+        self.assertEqual(new_memory.parent, self.repo.resolve() / '.opencode/project-memory')
+        self.assertEqual(new_memory.read_bytes(), edited)
+        self.assertEqual(memory.read_bytes(), edited)
 
     def test_binding_is_not_redirected_by_codex_preview(self) -> None:
         other_project = self.vault / 'Research/another-project'

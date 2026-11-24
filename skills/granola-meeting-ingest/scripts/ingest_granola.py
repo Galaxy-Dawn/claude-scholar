@@ -338,12 +338,7 @@ def ingest_meeting(
 
 
 def resolve_granola_binding(repo_root: Path, project_id: str | None) -> common.Binding:
-    registry = common.binding_registry_path(repo_root)
-    registered = common.load_binding_registry(registry).get('projects') or {}
-    legacy = repo_root / '.claude' / 'project-memory' / 'registry.yaml'
-    if registry != legacy:
-        legacy_projects = common.load_binding_registry(legacy).get('projects') or {}
-        registered = legacy_projects | registered
+    registered = {key: entry for key, (_, entry) in common.registered_projects(repo_root).items()}
     if not registered:
         raise ValueError('Bind the project to the intended existing Obsidian vault before importing')
     if project_id is None:

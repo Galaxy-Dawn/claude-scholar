@@ -181,8 +181,15 @@ def load_binding(repo_root: Path, project_id: str | None) -> common.Binding:
     return common.resolve_binding(repo_root, project_id or None)
 
 
+def registry_for_existing_project(repo_root: Path, project_id: str) -> Path:
+    project = common.registered_projects(repo_root).get(project_id)
+    if project is None:
+        raise SystemExit(f'Project {project_id!r} not found in binding registry')
+    return project[0]
+
+
 def update_binding_entry(repo_root: Path, project_id: str, **updates: Any) -> dict[str, Any]:
-    reg_path = common.binding_registry_path(repo_root)
+    reg_path = registry_for_existing_project(repo_root, project_id)
     registry = common.load_binding_registry(reg_path)
     entry = (registry.get('projects') or {}).get(project_id)
     if entry is None:
@@ -222,11 +229,11 @@ def archive_project(binding: common.Binding) -> dict[str, Any]:
 
 
 def purge_project(binding: common.Binding) -> dict[str, Any]:
-    reg_path = common.binding_registry_path(binding.repo_root)
+    reg_path = registry_for_existing_project(binding.repo_root, binding.project_id)
+    memory_path = reg_path.with_name(f'{binding.project_id}.md')
     registry = common.load_binding_registry(reg_path)
     registry.setdefault('projects', {}).pop(binding.project_id, None)
     common.save_binding_registry(reg_path, registry)
-    memory_path = common.project_memory_path(binding.repo_root, binding.project_id)
     if memory_path.exists():
         memory_path.unlink()
     if binding.project_root.exists():

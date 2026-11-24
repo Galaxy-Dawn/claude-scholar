@@ -56,9 +56,10 @@ a verified meeting UUID instead.
    destination and give the same folder-opening instructions with the result.
    [Manage vaults](https://obsidian.md/help/Files%20and%20folders/Manage%20vaults)
 
-   Use the binding already managed by the Scholar knowledge-base helper. Run
-   its project initialization workflow to set up a new one, then use
-   `--show-target` to check the result.
+   OpenCode reads `.opencode/project-memory/registry.yaml` and existing
+   bindings in `.claude/project-memory/registry.yaml`. If both contain the
+   same project ID, the OpenCode entry takes precedence. Use `--project-id`
+   to choose between distinct matching projects and confirm the full vault path.
 2. Identify exactly one source using the entry point that matches the request.
    Use the equivalent search, listing and reading tools available in the current
    client. When the client cannot read the note, use the local export path.
@@ -136,9 +137,10 @@ python3 "${OPENCODE_CONFIG_DIR:-$HOME/.opencode}/skills/granola-meeting-ingest/s
 
 Pass one UTF-8 summary JSON object on standard input. If using a file, keep
 it outside the repository and pass its path to `--input`. The command uses
-the default full-install location for OpenCode. For a plugin, custom skill
-directory, or checkout, use `scripts/ingest_granola.py` next to the actual
-`SKILL.md` loaded by your client. Substitute the selected project ID and vault folder in the
+the OpenCode V1 global install. With a project-scoped install, run
+`.opencode/skills/granola-meeting-ingest/scripts/ingest_granola.py` with
+Python from the project root. In a custom install or checkout, locate the
+script next to the loaded skill under `scripts/`. Substitute the selected project ID and vault folder in the
 command. A vault-path mismatch stops the import before writing. The helper
 returns UTF-8 JSON, including non-ASCII note paths.
 

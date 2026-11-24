@@ -106,11 +106,23 @@ def find_repo_root(cwd: Path) -> Path:
 
 
 def binding_registry_path(repo_root: Path) -> Path:
-    return repo_root / '.claude' / 'project-memory' / 'registry.yaml'
+    return repo_root / '.opencode' / 'project-memory' / 'registry.yaml'
+
+
+def registered_projects(repo_root: Path) -> dict[str, tuple[Path, dict[str, Any]]]:
+    paths = (binding_registry_path(repo_root),
+             repo_root / '.claude' / 'project-memory' / 'registry.yaml')
+    projects = {}
+    for registry in paths:
+        for project_id, entry in (load_binding_registry(registry).get('projects') or {}).items():
+            projects.setdefault(project_id, (registry, entry))
+    return projects
 
 
 def project_memory_path(repo_root: Path, project_id: str) -> Path:
-    return repo_root / '.claude' / 'project-memory' / f'{project_id}.md'
+    project = registered_projects(repo_root).get(project_id)
+    registry = project[0] if project else binding_registry_path(repo_root)
+    return registry.with_name(f'{project_id}.md')
 
 
 def load_binding_registry(path: Path) -> dict[str, Any]:
@@ -288,8 +300,7 @@ def project_root_for(vault_path: Path, project_slug: str) -> Path:
 
 
 def resolve_binding(repo_root: Path, project_id: str | None = None) -> Binding:
-    registry = load_binding_registry(binding_registry_path(repo_root))
-    projects = registry.get('projects') or {}
+    projects = registered_projects(repo_root)
     if not projects:
         raise SystemExit('No registered projects found in .opencode/project-memory/registry.yaml')
     if project_id is None:
@@ -301,9 +312,10 @@ def resolve_binding(repo_root: Path, project_id: str | None = None) -> Binding:
             project_id = project.get('project_id')
             if not project_id:
                 raise SystemExit('Multiple projects registered; pass --project-id')
-    entry = projects.get(project_id)
-    if not entry:
+    project = projects.get(project_id)
+    if not project:
         raise SystemExit(f'Project {project_id!r} not found in binding registry')
+    _, entry = project
     project_root = Path(entry['vault_root']).expanduser().resolve()
     vault_path = project_root.parent.parent
     return Binding(
@@ -346,10 +358,9 @@ def detect_project_features(repo_root: Path) -> dict[str, Any]:
 
 
 def detect(repo_root: Path) -> dict[str, Any]:
-    registry = load_binding_registry(binding_registry_path(repo_root))
     features = detect_project_features(repo_root)
     project = None
-    for project_id, entry in (registry.get('projects') or {}).items():
+    for project_id, (_, entry) in registered_projects(repo_root).items():
         roots = [Path(item).expanduser().resolve() for item in entry.get('repo_roots') or []]
         if repo_root.resolve() in roots:
             project = {
@@ -443,6 +454,7 @@ def bootstrap_binding(repo_root: Path, vault_path: Path, project_name: str | Non
     migrated = maybe_migrate_old_layout(project_root)
 
     reg_path = binding_registry_path(repo_root)
+    previous_memory = project_memory_path(repo_root, project_slug)
     registry = load_binding_registry(reg_path)
     registry.setdefault('projects', {})
     registry['projects'][project_slug] = {
@@ -457,9 +469,15 @@ def bootstrap_binding(repo_root: Path, vault_path: Path, project_name: str | Non
         'note_language': note_language,
         'updated_at': now_iso(),
     }
+    if previous_memory.parent != reg_path.parent:
+        legacy = load_binding_registry(previous_memory.with_name(reg_path.name))
+        prior_root = (legacy.get('projects') or {}).get(project_slug, {}).get('vault_root')
+        if not prior_root or Path(prior_root).expanduser().resolve() != project_root:
+            # An identically named project in another vault has its own memory.
+            previous_memory = reg_path.with_name(previous_memory.name)
     save_binding_registry(reg_path, registry)
 
-    memory = project_memory_path(repo_root, project_slug)
+    memory = reg_path.with_name(f'{project_slug}.md')
     content = f'''---
 project_id: {project_slug}
 project_slug: {project_slug}
@@ -485,7 +503,10 @@ auto_sync: true
 ## Recent Sync Summary
 - Bootstrap completed at {now_iso()}.
 '''
-    write_text(memory, content)
+    if previous_memory != memory and previous_memory.is_file() and not memory.exists():
+        shutil.copyfile(previous_memory, memory)
+    else:
+        write_text(memory, content)
     return {
         'project_id': project_slug,
         'project_slug': project_slug,
