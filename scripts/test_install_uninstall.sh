@@ -37,7 +37,7 @@ run_uninstall() {
 }
 
 test_roundtrip_existing_config() {
-  local home
+  local home granola kb
   home="$(make_home)"
   write_base_config "$home"
 
@@ -45,6 +45,18 @@ test_roundtrip_existing_config() {
   test -f "$home/.kimi/.kimi-scholar-manifest.txt"
   test -f "$home/.kimi/.kimi-scholar-install-state"
   test -f "$home/.kimi/AGENTS.md"
+  granola="$home/.kimi/skills/granola-meeting-ingest"
+  kb="$home/.kimi/skills/obsidian-project-kb-core/scripts/project_kb.py"
+  test -f "$granola/SKILL.md"
+  test -f "$granola/references/GRANOLA-MEETING-NOTES.md"
+  python3 -c 'import json, sys; assert "granola" not in json.load(open(sys.argv[1], encoding="utf-8"))["mcpServers"]' "$home/.kimi/mcp.json"
+
+  mkdir -p "$home/research" "$home/vault"
+  python3 -B "$kb" bootstrap --cwd "$home/research" --vault-path "$home/vault" --project-name study >/dev/null
+  python3 -B "$granola/scripts/ingest_granola.py" --cwd "$home/research" --project-id study \
+    --expect-vault "$home/vault" --input - >/dev/null <<'JSON'
+{"meeting_id":"a5c6d001-fd66-4e9c-b002-010203040506","title":"Fixture","meeting_date":"2026-01-15","source_kind":"notes","summary":["Review the sample."]}
+JSON
   test -f "$home/.kimi/skills/research-ideation/references/research-contract.md"
   test -f "$home/.kimi/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   grep -Fxq "skills/research-ideation/references/research-contract.md" "$home/.kimi/.kimi-scholar-manifest.txt"
@@ -52,6 +64,8 @@ test_roundtrip_existing_config() {
   run_uninstall "$home"
   test ! -f "$home/.kimi/.kimi-scholar-manifest.txt"
   test ! -f "$home/.kimi/.kimi-scholar-install-state"
+  test ! -f "$granola/scripts/ingest_granola.py"
+  test -f "$home/vault/Research/study/Sources/Interviews/Granola-26-01-15-Fixture.md"
   test -f "$home/.kimi/config.toml"
   test -f "$home/.kimi/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   ! grep -q '\[agents\.' "$home/.kimi/config.toml"
@@ -251,6 +265,7 @@ test_existing_mcp_json_is_preserved_on_uninstall() {
   cat > "$home/.kimi/mcp.json" <<'JSON'
 {
   "mcpServers": {
+    "granola": {"url": "https://mcp.granola.ai/mcp"},
     "custom": {
       "command": "custom-mcp",
       "args": ["--keep"]
@@ -260,6 +275,7 @@ test_existing_mcp_json_is_preserved_on_uninstall() {
 JSON
 
   run_setup "$home"
+  python3 -c 'import json, sys; assert json.load(open(sys.argv[1], encoding="utf-8"))["mcpServers"]["granola"] == {"url": "https://mcp.granola.ai/mcp"}' "$home/.kimi/mcp.json"
   grep -q 'custom-mcp' "$home/.kimi/mcp.json"
   grep -q 'zotero-mcp' "$home/.kimi/mcp.json"
   ! grep -Fxq 'mcp.json' "$home/.kimi/.kimi-scholar-manifest.txt"
@@ -267,6 +283,7 @@ JSON
   run_uninstall "$home"
 
   test -f "$home/.kimi/mcp.json"
+  python3 -c 'import json, sys; assert json.load(open(sys.argv[1], encoding="utf-8"))["mcpServers"]["granola"] == {"url": "https://mcp.granola.ai/mcp"}' "$home/.kimi/mcp.json"
   grep -q 'custom-mcp' "$home/.kimi/mcp.json"
   ! grep -q 'zotero-mcp' "$home/.kimi/mcp.json"
   pass "existing mcp.json is preserved on uninstall"

@@ -295,6 +295,12 @@ Use Obsidian when you want Claude Scholar to maintain a filesystem-first researc
 
 See [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md).
 
+### Granola (optional)
+
+In Kimi Code CLI, import a selected Granola meeting into the project's bound
+Obsidian vault. Use a local export or connect Granola MCP.
+[Set up and import a meeting](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md).
+
 ## Primary Workflows
 
 Complete academic research lifecycle — 7 stages from idea to publication.

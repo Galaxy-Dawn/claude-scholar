@@ -295,6 +295,10 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 
 详见 [OBSIDIAN_SETUP.zh-CN.md](./OBSIDIAN_SETUP.zh-CN.md)。
 
+### Granola（可选）
+
+在 Kimi Code CLI 中选择一场 Granola 会议，将笔记导入当前项目绑定的 Obsidian 库。可以提供本地导出，也可以连接 Granola MCP。[配置与导入指南](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
+
 ## 主要工作流
 
 完整学术研究生命周期 —— 从研究构思到发表的 7 个阶段。

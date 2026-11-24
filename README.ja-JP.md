@@ -295,6 +295,10 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 
 詳しくは [OBSIDIAN_SETUP.ja-JP.md](./OBSIDIAN_SETUP.ja-JP.md) を参照してください。
 
+### Granola（オプション）
+
+Kimi Code CLI で Granola の会議を選び、プロジェクトに紐づいた Obsidian 保管庫に取り込めます。ローカルのエクスポート、または Granola MCP 接続を利用できます。[設定とインポートの手順](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)
+
 ## 主要ワークフロー
 
 研究構想から発表までを含む、完全な学術研究ライフサイクルの 7 段階です。
