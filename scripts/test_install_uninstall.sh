@@ -31,6 +31,11 @@ test_roundtrip_empty_home() {
   test -f "$home/.claude/CLAUDE.md"
   node "$REPO_ROOT/scripts/test_settings_hooks.js" "$home/.claude/settings.json"
   test -f "$home/.claude/commands/promote.md"
+  test -f "$home/.claude/skills/granola-meeting-ingest/SKILL.md"
+  test -f "$home/.claude/skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md"
+  test -f "$home/.claude/skills/granola-meeting-ingest/scripts/ingest_granola.py"
+  python3 -B "$home/.claude/skills/granola-meeting-ingest/scripts/ingest_granola.py" --help >/dev/null
+  python3 -c 'import json, sys; assert "granola" not in json.load(open(sys.argv[1], encoding="utf-8")).get("mcpServers", {})' "$home/.claude/settings.json"
   test -f "$home/.claude/skills/post-acceptance/references/xquik-promotion.md"
   test -f "$home/.claude/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   ! grep -q 'generate-promotion.py' "$home/.claude/commands/promote.md"
