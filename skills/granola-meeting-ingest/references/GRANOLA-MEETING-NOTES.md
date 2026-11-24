@@ -34,6 +34,14 @@ the meeting and destination project.
 [Configure MCP in Kimi](https://moonshotai.github.io/kimi-code/en/customization/mcp)
 · [Granola MCP endpoint and tools](https://docs.granola.ai/help-center/sharing/integrations/mcp)
 
+In the terminal or Kimi Code Web (`kimi web`), choose the bound research
+folder and trust that workspace for project-level MCP. An editor using ACP
+must start its session in that project too. The Kimi process reads and
+writes files on the machine running it. If you are viewing a remote
+session while your vault is on your laptop, run the import in a local
+session and check `--show-target` there first.
+[Kimi Code Web](https://moonshotai.github.io/kimi-code/en/guides/web.html)
+
 ## Read and summarize the meeting
 
 1. **Resolve the destination before reading a meeting.** From the research
@@ -180,7 +188,7 @@ path in the app. [Obsidian URI](https://obsidian.md/help/uri)
 
 Keep the `source_provider` and `granola_meeting_id` fields when editing the
 note. The importer reads saved Markdown with or without a UTF-8 BOM. The
-registry stores the meeting UUID in a hidden row comment. After a manual
+registry stores the meeting UUID in a hidden row comment. A normal project sync or a Scholar rename also retains the original source ID when a marked meeting has one unambiguous new location. After a manual
 rename, re-import directly to keep the source ID and refresh the index link.
 If the new path is registered to a different meeting, re-import that meeting
 at its current path first. A new import skips filenames still used in the

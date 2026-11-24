@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
+from uuid import UUID
 
 IGNORE_DIRS = {
     '.git', '.hg', '.svn', '.venv', 'venv', 'node_modules', '__pycache__',
@@ -259,6 +260,19 @@ def read_frontmatter_fields(path: Path, *fields: str) -> dict[str, str]:
                 if value is not None:
                     values[field] = value
     return {}
+
+
+def meeting_source_key(note: Path, providers: set[str]) -> str | None:
+    """Match a provider's persisted meeting UUID without loading its integration."""
+    fields = read_frontmatter_fields(note, 'source_provider', *(f'{p}_meeting_id' for p in providers))
+    provider = fields.get('source_provider', '').strip().casefold()
+    if provider not in providers:
+        return None
+    try:
+        identifier = UUID(fields.get(f'{provider}_meeting_id', '').strip())
+    except ValueError:
+        return None
+    return f'{provider}:{identifier}'
 
 
 def set_frontmatter_value(text: str, key: str, value: str) -> str:
@@ -733,7 +747,7 @@ def registry_add_or_update(
                 existing = prior
             else:
                 entries.remove(prior)
-                existing = {**row, 'ID': prior['ID'], 'Status': prior['Status']}
+                existing = {**row, 'ID': prior['ID'], 'Status': prior['Status'], 'Title': prior['Title']}
                 rows[section].append(existing)
             break
     if existing is None:
