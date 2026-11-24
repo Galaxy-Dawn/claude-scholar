@@ -43,6 +43,14 @@ research folder. For V2, `opencode mcp list` shows connection status and
 [OpenCode web client](https://opencode.ai/docs/cli/web/) ·
 [OpenCode MCP configuration](https://opencode.ai/docs/mcp-servers/)
 
+OpenCode 1.2.9's one-shot `opencode run` rejects pending permission
+requests automatically. With Scholar's default settings, use the
+interactive terminal or a local web/desktop session and review each
+request to load the skill, read the selected meeting and write to the
+bound vault. For an unattended import from a local export, use the
+installed Python helper below with `--expect-vault` and `--project-id`.
+[OpenCode 1.2.9 one-shot permission handling](https://github.com/anomalyco/opencode/blob/v1.2.9/packages/opencode/src/cli/cmd/run.ts#L539-L551)
+
 ## Read and summarize the meeting
 
 1. **Resolve the destination before reading a meeting.** From the research
