@@ -196,14 +196,7 @@ def existing_meeting(project_root: Path, meeting_id: str) -> Path | None:
             for path in folder.rglob('*.md'):
                 if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(project_root):
                     continue
-                metadata = common.read_frontmatter_fields(path, 'source_provider', 'granola_meeting_id')
-                if metadata.get('source_provider', '').strip().casefold() != 'granola':
-                    continue
-                try:
-                    saved_id = str(UUID(metadata.get('granola_meeting_id', '').strip()))
-                except ValueError:
-                    continue
-                if saved_id == meeting_id:
+                if common.meeting_source_key(path, {'granola'}) == f'granola:{meeting_id}':
                     candidates.append(path)
     if len(candidates) > 1:
         raise ValueError('this Granola meeting already has multiple notes in the project')
