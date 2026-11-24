@@ -268,6 +268,102 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertNotIn(original_link, index)
         self.assertEqual(index.count(current_link), 1)
 
+    def test_sync_between_manual_rename_and_reimport_keeps_source_ids(self) -> None:
+        saved = {}
+        for uid in (MEETING_ID, SECOND_ID):
+            original = self.root / self.ingest(meeting_id=uid, title='Same title')['note']
+            old_link = f'[[{original.relative_to(self.root).with_suffix("").as_posix()}]]'
+            source_id = next(key for key, link in self.granola_registry_entries() if link == old_link)
+            renamed = original.with_name(f'Edited {source_id}.md')
+            saved[uid] = (original, renamed, source_id)
+        # Both moves happen outside Scholar, before the normal project sync runs.
+        for original, renamed, source_id in saved.values():
+            original.rename(renamed)
+            renamed.write_bytes(b'\xef\xbb\xbf' + renamed.read_bytes() + b'\r\nHandwritten.\r\n')
+        edits = {path: path.read_bytes() for _, path, _ in saved.values()}
+        for _ in range(2):
+            self.kb('sync')
+        expected = [(key, f'[[{path.relative_to(self.root).with_suffix("").as_posix()}]]')
+                    for _, path, key in saved.values()]
+        self.assertCountEqual(self.granola_registry_entries(), expected)
+        for uid, (_, path, _) in saved.items():
+            self.assertEqual(self.ingest(meeting_id=uid)['note'], path.relative_to(self.root).as_posix())
+        self.assertCountEqual(self.granola_registry_entries(), expected)
+        self.assertEqual({path: path.read_bytes() for path in edits}, edits)
+        for _, link in expected:
+            self.assertEqual(self.index.read_text(encoding='utf-8').count(link), 1)
+
+    def test_kb_rename_preserves_a_registered_meeting_id(self) -> None:
+        first = self.ingest()
+        [(source_id, old_link)] = self.granola_registry_entries()
+        dest = 'Sources/Interviews/Local name.md'
+        self.kb('note-lifecycle', '--mode', 'rename', '--note', first['note'], '--dest', dest)
+        link = '[[Sources/Interviews/Local name]]'
+        self.assertEqual(self.granola_registry_entries(), [(source_id, link)])
+        self.assertEqual(self.ingest()['status'], 'existing')
+        self.assertEqual(self.granola_registry_entries(), [(source_id, link)])
+        index = self.index.read_text(encoding='utf-8')
+        self.assertNotIn(old_link, index)
+        self.assertEqual(index.count(link), 1)
+
+    def test_sync_reports_ambiguous_moved_meeting_before_changing_registry(self) -> None:
+        self.ingest()
+        original = self.note.read_bytes()
+        self.note.rename(self.note.with_name('First copy.md'))
+        self.note.with_name('Second copy.md').write_bytes(original)
+        before = {path: path.read_bytes() for path in (self.registry, self.index)}
+        result = self.run_cli(KB_HELPER, 'sync', check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('multiple notes', result.stderr.lower())
+        self.assertEqual({path: path.read_bytes() for path in before}, before)
+
+    def test_sync_keeps_an_ordinary_interview_that_reuses_the_old_path(self) -> None:
+        self.ingest()
+        [(source_id, old_link)] = self.granola_registry_entries()
+        moved = self.note.rename(self.note.with_name('Moved out.md'))
+        ordinary = b'# New independent interview\n'
+        self.note.write_bytes(ordinary)
+        self.kb('sync')
+        new_link = '[[Sources/Interviews/Moved out]]'
+        self.assertEqual(self.granola_registry_entries(), [(source_id, new_link)])
+        self.assertEqual(self.ingest()['note'], moved.relative_to(self.root).as_posix())
+        self.assertEqual(self.note.read_bytes(), ordinary)
+        index = self.index.read_text(encoding='utf-8')
+        self.assertEqual(index.count(old_link), 1)
+        self.assertEqual(index.count(new_link), 1)
+
+    def test_kb_rename_of_a_meeting_refuses_an_occupied_destination(self) -> None:
+        first = self.ingest()
+        ordinary = self.root / 'Sources/Interviews/Independent.md'
+        ordinary.write_bytes(b'# Independent interview\n')
+        self.kb('sync')
+        before = {p: p.read_bytes() for p in (self.note, ordinary, self.registry, self.index)}
+        failed = self.run_cli(KB_HELPER, 'note-lifecycle', '--mode', 'rename', '--note',
+                              first['note'], '--dest', ordinary.relative_to(self.root).as_posix(), check=False)
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertIn('occupied', failed.stderr.lower())
+        self.assertEqual({p: p.read_bytes() for p in before}, before)
+
+    def test_sync_preserves_meeting_title_and_status_across_sections(self) -> None:
+        first = self.ingest(title='Original meeting title')
+        [(source_id, old_link)] = self.granola_registry_entries()
+        registry = self.registry.read_text(encoding='utf-8')
+        old_row = next(row for row in registry.splitlines() if old_link in row)
+        self.registry.write_text(registry.replace(old_row, old_row.replace('| active |', '| reviewed |')),
+                                 encoding='utf-8')
+        dest = self.root / 'Knowledge/Handwritten.md'
+        (self.root / first['note']).rename(dest)
+        before = dest.read_bytes()
+        self.kb('sync')
+        link = '[[Knowledge/Handwritten]]'
+        row = next(line for line in self.registry.read_text(encoding='utf-8').splitlines() if link in line)
+        self.assertIn(f'| {source_id} |', row)
+        self.assertIn('| Original meeting title |', row)
+        self.assertIn('| reviewed |', row)
+        self.assertEqual(self.ingest()['note'], 'Knowledge/Handwritten.md')
+        self.assertEqual(dest.read_bytes(), before)
+        self.assertEqual(self.index.read_text(encoding='utf-8').count(link), 1)
+
     def test_same_title_manual_renames_keep_distinct_registry_ids(self) -> None:
         expected = {}
         for uid in (MEETING_ID, SECOND_ID):

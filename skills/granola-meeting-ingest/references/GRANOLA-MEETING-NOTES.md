@@ -34,6 +34,15 @@ from your project, then authenticate. The
 a verified meeting UUID instead.
 [Granola MCP endpoint](https://docs.granola.ai/help-center/sharing/integrations/mcp)
 
+In a web or desktop client, select the OpenCode server and project that can
+access the intended vault. Both the configuration and the absolute vault
+path belong to the server running the tools. When the vault is on your
+computer, select a local server and run `--show-target` from the bound
+research folder. For V2, `opencode mcp list` shows connection status and
+`/mcps` offers sign-in if needed.
+[OpenCode web client](https://opencode.ai/docs/cli/web/) ·
+[OpenCode MCP configuration](https://opencode.ai/docs/mcp-servers/)
+
 ## Read and summarize the meeting
 
 1. **Resolve the destination before reading a meeting.** From the research
@@ -181,7 +190,7 @@ path in the app. [Obsidian URI](https://obsidian.md/help/uri)
 
 Keep the `source_provider` and `granola_meeting_id` fields when editing the
 note. The importer reads saved Markdown with or without a UTF-8 BOM. The
-registry stores the meeting UUID in a hidden row comment. After a manual
+registry stores the meeting UUID in a hidden row comment. A normal project sync or a Scholar rename also retains the original source ID when a marked meeting has one unambiguous new location. After a manual
 rename, re-import directly to keep the source ID and refresh the index link.
 If the new path is registered to a different meeting, re-import that meeting
 at its current path first. A new import skips filenames still used in the
