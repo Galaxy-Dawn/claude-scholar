@@ -289,6 +289,11 @@ Claude Scholar は現在、次の CLI ワークフローを対象にしていま
 
 詳細は [OBSIDIAN_SETUP.ja-JP.md](./OBSIDIAN_SETUP.ja-JP.md) を参照。
 
+### Granola（オプション）
+
+OpenCode で Granola の会議を選ぶかローカルのエクスポートを渡すと、研究プロジェクトに紐づく Obsidian 保管庫に記録できます。
+[セットアップとインポートのガイド](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)を参照してください。Granola MCP は必要に応じて設定します。
+
 ### Xquik（任意）
 
 `/promote`で範囲を限定した公開X投稿の調査、投稿案の分析、または承認済みの接続アカウント

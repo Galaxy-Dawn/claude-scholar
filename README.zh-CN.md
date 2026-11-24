@@ -286,6 +286,11 @@ Claude Scholar 目前面向以下 CLI 工作流：
 
 详见 [OBSIDIAN_SETUP.zh-CN.md](./OBSIDIAN_SETUP.zh-CN.md)。
 
+### Granola（可选）
+
+在 OpenCode 中选择一场 Granola 会议或提供本地导出，即可归档到当前研究项目绑定的 Obsidian 库。
+参见[配置与导入指南](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)。Granola MCP 需要按需配置。
+
 ### Xquik（可选）
 
 当 `/promote` 需要检索有边界的公开 X 内容、分析帖子草稿，或通过已确认的连接账号发布时，

@@ -43,6 +43,11 @@ test_created_config_roundtrip() {
   assert_file_exists "$home/.opencode-scholar-manifest.txt"
   assert_file_exists "$home/.opencode-scholar-install-state"
   assert_file_exists "$home/skills/research-ideation/references/research-contract.md"
+  assert_file_exists "$home/skills/granola-meeting-ingest/SKILL.md"
+  assert_file_exists "$home/skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md"
+  assert_file_exists "$home/skills/granola-meeting-ingest/scripts/ingest_granola.py"
+  python3 -B "$home/skills/granola-meeting-ingest/scripts/ingest_granola.py" --help >/dev/null
+  python3 -c 'import json, sys; assert "granola" not in json.load(open(sys.argv[1], encoding="utf-8")).get("mcp", {})' "$home/opencode.jsonc"
   assert_file_exists "$home/skills/post-acceptance/references/xquik-promotion.md"
   assert_file_exists "$home/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   assert_file_exists "$home/commands/promote.md"
@@ -55,6 +60,7 @@ test_created_config_roundtrip() {
   assert_file_missing "$home/opencode.jsonc"
   assert_file_missing "$home/.opencode-scholar-manifest.txt"
   assert_file_missing "$home/.opencode-scholar-install-state"
+  assert_file_missing "$home/skills/granola-meeting-ingest/scripts/ingest_granola.py"
   assert_file_exists "$home/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   pass "created opencode.jsonc is removed when unchanged"
 }
