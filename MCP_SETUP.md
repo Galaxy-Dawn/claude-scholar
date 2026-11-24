@@ -83,7 +83,7 @@ NO_PROXY = "localhost,127.0.0.1"
 
 ##### OpenCode
 
-Add to your `~/.opencode/opencode.jsonc`:
+Run `opencode debug paths config` to find the OpenCode V2 global configuration directory (by default `~/.config/opencode`). Add the entry below to the existing `opencode.json` or `opencode.jsonc` there. If neither exists, create `opencode.jsonc`.
 
 ```jsonc
 {

@@ -83,7 +83,7 @@ NO_PROXY = "localhost,127.0.0.1"
 
 ##### OpenCode
 
-`~/.opencode/opencode.jsonc`に追加:
+`opencode debug paths config` を実行して、OpenCode V2 のグローバル設定ディレクトリ（既定は `~/.config/opencode`）を確認します。以下の設定を、そのディレクトリにある既存の `opencode.json` または `opencode.jsonc` に追加します。どちらもなければ `opencode.jsonc` を作成します。
 
 ```jsonc
 {

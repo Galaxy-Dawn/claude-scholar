@@ -83,7 +83,7 @@ NO_PROXY = "localhost,127.0.0.1"
 
 ##### OpenCode
 
-在 `~/.opencode/opencode.jsonc` 中添加：
+运行 `opencode debug paths config` 查看 OpenCode V2 的全局配置目录（默认是 `~/.config/opencode`）。将下方配置合并到该目录中已有的 `opencode.json` 或 `opencode.jsonc`；如果两个文件都不存在，就创建 `opencode.jsonc`。
 
 ```jsonc
 {
