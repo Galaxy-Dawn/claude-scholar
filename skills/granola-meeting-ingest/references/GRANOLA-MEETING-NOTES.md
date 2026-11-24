@@ -20,6 +20,15 @@ In a Claude Code session, use `/mcp` to authenticate Granola. If you did not
 connect it, provide a local export and a verified meeting UUID instead.
 [Granola MCP setup for Claude Code](https://docs.granola.ai/help-center/sharing/integrations/mcp)
 
+In Claude Desktop, use the **Code** tab with a local session and open the
+bound research folder. Local Code and the CLI share skills, but the standalone
+CLI does not read the chat app's MCP configuration. Check Granola in the
+session that will run the import. If Desktop opens a separate Git worktree,
+run `--show-target` there before reading the meeting. A cloud or SSH session
+needs access to the vault on its execution host. If the vault is on your
+computer, run the import in a local session.
+[Claude Code Desktop configuration](https://code.claude.com/docs/en/desktop#shared-configuration)
+
 ## Read and summarize the meeting
 
 1. **Resolve the destination before reading a meeting.** From the research
@@ -165,7 +174,7 @@ path in the app. [Obsidian URI](https://obsidian.md/help/uri)
 
 Keep the `source_provider` and `granola_meeting_id` fields when editing the
 note. The importer reads saved Markdown with or without a UTF-8 BOM. The
-registry stores the meeting UUID in a hidden row comment. After a manual
+registry stores the meeting UUID in a hidden row comment. A normal project sync or a Scholar rename also retains the original source ID when a marked meeting has one unambiguous new location. After a manual
 rename, re-import directly to keep the source ID and refresh the index link.
 If the new path is registered to a different meeting, re-import that meeting
 at its current path first. A new import skips filenames still used in the

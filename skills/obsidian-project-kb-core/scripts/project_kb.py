@@ -88,11 +88,59 @@ def registry_links(rows: dict[str, list[dict[str, str]]]) -> dict[str, str]:
     return links
 
 
-def sync_registry(project_root: Path) -> dict[str, Any]:
+def moved_meeting_sources(
+    project_root: Path, desired: dict[str, str], rows: dict[str, list[dict[str, str]]],
+) -> dict[str, str]:
+    """Recover registered identities before a path-based sync drops their previous links."""
+    keyed = {row['Source Key']: row['Path'] for entries in rows.values() for row in entries
+             if row.get('Source Key')}
+    if not keyed:
+        return {}
+    providers = {key.partition(':')[0] for key in keyed}
+
+    def note_key(relative: str) -> str | None:
+        note = project_root / relative
+        if note.suffix != '.md' or note.is_symlink() or not note.resolve().is_relative_to(project_root):
+            return None
+        try:
+            return common.meeting_source_key(note, providers)
+        except OSError:
+            return None
+
+    displaced = {key for key, link in keyed.items()
+                 if link not in desired or note_key(desired[link]) != key}
+    if not displaced:
+        return {}
+    owners = {row['Path'].casefold(): row.get('Source Key') for entries in rows.values()
+              for row in entries if row.get('Path')}
+    moves: dict[str, str] = {}
+    for link, relative in desired.items():
+        key = note_key(relative)
+        if key is None or key not in displaced:
+            continue
+        if key in moves:
+            raise SystemExit(f'Multiple notes have the same meeting identity: {moves[key]} and {relative}')
+        if link.casefold() in owners and owners[link.casefold()] != key:
+            raise SystemExit(f'The moved meeting path is already registered to another source: {relative}')
+        moves[key] = relative
+    return moves
+
+
+def sync_registry(project_root: Path, *, renamed: tuple[str, str] | None = None) -> dict[str, Any]:
     rels = common.scan_canonical_relpaths(project_root)
     rows = common.parse_registry_md(common.registry_path(project_root))
     existing = registry_links(rows)
     desired = {common.wikilink(rel): rel for rel in rels}
+
+    for key, relative in moved_meeting_sources(project_root, desired, rows).items():
+        update = common.registry_add_or_update(project_root, relative, source_key=key)
+        if not update['updated']:
+            raise SystemExit(f"Cannot reconcile moved meeting {relative}: {update['reason']}")
+    if renamed is not None:
+        previous, current = renamed
+        common.registry_add_or_update(project_root, current)
+        if previous != current:
+            common.registry_remove_path(project_root, previous, reason='renamed', record_archive=False)
 
     added: list[str] = []
     removed: list[str] = []
@@ -348,13 +396,22 @@ def note_lifecycle(binding: common.Binding, mode: str, note: str, dest: str = ''
             if not dest:
                 raise SystemExit('--dest is required for rename')
             target = (binding.project_root / dest).resolve()
+            target_rel = target.relative_to(binding.project_root).as_posix()
+            source_link = common.wikilink(source_rel).casefold()
+            target_link = common.wikilink(target_rel).casefold()
+            rows = common.parse_registry_md(common.registry_path(binding.project_root))
+            involved = [row for entries in rows.values() for row in entries
+                        if row.get('Path', '').casefold() in (source_link, target_link)]
+            if any(row.get('Source Key') for row in involved):
+                occupied = target.exists() and not source.samefile(target)
+                reserved = source_link != target_link and any(
+                    row['Path'].casefold() == target_link for row in involved)
+                if occupied or reserved:
+                    raise SystemExit(f'The rename destination is occupied or reserved: {target_rel}')
             ensure_parent(target)
             shutil.move(str(source), str(target))
-            target_rel = str(target.relative_to(binding.project_root)).replace(os.sep, '/')
             rewritten = rewrite_project_references(binding.project_root, source_rel, target_rel)
-            common.registry_add_or_update(binding.project_root, target_rel)
-            common.registry_remove_path(binding.project_root, source_rel, reason='renamed', record_archive=False)
-            sync_registry(binding.project_root)
+            sync_registry(binding.project_root, renamed=(source_rel, target_rel))
             common.update_index(binding.project_root)
             source_label = Path(source_rel).stem.replace('-', ' ')
             target_link = target_rel[:-3] if target_rel.endswith('.md') else target_rel
