@@ -174,7 +174,7 @@ Used for: Chrome browser control, web page interaction.
 
 #### OpenCode V2 configuration
 
-The project installer includes this entry under `mcp.servers`:
+The installer does not add this server. If you already run a browser automation MCP server, merge the example below into your project configuration and replace the URL with your server's Streamable HTTP endpoint. OpenCode does not start the server for you.
 
 ```json
 {
@@ -189,7 +189,7 @@ The project installer includes this entry under `mcp.servers`:
 }
 ```
 
-To turn off either optional Scholar server in the project, set `"disabled": true` on its entry.
+To keep a configured server without connecting to it, set `"disabled": true` on its entry.
 
 ### 3. Xquik MCP (Optional)
 

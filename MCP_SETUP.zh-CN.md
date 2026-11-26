@@ -174,7 +174,7 @@ export UNSAFE_OPERATIONS="all"
 
 #### OpenCode V2 配置
 
-项目安装器会将此条目加到 `mcp.servers`：
+安装器不会添加此服务。如果你已运行浏览器自动化 MCP 服务，可以把下方示例合并到项目配置，并把 URL 换成你的服务实际使用的 Streamable HTTP 端点。OpenCode 不会代为启动该服务。
 
 ```json
 {
@@ -189,7 +189,7 @@ export UNSAFE_OPERATIONS="all"
 }
 ```
 
-不需要某个 Scholar MCP 时，在项目配置的对应条目中设置 `"disabled": true`。
+如需保留配置但不建立连接，在对应条目中设置 `"disabled": true`。
 
 ### 3. Xquik MCP（可选）
 

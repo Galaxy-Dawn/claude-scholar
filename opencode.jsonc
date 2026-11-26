@@ -2,10 +2,6 @@
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
     "servers": {
-      "streamable-mcp-server": {
-        "type": "remote",
-        "url": "http://127.0.0.1:12306/mcp"
-      },
       "zotero": {
         "type": "local",
         "command": ["zotero-mcp", "serve"]

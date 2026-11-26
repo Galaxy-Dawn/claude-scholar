@@ -174,7 +174,7 @@ export UNSAFE_OPERATIONS="all"
 
 #### OpenCode V2 の設定
 
-プロジェクトインストーラーは、次のエントリーを `mcp.servers` に追加します。
+インストーラーはこのサーバーを追加しません。ブラウザ自動化 MCP サーバーをすでに起動している場合は、次の例をプロジェクト設定に追加し、URL を実際の Streamable HTTP エンドポイントに置き換えてください。OpenCode はこのサーバーを起動しません。
 
 ```json
 {
@@ -189,7 +189,7 @@ export UNSAFE_OPERATIONS="all"
 }
 ```
 
-不要な Scholar MCP サーバーは、プロジェクト設定の該当エントリーに `"disabled": true` を指定すると無効になります。
+設定を残したまま接続を無効にする場合は、該当エントリーに `"disabled": true` を指定します。
 
 ### 3. Xquik MCP（任意）
 

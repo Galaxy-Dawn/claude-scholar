@@ -40,6 +40,7 @@ test_created_config_roundtrip() {
 
   run_setup "$home"
   assert_file_exists "$home/opencode.jsonc"
+  assert_not_contains "$home/opencode.jsonc" 'streamable-mcp-server'
   assert_file_exists "$home/.opencode-scholar-manifest.txt"
   assert_file_exists "$home/.opencode-scholar-install-state"
   assert_file_exists "$home/skills/research-ideation/references/research-contract.md"
@@ -88,7 +89,8 @@ test_existing_config_preserves_user_entries() {
   },
   "mcp": {
     "servers": {
-      "zotero": { "type": "local", "command": ["custom-zotero"], "disabled": true }
+      "zotero": { "type": "local", "command": ["custom-zotero"], "disabled": true },
+      "streamable-mcp-server": { "type": "remote", "url": "http://127.0.0.1:12306/mcp" }
     }
   },
   "permissions": [{ "action": "read", "resource": "*", "effect": "ask" }],
@@ -103,6 +105,7 @@ const data = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 if (!data.agents['code-reviewer']?.system) throw new Error('missing native injected agent');
 if (!data.agents['custom-agent']) throw new Error('lost custom agent');
 if (data.mcp.servers.zotero.disabled !== true || data.mcp.servers.zotero.command[0] !== 'custom-zotero') throw new Error('overwrote existing Zotero server');
+if (data.mcp.servers['streamable-mcp-server']?.url !== 'http://127.0.0.1:12306/mcp') throw new Error('lost user browser MCP');
 if (data.permissions.length !== 1 || data.permission) throw new Error('unexpected permissions');
 if (!data.plugin.includes('file:///user/plugin.ts')) throw new Error('lost user plugin');
 NODE
@@ -114,7 +117,7 @@ const data = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 if (data.agents['code-reviewer']) throw new Error('injected agent remained');
 if (!data.agents['custom-agent']) throw new Error('lost custom agent');
 if (data.mcp.servers.zotero.disabled !== true || data.mcp.servers.zotero.command[0] !== 'custom-zotero') throw new Error('lost user Zotero server');
-if ('streamable-mcp-server' in data.mcp.servers) throw new Error('injected MCP server remained');
+if (data.mcp.servers['streamable-mcp-server']?.url !== 'http://127.0.0.1:12306/mcp') throw new Error('removed user browser MCP');
 if (data.permissions.length !== 1 || data.permission) throw new Error('unexpected permissions');
 if (!data.plugin.includes('file:///user/plugin.ts')) throw new Error('lost user plugin');
 NODE

@@ -136,7 +136,7 @@ test("OpenCode V2 discovers Scholar and handles real created and moved/deleted s
   const config = JSON.parse(fs.readFileSync(cfg, "utf8"));
   assert.equal(config.permission, undefined);
   assert.equal(config.permissions, undefined);
-  // Exercise V2 discovery without starting Zotero or contacting the local HTTP endpoint.
+  // Exercise V2 discovery without starting Zotero.
   for (const server of Object.values(config.mcp.servers)) server.disabled = true;
   fs.writeFileSync(cfg, JSON.stringify(config));
   child = spawn(opencode, ["serve", "--hostname", "127.0.0.1", "--port", "0", "--print-logs"], { cwd: repo, env });
@@ -210,7 +210,7 @@ test("OpenCode V2 discovers Scholar and handles real created and moved/deleted s
   assert.equal(expectedAgents.length, 6);
   for (const id of expectedAgents) assert.ok(agents.some((agent) => agent.id === id), `missing ${id}`);
   const expectedMcp = Object.keys(config.mcp.servers).sort();
-  assert.deepEqual(expectedMcp, ["streamable-mcp-server", "zotero"]);
+  assert.deepEqual(expectedMcp, ["zotero"]);
   const mcp = await api("mcp" + at);
   assert.deepEqual(mcp.map(({ name, id }) => name ?? id).sort(), expectedMcp, JSON.stringify(mcp));
   const otherLocation = atDirectory(other);
@@ -220,7 +220,7 @@ test("OpenCode V2 discovers Scholar and handles real created and moved/deleted s
   assert.ok(!(await api("skill" + otherLocation)).some(({ id }) => id === "obsidian-project-kb-core"));
   assert.ok(!(await api("command" + otherLocation)).some(({ name }) => name === "kb-init"));
   assert.deepEqual(await api("mcp" + otherLocation), []);
-  t.diagnostic(`catalogs: ${plugins.length} Scholar plugins, ${installedSkills.length} installed skills, ${commands.length} commands total, ${expectedAgents.length} Scholar agents, ${expectedMcp.length} MCP entries`);
+  t.diagnostic(`catalogs: ${plugins.length} Scholar plugins, ${installedSkills.length} installed skills, ${commands.length} commands total, ${expectedAgents.length} Scholar agents; MCP: ${expectedMcp.join(", ")}`);
   const session = await api("session", "POST", { title: "V2 migration smoke", location: { directory: repo } });
   await until(() => logs.includes("Obsidian project memory: bound (runtime-project)"), () => logs);
   assert.equal(logs.split("Obsidian project memory: bound (runtime-project)").length, 2);

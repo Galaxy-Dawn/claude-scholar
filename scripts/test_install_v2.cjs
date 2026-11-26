@@ -78,6 +78,7 @@ test("an explicit project gets native Scholar config; a different project and gl
   }
   assert.equal(data.mcp.servers.zotero.type, "local");
   assert.equal(data.mcp.servers.zotero.enabled, undefined);
+  assert.deepEqual(Object.keys(data.mcp.servers), ["zotero"]);
   assert.equal(data.mcp.zotero, undefined);
   for (const key of ["agent", "permission", "permissions", "plugin"]) assert.equal(data[key], undefined);
   assert.equal(f.has("target/opencode.jsonc"), false);
@@ -93,7 +94,13 @@ test("an explicit project gets native Scholar config; a different project and gl
 test("a single existing project-root configuration is reused; two locations are refused", (t) => {
   const f = fixture(t);
   const project = path.join(f.dir, "target");
-  const user = '{"permissions":[{"action":"edit","resource":"*","effect":"ask"}],"mcp":{"servers":{"zotero":{"type":"local","command":["custom-zotero"],"disabled":true}}}}';
+  const user = JSON.stringify({
+    permissions: [{ action: "edit", resource: "*", effect: "ask" }],
+    mcp: { servers: {
+      zotero: { type: "local", command: ["custom-zotero"], disabled: true },
+      "streamable-mcp-server": { type: "remote", url: "http://127.0.0.1:12306/mcp" },
+    } },
+  });
   f.put("target/opencode.json", user);
   f.put("target/.opencode/opencode.jsonc", "{}");
   const run = (mode) => spawnSync(process.execPath, ["scripts/install.cjs", mode, project], {
@@ -105,7 +112,7 @@ test("a single existing project-root configuration is reused; two locations are 
   ok(run("install"));
   assert.equal(f.has("target/.opencode/opencode.jsonc"), false);
   const installed = JSON.parse(f.read("target/opencode.json"));
-  assert.deepEqual(installed.mcp.servers.zotero, JSON.parse(user).mcp.servers.zotero);
+  assert.deepEqual(installed.mcp, JSON.parse(user).mcp);
   assert.deepEqual(installed.permissions, JSON.parse(user).permissions);
   ok(run("uninstall"));
   assert.deepEqual(JSON.parse(f.read("target/opencode.json")), JSON.parse(user));
@@ -146,8 +153,7 @@ test("JSONC, user rules, same-name agent and changed managed content survive rei
   assert.equal(first.agent["code-reviewer"].description, "custom");
   assert.equal(first.agents["code-reviewer"], undefined);
   assert.deepEqual(first.permission, { "*": "allow", edit: { "*": "ask" } });
-  assert.deepEqual(first.mcp.zotero, { enabled: false });
-  assert.equal(first.mcp.servers.zotero, undefined);
+  assert.deepEqual(first.mcp, { zotero: { enabled: false } });
   assert.equal(first.plugin[0], "file:///user/keep.ts");
   assert.equal(f.read("opencode.jsonc.bak"), user);
   assert.equal(f.read("AGENTS.md"), "my own instructions");
@@ -302,8 +308,7 @@ test("same-root V1 upgrade replaces a verified older plugin and uninstalls only 
   assert.equal(upgraded.permissions, undefined);
   assert.equal(upgraded.agent["paper-miner"], undefined);
   assert.equal(typeof upgraded.agents["paper-miner"].system, "string");
-  assert.equal(upgraded.mcp.servers["streamable-mcp-server"].type, "remote");
-  assert.deepEqual(upgraded.mcp.zotero, { enabled: false });
+  assert.deepEqual(upgraded.mcp, { zotero: { enabled: false } });
   ok(launch(f.dir, "uninstall"));
   const remaining = JSON.parse(f.read(config));
   assert.equal(f.has(plugin), false);
@@ -356,6 +361,27 @@ test("a previous Scholar project install drops only its recorded V2-era legacy e
   ok(launch(f.dir, "uninstall"));
   assert.deepEqual(JSON.parse(f.read(config)), { permissions: [userRule], permission: data.permission });
 });
+
+for (const edited of [false, true]) {
+  test(`reinstall ${edited ? "preserves an edited" : "removes the unchanged"} browser MCP from a previous project install`, (t) => {
+    const f = fixture(t);
+    const name = "streamable-mcp-server";
+    const previous = { type: "remote", url: "http://127.0.0.1:12306/mcp" };
+    const current = edited ? { ...previous, disabled: true } : previous;
+    f.put(config, JSON.stringify({ mcp: { servers: { [name]: current } } }));
+    f.put(".opencode-scholar-manifest.txt", "");
+    f.put(state, JSON.stringify({ version: 3, configFile: ".opencode/opencode.jsonc", managedPaths: [], config: {
+      entries: [{ keys: ["mcp", "servers", name], value: previous }],
+      sections: ["mcp", ["mcp", "servers"]],
+    } }));
+    ok(launch(f.dir, "install"));
+    const data = JSON.parse(f.read(config));
+    assert.deepEqual(data.mcp.servers[name], edited ? current : undefined);
+    assert.equal(data.mcp.servers.zotero.type, "local");
+    ok(launch(f.dir, "uninstall"));
+    assert.deepEqual(JSON.parse(f.read(config)), edited ? { mcp: { servers: { [name]: current } } } : {});
+  });
+}
 
 test("V1 ownership survives checkout line endings but not content edits", (t) => {
   const f = fixture(t);
