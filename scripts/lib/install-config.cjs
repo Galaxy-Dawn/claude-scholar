@@ -1,3 +1,4 @@
+const fs = require("node:fs");
 const { fileURLToPath } = require("node:url");
 const path = require("node:path");
 
@@ -86,19 +87,26 @@ function removeOwned(config, ownership, warn) {
   }
 }
 
+// The destination may not exist yet. Resolve its existing ancestor first.
+function realDestination(dir) {
+  try {
+    return fs.realpathSync.native(dir);
+  } catch (error) {
+    const parent = path.dirname(dir);
+    if (error.code !== "ENOENT" || parent === dir) throw error;
+    return path.join(realDestination(parent), path.basename(dir));
+  }
+}
+
 function legacyPluginItem(item, root) {
   if (typeof item !== "string" || !item.startsWith("file://")) return false;
-  let file;
   try {
     const url = process.platform === "win32" ? item.replace(/^file:\/\/\/([a-z])\//i, "file:///$1:/") : item;
-    file = path.normalize(fileURLToPath(url));
+    const file = path.normalize(fileURLToPath(url));
+    const name = process.platform === "win32" ? path.basename(file).toLowerCase() : path.basename(file);
+    if (path.extname(name) !== ".ts" || !legacyPlugins.has(path.basename(name, ".ts"))) return false;
+    return path.relative(realDestination(path.join(root, "plugins")), realDestination(path.dirname(file))) === "";
   } catch { return false; }
-  if (process.platform === "win32") {
-    file = file.toLowerCase();
-    root = root.toLowerCase();
-  }
-  return path.dirname(file) === path.join(root, "plugins") &&
-    path.extname(file) === ".ts" && legacyPlugins.has(path.basename(file, ".ts"));
 }
 
 function removeLegacyConfig(config, template, meta, warn) {
@@ -123,6 +131,7 @@ function mergeConfig(config, template, root, previous, legacy, instructions, war
   // Keep the exact V1 defaults for ownership checks and reuse the existing agent prompts.
   const oldTemplate = require("./legacy-config.json");
   const ownership = { entries: [], sections: [], instructions: [] };
+  const previousZotero = record(config.mcp?.zotero) ? { ...config.mcp.zotero } : undefined;
   removeOwned(config, previous.config || {}, warn);
   if (!previous.version && previous.config) removeLegacyConfig(config, oldTemplate, previous.config, warn);
 
@@ -170,6 +179,15 @@ function mergeConfig(config, template, root, previous, legacy, instructions, war
   }
 
   const mcp = section(config, "mcp");
+  if (record(mcp.zotero) && !(record(mcp.servers) && own(mcp.servers, "zotero"))) {
+    // A surviving user preference still needs the connection fields that ownership cleanup removed.
+    const local = previousZotero?.type === "local" && Array.isArray(previousZotero.command);
+    const remote = previousZotero?.type === "remote" && typeof previousZotero.url === "string";
+    const fields = local ? ["type", "command"] : remote ? ["type", "url"] : [];
+    for (const field of fields) {
+      if (!own(mcp.zotero, field)) add(mcp.zotero, field, previousZotero[field], ["mcp", "zotero", field]);
+    }
+  }
   for (const [key, definition] of Object.entries(template.mcp.servers)) {
     if (own(mcp, key) || (record(mcp.servers) && own(mcp.servers, key))) continue;
     add(section(mcp, "servers", ["mcp", "servers"]), key, definition, ["mcp", "servers", key]);
@@ -189,4 +207,4 @@ function mergeConfig(config, template, root, previous, legacy, instructions, war
   return ownership;
 }
 
-module.exports = { legacyPluginItem, mergeConfig, parseConfig, removeOwned, same };
+module.exports = { legacyPluginItem, mergeConfig, parseConfig, realDestination, removeOwned, same };

@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { createHash } = require("node:crypto");
-const { legacyPluginItem, mergeConfig, parseConfig, removeOwned } = require("./lib/install-config.cjs");
+const { legacyPluginItem, mergeConfig, parseConfig, realDestination, removeOwned } = require("./lib/install-config.cjs");
 
 const source = path.resolve(__dirname, "..");
 let project;
@@ -12,6 +12,7 @@ const manifest = ".opencode-scholar-manifest.txt";
 const stateFile = ".opencode-scholar-install-state";
 const memory = "skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md";
 const stopSummary = "plugins/stop-summary.ts";
+const pluginCommon = "plugins/lib/common.ts";
 const components = ["skills", "commands", "plugins", "scripts", "utils", "templates"];
 // Git blob IDs of replaced upstream V1 files; new installs record SHA-256 instead.
 const knownV1 = {
@@ -29,7 +30,7 @@ const knownV1 = {
   "commands/setup-pm.md": "adecdebbc12ceaf77b35210de6d9933fb3e3feca",
   "commands/update-memory.md": "923fc7ec5327d954f94713125b5a88a4f9e683ea",
   "commands/zotero-notes.md": "d3536eb12303d204c5c452ff17ef76d20378608f",
-  "plugins/lib/common.ts": "85d9400061bc4f4b0a26daeba0aae8c6d757f4a7",
+  [pluginCommon]: "85d9400061bc4f4b0a26daeba0aae8c6d757f4a7",
   "plugins/security-guard.ts": "c0c087b33bc5c9a1993ad29f407adf4a7e06f474",
   "plugins/session-start.ts": "0f082b4af5de39c1cb004819f7a0dd0c0e6f3409",
   "plugins/session-summary.ts": "fa896b7cacfaa386b8241baf51c664b12059aa6c",
@@ -64,16 +65,10 @@ const backupRoot = `${backupDirectory}/${new Date().toISOString().replace(/[:.]/
 const backupFileOptions = { mode: 0o600, flag: "wx" };
 let backedUp = false;
 
-// The destination may not exist yet. Resolve its existing ancestor first.
-function realDestination(dir) {
-  try {
-    return fs.realpathSync.native(dir);
-  } catch (error) {
-    const parent = path.dirname(dir);
-    if (error.code !== "ENOENT" || parent === dir) throw error;
-    return path.join(realDestination(parent), path.basename(dir));
-  }
-}
+// Keep the original bytes and modes for caught I/O errors. This undo list
+// is process-local; it cannot recover a terminated process.
+const edits = [];
+class UnverifiedPathError extends Error {}
 
 function contains(parent, child) {
   const relative = path.relative(parent, child);
@@ -108,29 +103,83 @@ function requireOutsideCheckout() {
 function target(rel, base = root) {
   const names = rel.split("/");
   if (names.some((name) => !name || name === "." || name === ".." || /[\\:\r\n]/.test(name))) {
-    throw new Error(`Invalid install path: ${rel}`);
+    throw new UnverifiedPathError(`Invalid install path: ${rel}`);
   }
   let file = base;
-  if (stat(file)?.isSymbolicLink()) throw new Error(`Refusing linked install directory: ${base}`);
+  if (stat(file)?.isSymbolicLink()) throw new UnverifiedPathError(`Refusing linked install directory: ${base}`);
   for (const name of names) {
     file = path.join(file, name);
-    if (stat(file)?.isSymbolicLink()) throw new Error(`Refusing linked install path: ${file}`);
+    if (stat(file)?.isSymbolicLink()) throw new UnverifiedPathError(`Refusing linked install path: ${file}`);
   }
   return file;
 }
 
-function read(rel, base = root) {
+function fileState(rel, base = root) {
   const file = target(rel, base);
   const meta = stat(file);
-  if (!meta) return undefined;
-  if (!meta.isFile()) throw new Error(`Not a regular file: ${file}`);
-  return fs.readFileSync(file);
+  if (!meta) return { file };
+  if (!meta.isFile()) throw new UnverifiedPathError(`Not a regular file: ${file}`);
+  return { file, contents: fs.readFileSync(file), mode: meta.mode & 0o7777 };
+}
+
+function read(rel, base = root) {
+  return fileState(rel, base).contents;
+}
+
+function replaceContents(fd, contents) {
+  fs.ftruncateSync(fd);
+  fs.writeFileSync(fd, contents);
 }
 
 function write(rel, value, mode, base = root) {
-  const file = target(rel, base);
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, value, { mode });
+  const before = fileState(rel, base);
+  const after = Buffer.isBuffer(value) ? value : Buffer.from(value);
+  fs.mkdirSync(path.dirname(before.file), { recursive: true });
+  const fd = fs.openSync(before.file, before.contents ? "r+" : "wx", mode);
+  const edit = { rel, base, before, after, complete: false };
+  edits.push(edit);
+  try {
+    replaceContents(fd, after);
+    edit.complete = true;
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+function remove(rel, base = root, before = fileState(rel, base)) {
+  if (!before.contents) return;
+  fs.unlinkSync(before.file);
+  edits.push({ rel, base, before, complete: true });
+}
+
+function sameContents(left, right) {
+  return left === right || (left !== undefined && right !== undefined && left.equals(right));
+}
+
+function rollback() {
+  for (const { rel, base, before, after, complete } of edits.reverse()) {
+    try {
+      const current = fileState(rel, base);
+      if (sameContents(current.contents, before.contents)) continue;
+      const partial = !complete && current.contents && after.subarray(0, current.contents.length).equals(current.contents);
+      if (!sameContents(current.contents, after) && !partial) {
+        throw new Error("file changed during the operation");
+      }
+      if (!before.contents) {
+        fs.unlinkSync(current.file);
+      } else {
+        const fd = fs.openSync(current.file, current.contents ? "r+" : "wx", before.mode);
+        try {
+          replaceContents(fd, before.contents);
+          if (!current.contents && process.platform !== "win32") fs.fchmodSync(fd, before.mode);
+        } finally {
+          fs.closeSync(fd);
+        }
+      }
+    } catch (error) {
+      warn(`Could not restore ${rel}: ${error.message}`);
+    }
+  }
 }
 
 function backup(rel, content) {
@@ -228,7 +277,7 @@ function setConfig(rel, old, value) {
       }
     }
   }
-  if (value === undefined) fs.unlinkSync(target(rel, project));
+  if (value === undefined) remove(rel, project);
   else write(rel, json(value), undefined, project);
 }
 
@@ -310,7 +359,7 @@ function install() {
   const oldStop = read(stopSummary);
   if (oldStop && (paths.has(stopSummary) || legacy) && knownV1File(stopSummary, oldStop)) {
     backup(stopSummary, oldStop);
-    fs.unlinkSync(target(stopSummary));
+    remove(stopSummary);
   }
   if (!original || before !== JSON.stringify(config)) setConfig(configFile, original, config);
   managedPaths.sort();
@@ -339,22 +388,37 @@ function uninstall() {
       if (before !== JSON.stringify(config)) setConfig(configFile, original, config);
     }
   }
-  for (const rel of paths) {
-    if (rel === memory) continue;
+  function removeManagedFile(rel) {
+    let before;
     try {
-      const content = read(rel);
-      if (!content) continue;
-      if (!previous.fileHashes?.[rel] || !ownedFile(previous, paths, rel, content)) {
-        warn(`Keeping changed or unverified file: ${rel}`);
-        continue;
-      }
-      fs.unlinkSync(target(rel));
+      before = fileState(rel);
     } catch (error) {
+      if (!(error instanceof UnverifiedPathError) && error.code !== "ENOTDIR") throw error;
       warn(`Keeping ${rel}: ${error.message}`);
+      return;
     }
+    if (!before.contents) return;
+    if (!previous.fileHashes?.[rel] || !ownedFile(previous, paths, rel, before.contents)) {
+      warn(`Keeping changed or unverified file: ${rel}`);
+      return;
+    }
+    if (rel === pluginCommon) {
+      // OpenCode still discovers retained local plugins after uninstall.
+      const plugins = fs.readdirSync(path.join(root, "plugins"), { withFileTypes: true });
+      if (plugins.some((entry) => (entry.isFile() || entry.isSymbolicLink()) && /\.(?:ts|js)$/.test(entry.name))) {
+        info(`Keeping ${pluginCommon} for retained project plugins.`);
+        return;
+      }
+    }
+    remove(rel, root, before);
   }
-  fs.unlinkSync(target(manifest));
-  fs.unlinkSync(target(stateFile));
+
+  for (const rel of paths) {
+    if (rel !== memory && rel !== pluginCommon) removeManagedFile(rel);
+  }
+  if (paths.has(pluginCommon)) removeManagedFile(pluginCommon);
+  remove(manifest);
+  remove(stateFile);
   info(`Removed verified Scholar files from ${root}. User writing memory and backups were kept.`);
 }
 
@@ -367,6 +431,7 @@ try {
   if (operation === "install") install();
   else uninstall();
 } catch (error) {
+  rollback();
   console.error(`[ERROR] ${error.message}`);
   process.exitCode = 1;
 }

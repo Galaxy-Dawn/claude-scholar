@@ -118,6 +118,78 @@ test("a single existing project-root configuration is reused; two locations are 
   assert.deepEqual(JSON.parse(f.read("target/opencode.json")), JSON.parse(user));
 });
 
+test("a partial install rolls back files so retry and uninstall can own them", (t) => {
+  const f = fixture(t);
+  const conflict = path.join(f.dir, "skills/bug-detective/SKILL.md");
+  fs.mkdirSync(conflict, { recursive: true });
+  f.put("commands/custom.md", "user-owned command");
+  const failed = launch(f.dir, "install");
+  assert.notEqual(failed.status, 0);
+  assert.match(failed.stderr, /Not a regular file/);
+  for (const name of ["AGENTS.md", config, state]) assert.equal(f.has(name), false);
+  assert.equal(fs.statSync(conflict).isDirectory(), true);
+  assert.equal(f.read("commands/custom.md"), "user-owned command");
+
+  fs.rmdirSync(conflict);
+  ok(launch(f.dir, "install"));
+  assert.deepEqual(JSON.parse(f.read(config)).instructions, [".opencode/AGENTS.md"]);
+  ok(launch(f.dir, "uninstall"));
+  assert.equal(f.has("AGENTS.md"), false);
+  assert.equal(f.read("commands/custom.md"), "user-owned command");
+});
+
+for (const failure of ["plugins/session-summary.ts", state]) {
+  test("a failed uninstall rolls back and can retry after " + failure, (t) => {
+    const f = fixture(t);
+    ok(launch(f.dir, "install"));
+    const installed = [
+      "AGENTS.md", config, state, ".opencode-scholar-manifest.txt", skill,
+      "plugins/session-summary.ts", "plugins/lib/common.ts",
+      "scripts/install.cjs", "scripts/uninstall.sh", "scripts/lib/install-config.cjs",
+    ];
+    const before = installed.map(f.read);
+    const fault = path.join(f.project, "unlink-fault.cjs");
+    fs.writeFileSync(fault, [
+      'const fs = require("node:fs");',
+      "const unlink = fs.unlinkSync;",
+      "fs.unlinkSync = (file) => {",
+      "  if (file === process.env.SCHOLAR_TEST_UNLINK_FAILURE) {",
+      '    throw Object.assign(new Error("simulated unlink failure"), { code: "EACCES" });',
+      "  }",
+      "  return unlink(file);",
+      "};",
+    ].join("\n"));
+    const failAt = path.join(fs.realpathSync.native(f.dir), failure);
+    const result = spawnSync(process.execPath, [
+      "--require", fault, "scripts/install.cjs", "uninstall", f.project,
+    ], { cwd: f.dir, env: { ...process.env, SCHOLAR_TEST_UNLINK_FAILURE: failAt }, encoding: "utf8" });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /simulated unlink failure/);
+    assert.deepEqual(installed.map(f.read), before);
+
+    ok(launch(f.dir, "uninstall", undefined, f.dir));
+    assert.equal(f.has(state), false);
+    assert.equal(f.has(config), false);
+    assert.equal(f.has("plugins/session-summary.ts"), false);
+  });
+}
+
+test("uninstall keeps the helper used by a retained project plugin", (t) => {
+  const f = fixture(t);
+  const plugin = "plugins/session-start.ts";
+  const helper = "plugins/lib/common.ts";
+  ok(launch(f.dir, "install"));
+  const edited = f.read(plugin) + "\n// User's startup label.\n";
+  const helperBefore = f.read(helper);
+  f.put(plugin, edited);
+
+  ok(launch(f.dir, "uninstall"));
+  assert.equal(f.read(plugin), edited);
+  assert.equal(f.read(helper), helperBefore);
+  assert.equal(f.has("plugins/session-summary.ts"), false);
+  assert.equal(f.has(state), false);
+});
+
 for (const relative of [config, ".opencode/" + config]) {
   test("config backups use private permissions for " + relative, {
     skip: process.platform === "win32" && "uses POSIX permissions",
@@ -312,13 +384,17 @@ test("uninstall still accepts a renamed config with the same contents", (t) => {
   assert.equal(f.has("opencode.json"), false);
 });
 
-test("known same-root V1 URL is removed without claiming a different unmanaged file", (t) => {
+test("a V1 URL through a project path alias is removed without claiming unrelated files", (t) => {
   const f = fixture(t);
-  f.put(config, JSON.stringify({ plugin: [legacyURL(f.dir), "file:///unrelated/keep.ts"] }));
+  fs.mkdirSync(f.dir);
+  const alias = path.join(f.project, "legacy location");
+  fs.symlinkSync(f.dir, alias, process.platform === "win32" ? "junction" : "dir");
+  const unrelated = legacyURL(f.project);
+  f.put(config, JSON.stringify({ plugin: [legacyURL(alias), unrelated] }));
   f.put(skill, fs.readFileSync(path.join(root, skill)));
   f.put("commands/learn.md", "user command");
   ok(launch(f.dir, "install"));
-  assert.deepEqual(JSON.parse(f.read(config)).plugin, ["file:///unrelated/keep.ts"]);
+  assert.deepEqual(JSON.parse(f.read(config)).plugin, [unrelated]);
   ok(launch(f.dir, "uninstall"));
   assert.equal(f.has(skill), false);
   assert.equal(f.read("commands/learn.md"), "user command");
@@ -358,7 +434,10 @@ test("same-root V1 upgrade replaces a verified older plugin and uninstalls only 
   assert.equal(upgraded.permissions, undefined);
   assert.equal(upgraded.agent["paper-miner"], undefined);
   assert.equal(typeof upgraded.agents["paper-miner"].system, "string");
-  assert.deepEqual(upgraded.mcp, { zotero: { enabled: false } });
+  const zotero = { ...template.mcp.zotero, enabled: false };
+  assert.deepEqual(upgraded.mcp, { zotero });
+  ok(launch(f.dir, "install"));
+  assert.deepEqual(JSON.parse(f.read(config)).mcp, { zotero });
   ok(launch(f.dir, "uninstall"));
   const remaining = JSON.parse(f.read(config));
   assert.equal(f.has(plugin), false);
