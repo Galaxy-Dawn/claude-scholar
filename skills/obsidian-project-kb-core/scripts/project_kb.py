@@ -263,6 +263,24 @@ def update_binding_entry(repo_root: Path, project_id: str, **updates: Any) -> di
     return entry
 
 
+def require_exclusive_project_root(
+    binding: common.Binding, projects: dict[str, Any], operation: str,
+) -> None:
+    for project_id, other in projects.items():
+        if project_id == binding.project_id or not other.get('vault_root'):
+            continue
+        other_root = Path(other['vault_root']).expanduser().resolve()
+        shared = other_root == binding.project_root
+        if not shared:
+            try:
+                shared = other_root.samefile(binding.project_root)
+            except (FileNotFoundError, NotADirectoryError):
+                continue
+        if shared:
+            raise SystemExit(f'Cannot {operation} project {binding.project_id!r}: project {project_id!r} '
+                             'also uses this project folder. Resolve the binding conflict first.')
+
+
 def matching_archive_entry(registry: dict[str, Any], binding: common.Binding) -> dict[str, Any] | None:
     entry = (registry.get('projects') or {}).get(binding.project_id)
     if entry is not None and Path(entry['vault_root']).expanduser().resolve() == binding.project_root:
@@ -271,10 +289,12 @@ def matching_archive_entry(registry: dict[str, Any], binding: common.Binding) ->
 
 
 def archive_project(binding: common.Binding) -> dict[str, Any]:
-    paths = [
-        path for path in common.binding_registry_paths(binding.repo_root)
-        if matching_archive_entry(common.load_binding_registry(path), binding) is not None
-    ]
+    paths = []
+    for path in common.binding_registry_paths(binding.repo_root):
+        registry = common.load_binding_registry(path)
+        require_exclusive_project_root(binding, registry.get('projects') or {}, 'archive')
+        if matching_archive_entry(registry, binding) is not None:
+            paths.append(path)
     if not paths:
         raise SystemExit(f'Project {binding.project_id!r} is no longer bound to {binding.project_root}')
     archive_root = binding.vault_path / 'Research' / '_archived'
@@ -306,11 +326,7 @@ def archive_project(binding: common.Binding) -> dict[str, Any]:
 def load_purge_registry(binding: common.Binding, path: Path) -> dict[str, Any] | None:
     registry = common.load_binding_registry(path)
     projects = registry.get('projects') or {}
-    for project_id, other in projects.items():
-        if project_id != binding.project_id and other.get('vault_root'):
-            if Path(other['vault_root']).expanduser().resolve() == binding.project_root:
-                raise SystemExit(f'Cannot purge project {binding.project_id!r}: project {project_id!r} '
-                                 'also uses this project folder. Resolve the binding conflict first.')
+    require_exclusive_project_root(binding, projects, 'purge')
     entry = projects.get(binding.project_id)
     if entry is None:
         return None

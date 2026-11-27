@@ -1174,6 +1174,32 @@ ingest_granola.main()
         self.assertTrue(archived.is_relative_to(other.resolve()))
         self.assertEqual({file: file.read_bytes() for file in legacy_files}, before)
 
+    def test_archive_refuses_another_project_id_owning_the_same_folder(self) -> None:
+        self.ingest()
+        legacy = self.repo / '.claude/project-memory/registry.yaml'
+        legacy.parent.mkdir(parents=True)
+        legacy_memory = legacy.with_name('other-study.md')
+        legacy_memory.write_text('# Separate project memory\n', encoding='utf-8')
+        files = (self.binding_registry, legacy, self.binding_registry.with_name('granola-demo.md'),
+                 legacy_memory, self.note)
+        alternate = self.root.with_name(self.root.name.upper())
+        aliases = [self.root]
+        if alternate.is_dir() and alternate.samefile(self.root):
+            aliases.append(alternate)
+        for root in aliases:
+            with self.subTest(root=root):
+                alias = {'project_id': 'other-study', 'vault_root': str(root)}
+                legacy.write_text(json.dumps({'projects': {'other-study': alias}}), encoding='utf-8')
+                before = {file: file.read_bytes() for file in files}
+
+                rejected = self.run_cli(KB_HELPER, 'lifecycle', '--mode', 'archive',
+                                        '--project-id', 'granola-demo', check=False)
+
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertIn("project 'other-study' also uses this project folder", rejected.stderr)
+                self.assertEqual({file: file.read_bytes() for file in files}, before)
+                self.assertFalse((self.vault / 'Research' / '_archived').exists())
+
     def test_purge_refuses_another_project_id_owning_the_same_folder(self) -> None:
         self.ingest()
         legacy = self.repo / '.claude/project-memory/registry.yaml'
