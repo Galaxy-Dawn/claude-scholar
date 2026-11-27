@@ -152,7 +152,10 @@ path in the app. [Obsidian URI](https://obsidian.md/help/uri)
 Keep the `source_provider` and `granola_meeting_id` fields when editing the
 note. The importer reads saved Markdown with or without a UTF-8 BOM. The
 registry stores the meeting UUID in a hidden row comment. After a manual
-rename, re-import directly to keep the source ID and refresh the index link.
+rename, you can re-import immediately or run KB sync first. Both paths
+preserve the registered source ID and leave one index link to the renamed
+note. If sync finds two moved notes with that UUID, resolve the duplicate
+before retrying.
 If the new path is registered to a different meeting, re-import that meeting
 at its current path first. A new import skips filenames still used in the
 registry.

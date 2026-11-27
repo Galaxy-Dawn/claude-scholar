@@ -259,6 +259,252 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertNotIn(original_link, index)
         self.assertEqual(index.count(current_link), 1)
 
+    def test_sync_between_manual_rename_and_reimport_keeps_source_ids(self) -> None:
+        saved = {}
+        for uid in (MEETING_ID, SECOND_ID):
+            original = self.root / self.ingest(meeting_id=uid, title='Same title')['note']
+            old_link = f'[[{original.relative_to(self.root).with_suffix("").as_posix()}]]'
+            source_id = next(key for key, link in self.granola_registry_entries() if link == old_link)
+            renamed = original.with_name(f'Edited {source_id}.md')
+            saved[uid] = (original, renamed, source_id)
+        # Both moves happen outside Scholar, before the normal project sync runs.
+        for original, renamed, source_id in saved.values():
+            original.rename(renamed)
+            renamed.write_bytes(b'\xef\xbb\xbf' + renamed.read_bytes() + b'\r\nHandwritten.\r\n')
+        edits = {path: path.read_bytes() for _, path, _ in saved.values()}
+        expected = [(key, f'[[{path.relative_to(self.root).with_suffix("").as_posix()}]]')
+                    for _, path, key in saved.values()]
+        for _ in range(2):
+            self.kb('sync')
+            self.assertCountEqual(self.granola_registry_entries(), expected)
+            for uid, (_, path, _) in saved.items():
+                retry = self.ingest(meeting_id=uid)
+                self.assertEqual((retry['status'], retry['note']),
+                                 ('existing', path.relative_to(self.root).as_posix()))
+            self.assertCountEqual(self.granola_registry_entries(), expected)
+
+        self.assertCountEqual(self.note.parent.glob('*.md'), edits.keys())
+        self.assertEqual({path: path.read_bytes() for path in edits}, edits)
+        index = self.index.read_text(encoding='utf-8')
+        for _, link in expected:
+            self.assertEqual(index.count(link), 1)
+        for original, _, _ in saved.values():
+            self.assertNotIn(f'[[{original.relative_to(self.root).with_suffix("").as_posix()}]]', index)
+
+    def test_kb_rename_preserves_a_registered_meeting_id(self) -> None:
+        first = self.ingest()
+        [(source_id, old_link)] = self.granola_registry_entries()
+        self.kb('note-lifecycle', '--mode', 'rename', '--note', first['note'], '--dest', first['note'])
+        self.assertTrue(self.note.is_file())
+        self.assertEqual(self.granola_registry_entries(), [(source_id, old_link)])
+        dest = 'Sources/Interviews/Local name.md'
+        self.kb('note-lifecycle', '--mode', 'rename', '--note', first['note'], '--dest', dest)
+        link = '[[Sources/Interviews/Local name]]'
+        self.assertEqual(self.granola_registry_entries(), [(source_id, link)])
+        self.assertEqual(self.ingest()['status'], 'existing')
+        self.assertEqual(self.granola_registry_entries(), [(source_id, link)])
+        index = self.index.read_text(encoding='utf-8')
+        self.assertNotIn(old_link, index)
+        self.assertEqual(index.count(link), 1)
+
+    def test_sync_reports_ambiguous_moved_meeting_before_changing_registry(self) -> None:
+        self.ingest()
+        original = self.note.read_bytes()
+        self.note.rename(self.note.with_name('First copy.md'))
+        self.note.with_name('Second copy.md').write_bytes(original)
+        before = {path: path.read_bytes() for path in (self.registry, self.index)}
+        result = self.run_cli(KB_HELPER, 'sync', check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('multiple notes', result.stderr.lower())
+        self.assertEqual({path: path.read_bytes() for path in before}, before)
+
+    def test_kb_rename_keeps_note_links_and_registry_on_unrelated_ambiguity(self) -> None:
+        self.ingest()
+        [(source_id, previous_meeting_link)] = self.granola_registry_entries()
+        source = self.root / 'Knowledge/Original.md'
+        source.write_text('# Original note\n', encoding='utf-8')
+        reference = self.root / 'Writing/Reference.md'
+        reference.write_text('See [[Knowledge/Original#Section|original]].\n', encoding='utf-8')
+        canvas = self.root / 'Maps/Reference.canvas'
+        canvas.write_text('{"file": "Knowledge/Original.md"}\n', encoding='utf-8')
+        self.kb('sync')
+
+        first_copy = self.note.rename(self.note.with_name('First copy.md'))
+        second_copy = self.note.with_name('Second copy.md')
+        second_copy.write_bytes(first_copy.read_bytes())
+        target = self.root / 'Knowledge/Planned/Renamed.md'
+        tracked = (source, reference, canvas, first_copy, second_copy, self.registry, self.index,
+                   self.root / '00-Hub.md')
+        before = {path: path.read_bytes() for path in tracked}
+        args = ('note-lifecycle', '--mode', 'rename', '--note', source.relative_to(self.root).as_posix(),
+                '--dest', target.relative_to(self.root).as_posix())
+        failed = self.run_cli(KB_HELPER, *args, check=False)
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertIn('multiple notes', failed.stderr.lower())
+        self.assertFalse(target.parent.exists())
+        self.assertEqual({path: path.read_bytes() for path in tracked}, before)
+
+        second_copy.unlink()
+        self.kb(*args)
+        self.assertFalse(source.exists())
+        self.assertEqual(target.read_bytes(), before[source])
+        self.assertIn('[[Knowledge/Planned/Renamed#Section|original]]', reference.read_text(encoding='utf-8'))
+        self.assertIn('"file": "Knowledge/Planned/Renamed.md"', canvas.read_text(encoding='utf-8'))
+        self.assertEqual(self.granola_registry_entries(), [(source_id, '[[Sources/Interviews/First copy]]')])
+        index = self.index.read_text(encoding='utf-8')
+        self.assertNotIn(previous_meeting_link, index)
+        self.assertNotIn('[[Knowledge/Original]]', index)
+        self.assertEqual(index.count('[[Knowledge/Planned/Renamed]]'), 1)
+
+    def test_kb_rename_to_a_directory_uses_the_actual_note_path(self) -> None:
+        self.ingest()
+        source = self.root / 'Knowledge/Original.md'
+        source.write_text('# Original note\n', encoding='utf-8')
+        reference = self.root / 'Writing/Reference.md'
+        reference.write_text('See [[Knowledge/Original]].\n', encoding='utf-8')
+        self.kb('sync')
+
+        result = json.loads(self.kb('note-lifecycle', '--mode', 'rename', '--note',
+                                    'Knowledge/Original.md', '--dest', 'Writing').stdout)
+        self.assertEqual(result['to'], 'Writing/Original.md')
+        self.assertFalse(source.exists())
+        self.assertEqual((self.root / result['to']).read_text(encoding='utf-8'), '# Original note\n')
+        self.assertEqual(reference.read_text(encoding='utf-8'), 'See [[Writing/Original]].\n')
+        index = self.index.read_text(encoding='utf-8')
+        self.assertNotIn('[[Knowledge/Original]]', index)
+        self.assertEqual(index.count('[[Writing/Original]]'), 1)
+
+    def test_kb_rename_uses_on_disk_spelling_for_case_aliases(self) -> None:
+        canonical = self.root / 'Sources/Interviews'
+        alias = self.root / 'sources/interviews'
+        if not alias.is_dir() or not alias.samefile(canonical):
+            self.skipTest('canonical folder does not have a case-insensitive alias')
+        self.ingest()
+        (self.root / 'Sources').rename(self.root / 'sources')
+        (canonical / 'Old.md').write_text('# Original note\n', encoding='utf-8')
+        reference = self.root / 'Writing/Reference.md'
+        reference.write_text('See [[Sources/Interviews/Old]].\n', encoding='utf-8')
+        self.kb('sync')
+
+        result = json.loads(self.kb('note-lifecycle', '--mode', 'rename', '--note',
+                                    'sources/interviews/old.md', '--dest', 'sources/interviews/New.md').stdout)
+        self.assertEqual((result['from'], result['to']),
+                         ('Sources/Interviews/Old.md', 'Sources/Interviews/New.md'))
+        self.assertFalse((canonical / 'Old.md').exists())
+        self.assertTrue((canonical / 'New.md').is_file())
+        self.assertEqual(reference.read_text(encoding='utf-8'), 'See [[Sources/Interviews/New]].\n')
+        index = self.index.read_text(encoding='utf-8')
+        self.assertNotIn('[[Sources/Interviews/Old]]', index)
+        self.assertEqual(index.count('[[Sources/Interviews/New]]'), 1)
+
+        self.kb('note-lifecycle', '--mode', 'rename', '--note', result['to'],
+                '--dest', 'sources/interviews/new.md')
+        self.assertIn('new.md', {path.name for path in canonical.iterdir()})
+        self.assertEqual(reference.read_text(encoding='utf-8'), 'See [[Sources/Interviews/new]].\n')
+        self.assertEqual(self.index.read_text(encoding='utf-8').count('[[Sources/Interviews/new]]'), 1)
+
+        replacement = canonical / 'Replacement.md'
+        replacement.write_text('# Replacement note\n', encoding='utf-8')
+        result = json.loads(self.kb('note-lifecycle', '--mode', 'rename', '--note',
+                                    'Sources/Interviews/Replacement.md', '--dest', 'sources/interviews/NEW.md').stdout)
+        self.assertEqual(result['to'], 'Sources/Interviews/new.md')
+        self.assertEqual((canonical / 'new.md').read_text(encoding='utf-8'), '# Replacement note\n')
+        self.assertEqual(self.index.read_text(encoding='utf-8').count('[[Sources/Interviews/new]]'), 1)
+
+    def test_kb_rename_sees_the_pending_meeting_note_during_preflight(self) -> None:
+        first = self.ingest()
+        [(source_id, old_link)] = self.granola_registry_entries()
+        duplicate = self.note.with_name('Other copy.md')
+        duplicate.write_bytes(self.note.read_bytes())
+        reference = self.root / 'Knowledge/Reference.md'
+        reference.write_text(old_link + '\n', encoding='utf-8')
+        destination = 'Sources/Notes/Renamed meeting.md'
+        tracked = (self.note, reference, duplicate, self.registry, self.index)
+        before = {path: path.read_bytes() for path in tracked}
+        args = ('note-lifecycle', '--mode', 'rename', '--note', first['note'], '--dest', destination)
+        failed = self.run_cli(KB_HELPER, *args, check=False)
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertIn('multiple notes', failed.stderr.lower())
+        self.assertFalse((self.root / destination).exists())
+        self.assertEqual({path: path.read_bytes() for path in tracked}, before)
+
+        duplicate.unlink()
+        self.kb(*args)
+        new_link = '[[Sources/Notes/Renamed meeting]]'
+        self.assertEqual(reference.read_text(encoding='utf-8'), new_link + '\n')
+        self.assertEqual((self.root / destination).read_bytes(), before[self.note])
+        self.assertEqual(self.granola_registry_entries(), [(source_id, new_link)])
+        self.assertEqual(self.ingest()['note'], destination)
+
+    def test_kb_rename_validates_meeting_destination_registrability_before_moving(self) -> None:
+        first = self.ingest()
+        [(source_id, old_link)] = self.granola_registry_entries()
+        original = self.note.read_bytes()
+        self.note.write_bytes(original.replace(b'type: source', b'type: note', 1))
+        reference = self.root / 'Knowledge/Reference.md'
+        reference.write_text(old_link + '\n', encoding='utf-8')
+        tracked = (self.note, reference, self.registry, self.index)
+        before = {path: path.read_bytes() for path in tracked}
+        destination = 'Sources/Custom/Renamed meeting.md'
+        args = ('note-lifecycle', '--mode', 'rename', '--note', first['note'], '--dest', destination)
+        failed = self.run_cli(KB_HELPER, *args, check=False)
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertIn('path-not-registrable', failed.stderr)
+        self.assertFalse((self.root / destination).parent.exists())
+        self.assertEqual({path: path.read_bytes() for path in tracked}, before)
+
+        self.note.write_bytes(original)
+        self.kb(*args)
+        self.assertEqual(self.granola_registry_entries(), [(source_id, '[[Sources/Custom/Renamed meeting]]')])
+        self.assertEqual((self.root / destination).read_bytes(), original)
+
+    def test_sync_keeps_an_ordinary_interview_that_reuses_the_old_path(self) -> None:
+        self.ingest()
+        [(source_id, old_link)] = self.granola_registry_entries()
+        moved = self.note.rename(self.note.with_name('Moved out.md'))
+        ordinary = b'# New independent interview\n'
+        self.note.write_bytes(ordinary)
+        self.kb('sync')
+        new_link = '[[Sources/Interviews/Moved out]]'
+        self.assertEqual(self.granola_registry_entries(), [(source_id, new_link)])
+        self.assertEqual(self.ingest()['note'], moved.relative_to(self.root).as_posix())
+        self.assertEqual(self.note.read_bytes(), ordinary)
+        index = self.index.read_text(encoding='utf-8')
+        self.assertEqual(index.count(old_link), 1)
+        self.assertEqual(index.count(new_link), 1)
+
+    def test_kb_rename_of_a_meeting_refuses_an_occupied_destination(self) -> None:
+        first = self.ingest()
+        ordinary = self.root / 'Sources/Interviews/Independent.md'
+        ordinary.write_bytes(b'# Independent interview\n')
+        self.kb('sync')
+        before = {p: p.read_bytes() for p in (self.note, ordinary, self.registry, self.index)}
+        failed = self.run_cli(KB_HELPER, 'note-lifecycle', '--mode', 'rename', '--note',
+                              first['note'], '--dest', ordinary.relative_to(self.root).as_posix(), check=False)
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertIn('occupied', failed.stderr.lower())
+        self.assertEqual({p: p.read_bytes() for p in before}, before)
+
+    def test_sync_preserves_meeting_title_and_status_across_sections(self) -> None:
+        first = self.ingest(title='Original meeting title')
+        [(source_id, old_link)] = self.granola_registry_entries()
+        registry = self.registry.read_text(encoding='utf-8')
+        old_row = next(row for row in registry.splitlines() if old_link in row)
+        self.registry.write_text(registry.replace(old_row, old_row.replace('| active |', '| reviewed |')),
+                                 encoding='utf-8')
+        dest = self.root / 'Knowledge/Handwritten.md'
+        (self.root / first['note']).rename(dest)
+        before = dest.read_bytes()
+        self.kb('sync')
+        link = '[[Knowledge/Handwritten]]'
+        row = next(line for line in self.registry.read_text(encoding='utf-8').splitlines() if link in line)
+        self.assertIn(f'| {source_id} |', row)
+        self.assertIn('| Original meeting title |', row)
+        self.assertIn('| reviewed |', row)
+        self.assertEqual(self.ingest()['note'], 'Knowledge/Handwritten.md')
+        self.assertEqual(dest.read_bytes(), before)
+        self.assertEqual(self.index.read_text(encoding='utf-8').count(link), 1)
+
     def test_same_title_manual_renames_keep_distinct_registry_ids(self) -> None:
         expected = {}
         for uid in (MEETING_ID, SECOND_ID):
