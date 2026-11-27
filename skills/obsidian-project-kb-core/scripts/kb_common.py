@@ -717,9 +717,11 @@ def prefix_for_section_row(section: str, row: dict[str, str]) -> str:
     }[section]
 
 
-def imported_source_metadata(project_root: Path, relative: str) -> dict[str, str]:
-    path = project_root / relative
-    if path.suffix != '.md' or path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(project_root.resolve()):
+def imported_source_metadata(
+    project_root: Path, relative: str, *, content_path: str | None = None,
+) -> dict[str, str]:
+    path = project_root / (content_path or relative)
+    if Path(relative).suffix != '.md' or path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(project_root.resolve()):
         return {}
     try:
         fields = read_frontmatter_fields(path, 'type', 'source_type', 'source_provider', 'title')
@@ -748,18 +750,22 @@ def registry_add_or_update(
     project_root: Path, rel_path: str, *, status: str | None = None,
     title: str | None = None, origin: str | None = None, source_key: str | None = None,
     previous_link: str | None = None,
+    rows: dict[str, list[dict[str, str]]] | None = None, content_path: str | None = None,
 ) -> dict[str, Any]:
+    """Stage an update in supplied rows, or persist it when called on its own."""
     metadata = None
     payload = section_and_row_for_relpath(rel_path)
     if payload is None and rel_path.replace('\\', '/').startswith('Sources/'):
-        metadata = imported_source_metadata(project_root, rel_path)
+        metadata = imported_source_metadata(project_root, rel_path, content_path=content_path)
         source_type = metadata.get('source_type')
         if source_type in SOURCE_TYPES.values():
             payload = section_and_row_for_relpath(rel_path, imported_source_type=source_type)
     if payload is None:
         return {'updated': False, 'reason': 'path-not-registrable'}
     section, row = payload
-    rows = parse_registry_md(registry_path(project_root))
+    persist = rows is None
+    if rows is None:
+        rows = parse_registry_md(registry_path(project_root))
     if source_key:
         link = row['Path'].casefold()
         path_rows = [(name, item) for name, entries in rows.items() if name != 'Archive'
@@ -802,7 +808,7 @@ def registry_add_or_update(
             row['Status'] = status
         rows[section].append(row)
         if metadata is None:
-            metadata = imported_source_metadata(project_root, rel_path)
+            metadata = imported_source_metadata(project_root, rel_path, content_path=content_path)
         if metadata:
             if title is None:
                 title = _metadata_cell(metadata.get('title', ''))
@@ -822,7 +828,8 @@ def registry_add_or_update(
         row['Origin'] = origin.replace('|', '｜')
     if source_key is not None:
         row['Source Key'] = source_key
-    write_registry(project_root, rows)
+    if persist:
+        write_registry(project_root, rows)
     return {'updated': True, 'section': section, 'path': rel_path}
 
 
