@@ -88,20 +88,76 @@ def registry_links(rows: dict[str, list[dict[str, str]]]) -> dict[str, str]:
     return links
 
 
-def sync_registry(project_root: Path) -> dict[str, Any]:
-    rels = common.scan_canonical_relpaths(project_root)
-    rows = common.parse_registry_md(common.registry_path(project_root))
+def moved_meeting_sources(
+    project_root: Path, desired: dict[str, str], rows: dict[str, list[dict[str, str]]],
+    content_paths: dict[str, str],
+) -> dict[str, str]:
+    """Recover registered identities before a path-based sync drops their previous links."""
+    keyed = {row['Source Key']: row['Path'] for entries in rows.values() for row in entries
+             if row.get('Source Key')}
+    if not keyed:
+        return {}
+    providers = {key.partition(':')[0] for key in keyed}
+
+    def note_key(relative: str) -> str | None:
+        note = project_root / content_paths.get(relative, relative)
+        if Path(relative).suffix != '.md' or note.is_symlink() or not note.resolve().is_relative_to(project_root):
+            return None
+        try:
+            return common.meeting_source_key(note, providers)
+        except OSError:
+            return None
+
+    displaced = {key for key, link in keyed.items()
+                 if link not in desired or note_key(desired[link]) != key}
+    if not displaced:
+        return {}
+    owners = {row['Path'].casefold(): row.get('Source Key') for entries in rows.values()
+              for row in entries if row.get('Path')}
+    moves: dict[str, str] = {}
+    for link, relative in desired.items():
+        key = note_key(relative)
+        if key is None or key not in displaced:
+            continue
+        if key in moves:
+            raise SystemExit(f'Multiple notes have the same meeting identity: {moves[key]} and {relative}')
+        if link.casefold() in owners and owners[link.casefold()] != key:
+            raise SystemExit(f'The moved meeting path is already registered to another source: {relative}')
+        moves[key] = relative
+    return moves
+
+
+def reconcile_registry(
+    project_root: Path, rels: list[str], rows: dict[str, list[dict[str, str]]],
+    *, renamed: tuple[str, str] | None = None, content_paths: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Update the proposed registry in memory before writing any changes."""
     existing = registry_links(rows)
     desired = {common.wikilink(rel): rel for rel in rels}
+    content_paths = content_paths or {}
+
+    for key, relative in moved_meeting_sources(project_root, desired, rows, content_paths).items():
+        update = common.registry_add_or_update(
+            project_root, relative, source_key=key, rows=rows, content_path=content_paths.get(relative),
+        )
+        if not update['updated']:
+            raise SystemExit(f"Cannot reconcile moved meeting {relative}: {update['reason']}")
+    if renamed is not None:
+        previous, current = renamed
+        common.registry_add_or_update(project_root, current, rows=rows, content_path=content_paths.get(current))
+        if previous != current:
+            previous_link = common.wikilink(previous)
+            for section, entries in rows.items():
+                if section != 'Archive':
+                    rows[section] = [row for row in entries if row['Path'] != previous_link]
 
     added: list[str] = []
     removed: list[str] = []
     for rel in rels:
-        result = common.registry_add_or_update(project_root, rel)
+        result = common.registry_add_or_update(project_root, rel, rows=rows, content_path=content_paths.get(rel))
         if result.get('updated') and common.wikilink(rel) not in existing:
             added.append(rel)
 
-    rows = common.parse_registry_md(common.registry_path(project_root))
     for section in list(rows):
         if section == 'Archive':
             continue
@@ -113,8 +169,15 @@ def sync_registry(project_root: Path) -> dict[str, Any]:
             else:
                 removed.append(link)
         rows[section] = keep
-    common.write_registry(project_root, rows)
     return {'canonical_paths': rels, 'added': added, 'removed': removed}
+
+
+def sync_registry(project_root: Path) -> dict[str, Any]:
+    rows = common.parse_registry_md(common.registry_path(project_root))
+    rels = common.scan_canonical_relpaths(project_root)
+    result = reconcile_registry(project_root, rels, rows)
+    common.write_registry(project_root, rows)
+    return result
 
 
 def update_hub_link_block(binding: common.Binding) -> None:
@@ -148,32 +211,33 @@ def update_hub_link_block(binding: common.Binding) -> None:
 
 
 def run_sync(binding: common.Binding, scope: str = 'auto') -> dict[str, Any]:
-    common.ensure_project_scaffold(binding.project_root, binding.project_slug, common.titleize_slug(binding.project_slug))
-    migrated = common.maybe_migrate_old_layout(binding.project_root)
-    daily_path = common.ensure_today_daily(binding.project_root, binding.project_slug)
-    registry_result = sync_registry(binding.project_root)
-    common.update_index(binding.project_root)
-    update_hub_link_block(binding)
-    summary = f'scope={scope}; canonical={len(registry_result["canonical_paths"])}; added={len(registry_result["added"])}; migrated={len(migrated)}'
-    common.update_project_memory(
-        binding.repo_root,
-        binding.project_id,
-        binding.project_root,
-        common.relative_note_path(binding.project_root / '00-Hub.md', binding.vault_path),
-        binding.note_language,
-        summary=summary,
-    )
-    common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: sync refreshed scaffold, registry, index, and daily note ({scope}).')
-    return {
-        'project_id': binding.project_id,
-        'project_root': str(binding.project_root),
-        'daily_note': str(daily_path),
-        'migrated_paths': migrated,
-        'registry_added': registry_result['added'],
-        'registry_removed': registry_result['removed'],
-        'canonical_count': len(registry_result['canonical_paths']),
-        'scope': scope,
-    }
+    with common.project_write_lock(binding.project_root):
+        common.ensure_project_scaffold(binding.project_root, binding.project_slug, common.titleize_slug(binding.project_slug))
+        migrated = common.maybe_migrate_old_layout(binding.project_root)
+        daily_path = common.ensure_today_daily(binding.project_root, binding.project_slug)
+        registry_result = sync_registry(binding.project_root)
+        common.update_index(binding.project_root)
+        update_hub_link_block(binding)
+        summary = f'scope={scope}; canonical={len(registry_result["canonical_paths"])}; added={len(registry_result["added"])}; migrated={len(migrated)}'
+        common.update_project_memory(
+            binding.repo_root,
+            binding.project_id,
+            binding.project_root,
+            common.relative_note_path(binding.project_root / '00-Hub.md', binding.vault_path),
+            binding.note_language,
+            summary=summary,
+        )
+        common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: sync refreshed scaffold, registry, index, and daily note ({scope}).')
+        return {
+            'project_id': binding.project_id,
+            'project_root': str(binding.project_root),
+            'daily_note': str(daily_path),
+            'migrated_paths': migrated,
+            'registry_added': registry_result['added'],
+            'registry_removed': registry_result['removed'],
+            'canonical_count': len(registry_result['canonical_paths']),
+            'scope': scope,
+        }
 
 
 def load_binding(repo_root: Path, project_id: str | None) -> common.Binding:
@@ -338,47 +402,126 @@ def ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
+def on_disk_rename_path(project_root: Path, path: Path, *, keep_name: bool = False) -> Path:
+    """Use actual filesystem spelling without conflating distinct names."""
+    parts = path.relative_to(project_root).parts
+    parent = project_root
+    for index, name in enumerate(parts):
+        entered = parent / name
+        if (keep_name and index == len(parts) - 1) or not entered.exists():
+            return parent.joinpath(*parts[index:])
+        actual = entered
+        try:
+            if index == 0:
+                for base in common.CANONICAL_DIRECTORIES:
+                    canonical = parent / base
+                    if name.casefold() == base.casefold() and canonical.exists() and entered.samefile(canonical):
+                        actual = canonical
+                        break
+                if actual.name in common.CANONICAL_DIRECTORIES:
+                    parent = actual
+                    continue
+            for sibling in parent.iterdir():
+                if sibling.name == name:
+                    actual = entered
+                    break
+                if sibling.name.casefold() == name.casefold() and entered.samefile(sibling):
+                    actual = sibling
+        except OSError:
+            actual = entered
+        parent = actual
+    return parent
+
+
+def canonical_paths_after_rename(
+    project_root: Path, source: Path, target: Path,
+) -> tuple[list[str], dict[str, str]]:
+    sources = (path for path in source.rglob('*') if not path.is_dir()) if source.is_dir() else (source,)
+    content_paths = {
+        (target / path.relative_to(source)).relative_to(project_root).as_posix():
+        path.relative_to(project_root).as_posix()
+        for path in sources
+    }
+    rels = set(common.scan_canonical_relpaths(project_root))
+    rels.difference_update(content_paths, content_paths.values())
+    for rel in content_paths:
+        base, separator, _ = rel.partition('/')
+        extensions = {'.md', '.canvas'} if base == 'Maps' else {'.md'}
+        if separator and base in common.CANONICAL_DIRECTORIES and Path(rel).suffix in extensions:
+            rels.add(rel)
+    ordered = sorted(rels, key=lambda rel: (common.CANONICAL_DIRECTORIES.index(rel.partition('/')[0]), Path(rel)))
+    return ordered, content_paths
+
+
 def note_lifecycle(binding: common.Binding, mode: str, note: str, dest: str = '', reason: str = 'manual') -> dict[str, Any]:
-    source = common.resolve_project_note(binding.project_root, note)
-    source_rel = str(source.relative_to(binding.project_root)).replace(os.sep, '/')
+    with common.project_write_lock(binding.project_root):
+        source = common.resolve_project_note(binding.project_root, note)
+        if mode == 'rename':
+            source = on_disk_rename_path(binding.project_root, source)
+        source_rel = str(source.relative_to(binding.project_root)).replace(os.sep, '/')
 
-    if mode == 'rename':
-        if not dest:
-            raise SystemExit('--dest is required for rename')
-        target = (binding.project_root / dest).resolve()
-        ensure_parent(target)
-        shutil.move(str(source), str(target))
-        target_rel = str(target.relative_to(binding.project_root)).replace(os.sep, '/')
-        rewritten = rewrite_project_references(binding.project_root, source_rel, target_rel)
-        common.registry_add_or_update(binding.project_root, target_rel)
-        common.registry_remove_path(binding.project_root, source_rel, reason='renamed', record_archive=False)
-        sync_registry(binding.project_root)
-        common.update_index(binding.project_root)
-        source_label = Path(source_rel).stem.replace('-', ' ')
-        target_link = target_rel[:-3] if target_rel.endswith('.md') else target_rel
-        common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: renamed {source_label} -> [[{target_link}]].')
-        return {'mode': mode, 'from': source_rel, 'to': target_rel, 'rewritten_paths': rewritten}
+        if mode == 'rename':
+            if not dest:
+                raise SystemExit('--dest is required for rename')
+            requested = binding.project_root / dest
+            target = requested.resolve()
+            target_exists = target.exists()
+            same_target = target_exists and source.samefile(target)
+            if (same_target and requested.name != target.name
+                    and requested.name.casefold() == target.name.casefold() and not requested.is_symlink()):
+                # Keep an explicit case-only rename on platforms that normalize resolve().
+                target = target.with_name(requested.name)
+            # shutil.move places a note inside an existing destination directory.
+            moved_path = target
+            if target.is_dir() and not same_target:
+                moved_path = target / source.name
+            moved_path = on_disk_rename_path(binding.project_root, moved_path, keep_name=same_target)
+            target_rel = moved_path.relative_to(binding.project_root).as_posix()
+            source_link = common.wikilink(source_rel).casefold()
+            target_link = common.wikilink(target_rel).casefold()
+            rows = common.parse_registry_md(common.registry_path(binding.project_root))
+            involved = [row for entries in rows.values() for row in entries
+                        if row.get('Path', '').casefold() in (source_link, target_link)]
+            if any(row.get('Source Key') for row in involved):
+                occupied = target_exists and not same_target
+                reserved = source_link != target_link and any(
+                    row['Path'].casefold() == target_link for row in involved)
+                if occupied or reserved:
+                    raise SystemExit(f'The rename destination is occupied or reserved: {target_rel}')
+            rels, content_paths = canonical_paths_after_rename(binding.project_root, source, moved_path)
+            reconcile_registry(
+                binding.project_root, rels, rows, renamed=(source_rel, target_rel), content_paths=content_paths,
+            )
+            ensure_parent(target)
+            shutil.move(str(source), str(target))
+            rewritten = rewrite_project_references(binding.project_root, source_rel, target_rel)
+            common.write_registry(binding.project_root, rows)
+            common.update_index(binding.project_root)
+            source_label = Path(source_rel).stem.replace('-', ' ')
+            target_link = target_rel[:-3] if target_rel.endswith('.md') else target_rel
+            common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: renamed {source_label} -> [[{target_link}]].')
+            return {'mode': mode, 'from': source_rel, 'to': target_rel, 'rewritten_paths': rewritten}
 
-    if mode == 'archive':
-        archived = binding.project_root / 'Archive' / source_rel
-        ensure_parent(archived)
-        shutil.move(str(source), str(archived))
-        archived_rel = str(archived.relative_to(binding.project_root)).replace(os.sep, '/')
-        rewritten = rewrite_project_references(binding.project_root, source_rel, archived_rel)
-        common.registry_archive(binding.project_root, source_rel, archived_rel, reason=reason)
-        common.update_index(binding.project_root)
-        common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: archived [[{source_rel[:-3] if source_rel.endswith(".md") else source_rel}]].')
-        return {'mode': mode, 'from': source_rel, 'to': archived_rel, 'rewritten_paths': rewritten}
+        if mode == 'archive':
+            archived = binding.project_root / 'Archive' / source_rel
+            ensure_parent(archived)
+            shutil.move(str(source), str(archived))
+            archived_rel = str(archived.relative_to(binding.project_root)).replace(os.sep, '/')
+            rewritten = rewrite_project_references(binding.project_root, source_rel, archived_rel)
+            common.registry_archive(binding.project_root, source_rel, archived_rel, reason=reason)
+            common.update_index(binding.project_root)
+            common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: archived [[{source_rel[:-3] if source_rel.endswith(".md") else source_rel}]].')
+            return {'mode': mode, 'from': source_rel, 'to': archived_rel, 'rewritten_paths': rewritten}
 
-    if mode == 'purge':
-        source.unlink()
-        rewritten = rewrite_project_references(binding.project_root, source_rel, None)
-        common.registry_remove_path(binding.project_root, source_rel, reason=reason)
-        common.update_index(binding.project_root)
-        common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: purged {source_rel}.')
-        return {'mode': mode, 'purged': source_rel, 'rewritten_paths': rewritten}
+        if mode == 'purge':
+            source.unlink()
+            rewritten = rewrite_project_references(binding.project_root, source_rel, None)
+            common.registry_remove_path(binding.project_root, source_rel, reason=reason)
+            common.update_index(binding.project_root)
+            common.prepend_recent_change(binding.project_root, f'{common.now_iso()}: purged {source_rel}.')
+            return {'mode': mode, 'purged': source_rel, 'rewritten_paths': rewritten}
 
-    raise SystemExit(f'Unsupported note lifecycle mode: {mode}')
+        raise SystemExit(f'Unsupported note lifecycle mode: {mode}')
 
 
 def project_status(binding: common.Binding) -> dict[str, Any]:
@@ -489,4 +632,7 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+    # Piped JSON may contain Unicode vault paths on a Windows legacy code page.
+    if not sys.stdout.isatty():
+        sys.stdout.reconfigure(encoding='utf-8')
     main()
