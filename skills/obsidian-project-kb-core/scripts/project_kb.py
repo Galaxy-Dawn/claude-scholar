@@ -454,6 +454,37 @@ def ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
+def on_disk_rename_path(project_root: Path, path: Path, *, keep_name: bool = False) -> Path:
+    """Use actual filesystem spelling without conflating distinct names."""
+    parts = path.relative_to(project_root).parts
+    parent = project_root
+    for index, name in enumerate(parts):
+        entered = parent / name
+        if (keep_name and index == len(parts) - 1) or not entered.exists():
+            return parent.joinpath(*parts[index:])
+        actual = entered
+        try:
+            if index == 0:
+                for base in common.CANONICAL_DIRECTORIES:
+                    canonical = parent / base
+                    if name.casefold() == base.casefold() and canonical.exists() and entered.samefile(canonical):
+                        actual = canonical
+                        break
+                if actual.name in common.CANONICAL_DIRECTORIES:
+                    parent = actual
+                    continue
+            for sibling in parent.iterdir():
+                if sibling.name == name:
+                    actual = entered
+                    break
+                if sibling.name.casefold() == name.casefold() and entered.samefile(sibling):
+                    actual = sibling
+        except OSError:
+            actual = entered
+        parent = actual
+    return parent
+
+
 def canonical_paths_after_rename(
     project_root: Path, source: Path, target: Path,
 ) -> tuple[list[str], dict[str, str]]:
@@ -477,16 +508,26 @@ def canonical_paths_after_rename(
 def note_lifecycle(binding: common.Binding, mode: str, note: str, dest: str = '', reason: str = 'manual') -> dict[str, Any]:
     with common.project_write_lock(binding.project_root):
         source = common.resolve_project_note(binding.project_root, note)
+        if mode == 'rename':
+            source = on_disk_rename_path(binding.project_root, source)
         source_rel = str(source.relative_to(binding.project_root)).replace(os.sep, '/')
 
         if mode == 'rename':
             if not dest:
                 raise SystemExit('--dest is required for rename')
-            target = (binding.project_root / dest).resolve()
+            requested = binding.project_root / dest
+            target = requested.resolve()
+            target_exists = target.exists()
+            same_target = target_exists and source.samefile(target)
+            if (same_target and requested.name != target.name
+                    and requested.name.casefold() == target.name.casefold() and not requested.is_symlink()):
+                # Keep an explicit case-only rename on platforms that normalize resolve().
+                target = target.with_name(requested.name)
             # shutil.move places a note inside an existing destination directory.
             moved_path = target
-            if target.is_dir() and not source.samefile(target):
+            if target.is_dir() and not same_target:
                 moved_path = target / source.name
+            moved_path = on_disk_rename_path(binding.project_root, moved_path, keep_name=same_target)
             target_rel = moved_path.relative_to(binding.project_root).as_posix()
             source_link = common.wikilink(source_rel).casefold()
             target_link = common.wikilink(target_rel).casefold()
@@ -494,7 +535,7 @@ def note_lifecycle(binding: common.Binding, mode: str, note: str, dest: str = ''
             involved = [row for entries in rows.values() for row in entries
                         if row.get('Path', '').casefold() in (source_link, target_link)]
             if any(row.get('Source Key') for row in involved):
-                occupied = target.exists() and not source.samefile(target)
+                occupied = target_exists and not same_target
                 reserved = source_link != target_link and any(
                     row['Path'].casefold() == target_link for row in involved)
                 if occupied or reserved:

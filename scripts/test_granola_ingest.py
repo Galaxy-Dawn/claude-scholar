@@ -376,6 +376,43 @@ class GranolaIngestTest(unittest.TestCase):
         self.assertNotIn('[[Knowledge/Original]]', index)
         self.assertEqual(index.count('[[Writing/Original]]'), 1)
 
+    def test_kb_rename_uses_on_disk_spelling_for_case_aliases(self) -> None:
+        canonical = self.root / 'Sources/Interviews'
+        alias = self.root / 'sources/interviews'
+        if not alias.is_dir() or not alias.samefile(canonical):
+            self.skipTest('canonical folder does not have a case-insensitive alias')
+        self.ingest()
+        (self.root / 'Sources').rename(self.root / 'sources')
+        (canonical / 'Old.md').write_text('# Original note\n', encoding='utf-8')
+        reference = self.root / 'Writing/Reference.md'
+        reference.write_text('See [[Sources/Interviews/Old]].\n', encoding='utf-8')
+        self.kb('sync')
+
+        result = json.loads(self.kb('note-lifecycle', '--mode', 'rename', '--note',
+                                    'sources/interviews/old.md', '--dest', 'sources/interviews/New.md').stdout)
+        self.assertEqual((result['from'], result['to']),
+                         ('Sources/Interviews/Old.md', 'Sources/Interviews/New.md'))
+        self.assertFalse((canonical / 'Old.md').exists())
+        self.assertTrue((canonical / 'New.md').is_file())
+        self.assertEqual(reference.read_text(encoding='utf-8'), 'See [[Sources/Interviews/New]].\n')
+        index = self.index.read_text(encoding='utf-8')
+        self.assertNotIn('[[Sources/Interviews/Old]]', index)
+        self.assertEqual(index.count('[[Sources/Interviews/New]]'), 1)
+
+        self.kb('note-lifecycle', '--mode', 'rename', '--note', result['to'],
+                '--dest', 'sources/interviews/new.md')
+        self.assertIn('new.md', {path.name for path in canonical.iterdir()})
+        self.assertEqual(reference.read_text(encoding='utf-8'), 'See [[Sources/Interviews/new]].\n')
+        self.assertEqual(self.index.read_text(encoding='utf-8').count('[[Sources/Interviews/new]]'), 1)
+
+        replacement = canonical / 'Replacement.md'
+        replacement.write_text('# Replacement note\n', encoding='utf-8')
+        result = json.loads(self.kb('note-lifecycle', '--mode', 'rename', '--note',
+                                    'Sources/Interviews/Replacement.md', '--dest', 'sources/interviews/NEW.md').stdout)
+        self.assertEqual(result['to'], 'Sources/Interviews/new.md')
+        self.assertEqual((canonical / 'new.md').read_text(encoding='utf-8'), '# Replacement note\n')
+        self.assertEqual(self.index.read_text(encoding='utf-8').count('[[Sources/Interviews/new]]'), 1)
+
     def test_kb_rename_sees_the_pending_meeting_note_during_preflight(self) -> None:
         first = self.ingest()
         [(source_id, old_link)] = self.granola_registry_entries()
