@@ -203,8 +203,8 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 **安装后**：选择性/手动安装不仅不会自动合并 `config.toml`，如果你已经有自己的 `~/.kimi-code/AGENTS.md`，也请把仓库 `AGENTS.md` 中相关内容按需 merge 到你的文件里，而不是直接覆盖。
 
 **Kimi 使用说明**：
-- Kimi **不会**在 `/...` 菜单里列出自定义 skills。
-- 优先使用自然语言触发；必要时可显式写 `$skill-name`。
+- 在 Kimi Code CLI 输入 `/` 时，已安装的技能会出现在 **Skills** 分组。
+- 可以用自然语言描述任务，也可以输入 `/skill:<name>` 直接调用指定技能。
 
 ## 上手场景
 
@@ -255,7 +255,6 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 
 ### 使用建议
 - 先从一个具体任务开始，而不是一上来让系统“把所有事情都做了”。
-- 在 Kimi 里，自然语言是默认入口；只有当你想强制调用某个 skill 时，才需要显式写 `$skill-name`。
 - 如果你已经有自己的本地 `AGENTS.md` 或 `AGENTS.zh-CN.md` 文件，请把你需要的 Claude Scholar 内容从 `AGENTS.scholar.md` 或 `AGENTS.zh-CN.scholar.md` 里按需 merge 进去，不要假设 sidecar 文件会自动生效。
 - Zotero 和 Obsidian 都不是强制的，但如果你希望得到 durable literature notes 或 project memory，而不是一次性聊天输出，它们会非常有帮助。
 
@@ -303,7 +302,7 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 
 完整学术研究生命周期 —— 从研究构思到发表的 7 个阶段。
 
-> **Kimi 入口说明**：这个分支不依赖仓库级 slash commands。默认入口是自然语言触发；必要时可显式调用 `$results-analysis` 这样的 skill。
+> 例如，输入 `/skill:results-analysis`，接着描述分析任务，即可直接调用结果分析技能。
 
 ### 1. 研究构思（Zotero 集成）
 

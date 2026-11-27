@@ -203,8 +203,8 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 **インストール後**：選択的 / 手動インストールでも `config.toml` は自動マージされません。既に `~/.kimi-code/AGENTS.md` を持っている場合も、必要な内容だけを手動で merge してください。
 
 **Kimi 利用メモ**：
-- Kimi は `/...` メニューにカスタム skill を表示しません。
-- 基本は自然言語で起動し、必要な場合だけ `$skill-name` を明示してください。
+- Kimi Code CLI のスラッシュ補完では、インストール済みのスキルが **Skills** に表示されます。
+- 自然言語でタスクを伝えるか、`/skill:<name>` を入力して特定のスキルを呼び出します。
 
 ## 使い始めのシナリオ
 
@@ -255,7 +255,6 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 
 ### 実用上のメモ
 - 最初は「全部やって」ではなく、具体的な一つのタスクから始めるのがおすすめです。
-- Kimi では自然言語が基本の入口で、特定の skill を明示したいときだけ `$skill-name` を使えば十分です。
 - すでに自分用のローカル`AGENTS.md`または`AGENTS.zh-CN.md`を運用している場合は、`AGENTS.scholar.md`または`AGENTS.zh-CN.scholar.md`から必要な内容だけを手動でマージしてください。別名で配置されたファイルが自動適用されるわけではありません。
 - ZoteroとObsidianは必須ではありませんが、単発のチャット出力ではなく、継続的な文献ノートやプロジェクトメモリを残したい場合にはかなり有用です。
 
@@ -303,7 +302,7 @@ Kimi Code CLI で Granola の会議を選び、プロジェクトに紐づいた
 
 研究構想から発表までを含む、完全な学術研究ライフサイクルの 7 段階です。
 
-> **Kimi 入口説明**：この分岐は repo レベルの slash commands に依存しません。通常は自然言語で起動し、必要に応じて `$results-analysis` のような skill を明示してください。
+> たとえば、`/skill:results-analysis` に続けて分析タスクを入力すると、結果分析スキルを直接呼び出せます。
 
 ### 1. 研究構想（Zotero 統合）
 

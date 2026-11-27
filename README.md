@@ -203,8 +203,8 @@ cp /tmp/claude-scholar/AGENTS.zh-CN.md ~/.kimi-code/AGENTS.zh-CN.md
 **Post-install**: selective/manual install does **not** auto-merge your `config.toml`, and if you already have your own `~/.kimi-code/AGENTS.md`, merge the relevant sections from this repo's `AGENTS.md` into your file instead of blindly overwriting it.
 
 **Important Kimi note**:
-- Kimi does **not** show custom skills in `/...` menus.
-- Use natural language prompts, or explicitly invoke a skill as `$skill-name` when needed.
+- Kimi Code CLI lists installed skills under **Skills** in slash completion.
+- Describe your task in natural language or enter `/skill:<name>` to invoke a specific skill.
 
 ## Getting Started Scenarios
 
@@ -255,7 +255,6 @@ or:
 
 ### Practical Notes
 - Start with one concrete task, not a vague request for "everything."
-- In Kimi, natural-language prompts are the default entrypoint; use `$skill-name` only when you want to force a specific skill.
 - If you already maintain your own local `AGENTS.md` or `AGENTS.zh-CN.md`, merge the Claude Scholar sections you want from `AGENTS.scholar.md` or `AGENTS.zh-CN.scholar.md` instead of assuming sidecar files apply automatically.
 - Zotero and Obsidian are optional, but they become much more useful when you want durable literature notes or project memory rather than one-off chat output.
 
@@ -305,7 +304,7 @@ Obsidian vault. Use a local export or connect Granola MCP.
 
 Complete academic research lifecycle — 7 stages from idea to publication.
 
-> **Kimi entrypoint note**: this branch does not rely on repo slash commands. The normal entrypoint is natural language plus explicit skill invocation such as `$results-analysis` when needed.
+> For example, enter `/skill:results-analysis` followed by your analysis task to invoke the results analysis skill directly.
 
 ### 1. Research Ideation (Zotero-Integrated)
 
