@@ -1016,7 +1016,7 @@ def update_project_memory(
     if summary:
         block = f'## Recent Sync Summary\n- {summary}\n'
         if '## Recent Sync Summary\n' in content:
-            content = re.sub(r'## Recent Sync Summary\n(?:- .*\n?)*', block, content, count=1)
+            content = re.sub(r'## Recent Sync Summary\n(?:- .*\n?)*', lambda _: block, content, count=1)
         else:
             content = content.rstrip() + '\n\n' + block
     if atomic:
