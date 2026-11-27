@@ -263,6 +263,15 @@ def update_binding_entry(repo_root: Path, project_id: str, **updates: Any) -> di
     return entry
 
 
+def same_project_root(left: Path, right: Path) -> bool:
+    if left == right:
+        return True
+    try:
+        return left.samefile(right)
+    except (FileNotFoundError, NotADirectoryError):
+        return False
+
+
 def require_exclusive_project_root(
     binding: common.Binding, projects: dict[str, Any], operation: str,
 ) -> None:
@@ -270,33 +279,54 @@ def require_exclusive_project_root(
         if project_id == binding.project_id or not other.get('vault_root'):
             continue
         other_root = Path(other['vault_root']).expanduser().resolve()
-        shared = other_root == binding.project_root
-        if not shared:
-            try:
-                shared = other_root.samefile(binding.project_root)
-            except (FileNotFoundError, NotADirectoryError):
-                continue
-        if shared:
+        if same_project_root(other_root, binding.project_root):
             raise SystemExit(f'Cannot {operation} project {binding.project_id!r}: project {project_id!r} '
                              'also uses this project folder. Resolve the binding conflict first.')
 
 
-def matching_archive_entry(registry: dict[str, Any], binding: common.Binding) -> dict[str, Any] | None:
-    entry = (registry.get('projects') or {}).get(binding.project_id)
-    if entry is not None and Path(entry['vault_root']).expanduser().resolve() == binding.project_root:
-        return entry
-    return None
+def lifecycle_registries(binding: common.Binding, operation: str) -> list[tuple[Path, str]]:
+    aliases = []
+    for path in common.binding_registry_paths(binding.repo_root):
+        registry = common.load_binding_registry(path)
+        projects = registry.get('projects') or {}
+        require_exclusive_project_root(binding, projects, operation)
+        entry = projects.get(binding.project_id)
+        if entry is None:
+            continue
+        root = Path(entry['vault_root']).expanduser().resolve()
+        if same_project_root(root, binding.project_root):
+            # After moving or deleting the folder, compare the registered value
+            # captured here instead of trying to stat the old path.
+            aliases.append((path, entry['vault_root']))
+        elif operation == 'purge':
+            raise SystemExit(
+                f'Cannot purge project {binding.project_id!r}: its bindings point to different project folders '
+                f'({binding.project_root} and {root}). Resolve the binding conflict first.'
+            )
+    if not aliases:
+        raise SystemExit(f'Project {binding.project_id!r} is no longer bound to {binding.project_root}')
+    return aliases
+
+
+def read_lifecycle_entry(
+    binding: common.Binding, path: Path, registered_root: str, operation: str,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    registry = common.load_binding_registry(path)
+    projects = registry.get('projects') or {}
+    require_exclusive_project_root(binding, projects, operation)
+    entry = projects.get(binding.project_id)
+    if entry is not None and entry['vault_root'] != registered_root:
+        raise SystemExit(f'Cannot {operation} project {binding.project_id!r}: the binding changed in {path}')
+    return registry, entry
 
 
 def archive_project(binding: common.Binding) -> dict[str, Any]:
-    paths = []
-    for path in common.binding_registry_paths(binding.repo_root):
-        registry = common.load_binding_registry(path)
-        require_exclusive_project_root(binding, registry.get('projects') or {}, 'archive')
-        if matching_archive_entry(registry, binding) is not None:
-            paths.append(path)
-    if not paths:
-        raise SystemExit(f'Project {binding.project_id!r} is no longer bound to {binding.project_root}')
+    aliases = lifecycle_registries(binding, 'archive')
+    if binding.status == 'archived':
+        if not binding.project_root.is_dir():
+            raise SystemExit(f'Archived project folder is missing: {binding.project_root}')
+        return {'project_id': binding.project_id, 'archived_to': str(binding.project_root)}
+
     archive_root = binding.vault_path / 'Research' / '_archived'
     archive_root.mkdir(parents=True, exist_ok=True)
     dest = archive_root / f'{binding.project_slug}-{common.today_str()}'
@@ -304,48 +334,65 @@ def archive_project(binding: common.Binding) -> dict[str, Any]:
     while dest.exists():
         counter += 1
         dest = archive_root / f'{binding.project_slug}-{common.today_str()}-{counter}'
-    shutil.move(str(binding.project_root), str(dest))
     hub_note = common.relative_note_path(dest / '00-Hub.md', binding.vault_path)
-    for path in paths:
-        registry = common.load_binding_registry(path)
-        entry = matching_archive_entry(registry, binding)
-        if entry is None:
-            continue
-        entry.update(vault_root=str(dest), hub_note=hub_note, status='archived',
-                     auto_sync=False, updated_at=common.now_iso())
-        common.save_binding_registry(path, registry)
-        common.update_project_memory(
-            binding.repo_root, binding.project_id, dest, hub_note,
-            entry.get('note_language', binding.note_language),
-            summary=f'project archived to {dest}', memory_path=path.with_name(f'{binding.project_id}.md'),
-            status='archived', auto_sync=False,
-        )
+    changed: dict[Path, bytes | None] = {}
+    shutil.move(str(binding.project_root), str(dest))
+    try:
+        for path, registered_root in aliases:
+            registry_target = path.resolve()
+            expected_root = str(dest) if registry_target in changed else registered_root
+            registry, entry = read_lifecycle_entry(binding, path, expected_root, 'archive')
+            if entry is None:
+                continue
+            if registry_target not in changed:
+                registry_before = registry_target.read_bytes()
+                entry.update(vault_root=str(dest), hub_note=hub_note, status='archived',
+                             auto_sync=False, updated_at=common.now_iso())
+                common.save_binding_registry(registry_target, registry)
+                changed[registry_target] = registry_before
+            memory_target = path.with_name(f'{binding.project_id}.md').resolve()
+            if memory_target in changed:
+                continue
+            try:
+                memory_before = memory_target.read_bytes()
+            except FileNotFoundError:
+                memory_before = None
+            common.update_project_memory(
+                binding.repo_root, binding.project_id, dest, hub_note,
+                entry.get('note_language', binding.note_language),
+                summary=f'project archived to {dest}', memory_path=memory_target,
+                status='archived', auto_sync=False, atomic=True,
+            )
+            changed[memory_target] = memory_before
+    except (Exception, SystemExit):
+        try:
+            if binding.project_root.exists() or binding.project_root.is_symlink():
+                raise OSError(f'Original project path was recreated: {binding.project_root}')
+            for path, content in reversed(changed.items()):
+                if content is None:
+                    path.unlink(missing_ok=True)
+                else:
+                    common.write_atomic(path, content)
+            shutil.move(str(dest), str(binding.project_root))
+        except Exception as exc:
+            raise SystemExit(f'Archive rollback failed. Check {dest} and {binding.project_root}: {exc}') from exc
+        raise
     return {'project_id': binding.project_id, 'archived_to': str(dest)}
 
 
-def load_purge_registry(binding: common.Binding, path: Path) -> dict[str, Any] | None:
-    registry = common.load_binding_registry(path)
-    projects = registry.get('projects') or {}
-    require_exclusive_project_root(binding, projects, 'purge')
-    entry = projects.get(binding.project_id)
-    if entry is None:
-        return None
-    bound_root = Path(entry['vault_root']).expanduser().resolve()
-    if bound_root != binding.project_root:
-        raise SystemExit(
-            f'Cannot purge project {binding.project_id!r}: its bindings point to different project folders '
-            f'({binding.project_root} and {bound_root}). Resolve the binding conflict first.'
-        )
-    return registry
-
-
 def purge_project(binding: common.Binding) -> dict[str, Any]:
-    paths = [
-        path for path in common.binding_registry_paths(binding.repo_root)
-        if load_purge_registry(binding, path) is not None
-    ]
-    if not paths:
-        raise SystemExit(f'Project {binding.project_id!r} not found in binding registry')
+    aliases = lifecycle_registries(binding, 'purge')
+
+    # Save the primary spelling for physical aliases before deletion. A retry
+    # can then still identify the matching registry entries with no folder to stat.
+    for i, (path, registered_root) in enumerate(aliases):
+        if Path(registered_root).expanduser().resolve() == binding.project_root:
+            continue
+        registry, entry = read_lifecycle_entry(binding, path, registered_root, 'purge')
+        if entry is not None:
+            entry['vault_root'] = str(binding.project_root)
+            common.save_binding_registry(path, registry)
+            aliases[i] = (path, entry['vault_root'])
 
     # Keep bindings on disk until the project directory has been removed so a
     # failed deletion can be retried against the same project.
@@ -353,19 +400,22 @@ def purge_project(binding: common.Binding) -> dict[str, Any]:
         shutil.rmtree(binding.project_root)
 
     memory_name = f'{binding.project_id}.md'
-    for path in reversed(paths):
+    # Two symlinked registries can share one entry but have separate memory files.
+    for path, registered_root in reversed(aliases):
+        _, entry = read_lifecycle_entry(binding, path, registered_root, 'purge')
+        if entry is not None:
+            path.with_name(memory_name).unlink(missing_ok=True)
+    for path, registered_root in reversed(aliases):
         # Other projects may have been registered during filesystem deletion.
-        registry = load_purge_registry(binding, path)
-        if registry is None:
-            continue
-        path.with_name(memory_name).unlink(missing_ok=True)
-        registry['projects'].pop(binding.project_id)
-        common.save_binding_registry(path, registry)
+        registry, entry = read_lifecycle_entry(binding, path, registered_root, 'purge')
+        if entry is not None:
+            registry['projects'].pop(binding.project_id)
+            common.save_binding_registry(path, registry)
 
     return {
         'project_id': binding.project_id,
         'purged_project_root': str(binding.project_root),
-        'removed_memory': str(paths[0].with_name(memory_name)),
+        'removed_memory': str(aliases[0][0].with_name(memory_name)),
     }
 
 

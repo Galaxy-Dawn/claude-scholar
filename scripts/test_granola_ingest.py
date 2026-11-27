@@ -1135,12 +1135,19 @@ ingest_granola.main()
                                     '--project-name', 'Granola Demo').stdout)
         native_memory = Path(native['memory_path'])
         native_memory.write_bytes(native_memory.read_bytes() + b'\nPreserve native project notes.\n')
+        with patch.object(sys, 'path', [str(KB_HELPER.parent), *sys.path]):
+            import kb_common
+        alternate = self.root.with_name(self.root.name.upper())
+        if alternate.is_dir() and alternate.samefile(self.root):
+            registry = kb_common.load_binding_registry(self.binding_registry)
+            registry['projects']['granola-demo']['vault_root'] = str(alternate)
+            kb_common.save_binding_registry(self.binding_registry, registry)
 
         archived = Path(json.loads(self.kb('lifecycle', '--mode', 'archive').stdout)['archived_to'])
         self.assertFalse(self.root.exists())
         self.assertEqual((archived / self.note.relative_to(self.root)).read_bytes(), original_note)
-        with patch.object(sys, 'path', [str(KB_HELPER.parent), *sys.path]):
-            import kb_common
+        repeated = Path(json.loads(self.kb('lifecycle', '--mode', 'archive').stdout)['archived_to'])
+        self.assertEqual(repeated, archived)
         for registry_path, memory, annotation in (
             (self.binding_registry, legacy_memory, 'Preserve legacy'),
             (Path(native['binding_registry']), native_memory, 'Preserve native'),
@@ -1159,6 +1166,96 @@ ingest_granola.main()
         self.assertFalse(archived.exists())
         self.assertFalse(legacy_memory.exists())
         self.assertFalse(native_memory.exists())
+        self.assertNotEqual(self.run_cli(KB_HELPER, 'status', '--project-id', 'granola-demo', check=False).returncode, 0)
+
+    def test_archive_rolls_back_after_second_alias_write_fails_and_can_retry(self) -> None:
+        self.ingest()
+        legacy = self.place_binding('.claude')
+        native = json.loads(self.kb('bootstrap', '--vault-path', str(self.vault),
+                                    '--project-name', 'Granola Demo').stdout)
+        legacy_memory = legacy / 'granola-demo.md'
+        legacy_memory.write_bytes(legacy_memory.read_bytes() + b'\r\nOriginal handwritten notes.\r\n')
+        metadata = (self.binding_registry, Path(native['binding_registry']),
+                    legacy_memory, Path(native['memory_path']))
+        before = {file: file.read_bytes() for file in (*metadata, self.note)}
+        with patch.object(sys, 'path', [str(KB_HELPER.parent), *sys.path]):
+            import project_kb
+        binding = project_kb.common.resolve_binding(self.repo.resolve(), 'granola-demo')
+        replace = os.replace
+        archive_root = self.vault / 'Research' / '_archived'
+
+        for failed_path, error in ((self.binding_registry, OSError), (legacy_memory, RuntimeError)):
+            with self.subTest(failed_path=failed_path):
+                def fail_replacement(source: Path, target: Path) -> None:
+                    if target == failed_path:
+                        raise error('fixture interruption during second alias update')
+                    replace(source, target)
+
+                with patch.object(os, 'replace', side_effect=fail_replacement):
+                    with self.assertRaisesRegex(error, 'fixture interruption'):
+                        project_kb.archive_project(binding)
+                self.assertEqual({file: file.read_bytes() for file in before}, before)
+                self.assertEqual(list(archive_root.iterdir()), [])
+
+        archived = Path(json.loads(self.kb('lifecycle', '--mode', 'archive').stdout)['archived_to'])
+        self.assertEqual((archived / self.note.relative_to(self.root)).read_bytes(), before[self.note])
+        self.kb('lifecycle', '--mode', 'purge', '--project-id', 'granola-demo')
+        self.assertFalse(archived.exists())
+
+    def test_archive_and_purge_share_a_symlinked_registry_with_separate_memories(self) -> None:
+        self.ingest()
+        legacy = self.repo / '.claude/project-memory/registry.yaml'
+        legacy.parent.mkdir(parents=True)
+        try:
+            legacy.symlink_to(self.binding_registry)
+        except OSError as exc:
+            self.skipTest(f'fixture cannot create a registry symlink: {exc}')
+        legacy_memory = legacy.with_name('granola-demo.md')
+        native_memory = self.binding_registry.with_name('granola-demo.md')
+        legacy_memory.write_bytes(native_memory.read_bytes() + b'\nKeep the legacy notes.\n')
+
+        archived = Path(json.loads(self.kb('lifecycle', '--mode', 'archive').stdout)['archived_to'])
+
+        for memory in (native_memory, legacy_memory):
+            self.assertIn(f'vault_root: {archived}', memory.read_text(encoding='utf-8'))
+        self.assertIn('Keep the legacy notes.', legacy_memory.read_text(encoding='utf-8'))
+        self.assertTrue(legacy.is_symlink())
+        self.kb('lifecycle', '--mode', 'purge', '--project-id', 'granola-demo')
+        self.assertFalse(archived.exists())
+        self.assertFalse(native_memory.exists())
+        self.assertFalse(legacy_memory.exists())
+        self.assertTrue(legacy.is_symlink())
+
+    def test_purge_retries_after_deleted_case_variant_alias(self) -> None:
+        alternate = self.root.with_name(self.root.name.upper())
+        if not alternate.is_dir() or not alternate.samefile(self.root):
+            self.skipTest('fixture volume is case-sensitive')
+        legacy = self.place_binding('.claude')
+        native = json.loads(self.kb('bootstrap', '--vault-path', str(self.vault),
+                                    '--project-name', 'Granola Demo').stdout)
+        with patch.object(sys, 'path', [str(KB_HELPER.parent), *sys.path]):
+            import project_kb
+        common = project_kb.common
+        registry = common.load_binding_registry(self.binding_registry)
+        registry['projects']['granola-demo']['vault_root'] = str(alternate)
+        common.save_binding_registry(self.binding_registry, registry)
+        binding = common.resolve_binding(self.repo.resolve(), 'granola-demo')
+        replace = os.replace
+
+        def fail_cleanup(source: Path, target: Path) -> None:
+            if target == self.binding_registry and not self.root.exists():
+                raise OSError('fixture interruption during purge cleanup')
+            replace(source, target)
+
+        with patch.object(os, 'replace', side_effect=fail_cleanup):
+            with self.assertRaisesRegex(OSError, 'fixture interruption'):
+                project_kb.purge_project(binding)
+        self.assertFalse(self.root.exists())
+        self.assertEqual(common.load_binding_registry(self.binding_registry)['projects']['granola-demo']['vault_root'],
+                         str(self.root.resolve()))
+        self.kb('lifecycle', '--mode', 'purge', '--project-id', 'granola-demo')
+        self.assertFalse((legacy / 'granola-demo.md').exists())
+        self.assertFalse(Path(native['memory_path']).exists())
         self.assertNotEqual(self.run_cli(KB_HELPER, 'status', '--project-id', 'granola-demo', check=False).returncode, 0)
 
     def test_archive_keeps_same_id_binding_for_another_vault_intact(self) -> None:

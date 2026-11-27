@@ -151,15 +151,12 @@ def load_binding_registry(path: Path) -> dict[str, Any]:
         raise SystemExit(f'Unsupported binding registry format: {path}')
 
 
-def save_binding_registry(path: Path, data: dict[str, Any]) -> None:
+def write_atomic(path: Path, content: str | bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     # Follow an existing symlink as before, and replace its target atomically.
     target = path.resolve()
-    try:
-        import yaml  # type: ignore
-        content = yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
-    except Exception:
-        content = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
+    if isinstance(content, str):
+        content = content.replace('\n', os.linesep).encode('utf-8')
     try:
         mode = stat.S_IMODE(target.stat().st_mode)
     except FileNotFoundError:
@@ -167,7 +164,7 @@ def save_binding_registry(path: Path, data: dict[str, Any]) -> None:
 
     temp_path = None
     try:
-        with tempfile.NamedTemporaryFile('w', encoding='utf-8', dir=target.parent, delete=False) as stream:
+        with tempfile.NamedTemporaryFile('wb', dir=target.parent, delete=False) as stream:
             temp_path = Path(stream.name)
             stream.write(content)
             stream.flush()
@@ -178,6 +175,15 @@ def save_binding_registry(path: Path, data: dict[str, Any]) -> None:
     finally:
         if temp_path is not None:
             temp_path.unlink(missing_ok=True)
+
+
+def save_binding_registry(path: Path, data: dict[str, Any]) -> None:
+    try:
+        import yaml  # type: ignore
+        content = yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
+    except Exception:
+        content = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
+    write_atomic(path, content)
 
 
 def read_text(path: Path, default: str = '') -> str:
@@ -996,7 +1002,7 @@ def prepend_recent_change(project_root: Path, message: str) -> None:
 def update_project_memory(
     repo_root: Path, project_id: str, project_root: Path, hub_note: str, note_language: str,
     summary: str | None = None, *, memory_path: Path | None = None,
-    status: str | None = None, auto_sync: bool | None = None,
+    status: str | None = None, auto_sync: bool | None = None, atomic: bool = False,
 ) -> None:
     path = memory_path or project_memory_path(repo_root, project_id)
     content = read_text(path, f'---\nproject_id: {project_id}\nproject_slug: {project_id}\nrepo_root: {repo_root}\nvault_root: {project_root}\nhub_note: {hub_note}\nlanguage: {note_language}\nstatus: active\nauto_sync: true\n---\n\n# Project Memory: {project_id}\n')
@@ -1013,7 +1019,10 @@ def update_project_memory(
             content = re.sub(r'## Recent Sync Summary\n(?:- .*\n?)*', block, content, count=1)
         else:
             content = content.rstrip() + '\n\n' + block
-    write_text(path, content)
+    if atomic:
+        write_atomic(path, content)
+    else:
+        write_text(path, content)
 
 
 def list_kind_notes(project_root: Path, kind: str) -> list[Path]:
