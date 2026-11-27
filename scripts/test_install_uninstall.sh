@@ -44,6 +44,17 @@ test_created_config_roundtrip() {
   assert_file_exists "$home/.opencode-scholar-manifest.txt"
   assert_file_exists "$home/.opencode-scholar-install-state"
   assert_file_exists "$home/skills/research-ideation/references/research-contract.md"
+  assert_file_exists "$home/skills/granola-meeting-ingest/SKILL.md"
+  assert_file_exists "$home/skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md"
+  assert_file_exists "$home/skills/granola-meeting-ingest/scripts/ingest_granola.py"
+  python3 -B "$home/skills/granola-meeting-ingest/scripts/ingest_granola.py" --help >/dev/null
+  node - "$home/opencode.jsonc" <<'NODE'
+const fs = require('fs');
+const { mcp = {} } = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+if ('granola' in mcp || 'granola' in (mcp.servers || {})) {
+  throw new Error('Granola MCP must be configured explicitly');
+}
+NODE
   assert_file_exists "$home/skills/post-acceptance/references/xquik-promotion.md"
   assert_file_exists "$home/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   assert_file_exists "$home/commands/promote.md"
@@ -56,6 +67,7 @@ test_created_config_roundtrip() {
   assert_file_missing "$home/opencode.jsonc"
   assert_file_missing "$home/.opencode-scholar-manifest.txt"
   assert_file_missing "$home/.opencode-scholar-install-state"
+  assert_file_missing "$home/skills/granola-meeting-ingest/scripts/ingest_granola.py"
   assert_file_exists "$home/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   pass "created opencode.jsonc is removed when unchanged"
 }

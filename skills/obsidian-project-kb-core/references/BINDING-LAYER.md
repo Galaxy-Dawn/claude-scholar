@@ -9,6 +9,14 @@ Repo-local binding metadata remains under:
 
 This is the runtime binding layer only.
 
+Earlier installations may store the same two files in `.claude/project-memory/`.
+The helper reads both registries. An OpenCode entry takes precedence when the
+same project ID appears in both. A sync updates the memory beside the selected
+registry. When both entries refer to the same project ID and folder, archive
+updates both bindings and memory files, and purge removes them. Resolve binding
+conflicts before purging if the same ID points to different project folders or
+another project ID also uses the selected folder.
+
 It may record:
 - `project_id`
 - `project_slug`
