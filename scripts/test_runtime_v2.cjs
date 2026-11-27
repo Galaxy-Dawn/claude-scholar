@@ -197,12 +197,22 @@ test("OpenCode V2 discovers Scholar and handles real created and moved/deleted s
   const skills = await api("skill" + at);
   const commands = await api("command" + at);
   const agents = await api("agent" + at);
+  const sourceSkillsDir = path.join(root, "skills");
+  const expectedSkillFiles = fs.readdirSync(sourceSkillsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map(({ name }) => path.join(name, "SKILL.md"))
+    .filter((file) => fs.statSync(path.join(sourceSkillsDir, file), { throwIfNoEntry: false })?.isFile())
+    .sort();
+  const installedSkillsDir = path.join(install, "skills");
   const installedSkills = skills.filter(({ path: file }) => {
-    const relative = path.relative(path.join(install, "skills"), file);
+    const relative = path.relative(installedSkillsDir, file);
     return relative && !relative.startsWith("..") && !path.isAbsolute(relative);
   });
-  assert.equal(installedSkills.length, 40);
-  assert.ok(installedSkills.some((skill) => skill.id === "obsidian-project-kb-core"));
+  const discoveredSkillFiles = installedSkills.map(({ path: file }) => path.relative(installedSkillsDir, file)).sort();
+  assert.deepEqual(discoveredSkillFiles, expectedSkillFiles);
+  for (const id of ["obsidian-project-kb-core", "granola-meeting-ingest"]) {
+    assert.ok(installedSkills.some((skill) => skill.id === id), `missing ${id}`);
+  }
   for (const name of ["kb-init", "mine-writing-patterns", "promote"]) {
     assert.ok(commands.some((command) => command.name === name), `missing ${name}`);
   }
