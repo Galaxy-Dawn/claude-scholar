@@ -5,7 +5,9 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
+import tempfile
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -151,11 +153,31 @@ def load_binding_registry(path: Path) -> dict[str, Any]:
 
 def save_binding_registry(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Follow an existing symlink as before, and replace its target atomically.
+    target = path.resolve()
     try:
         import yaml  # type: ignore
-        path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding='utf-8')
+        content = yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
     except Exception:
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        content = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
+    try:
+        mode = stat.S_IMODE(target.stat().st_mode)
+    except FileNotFoundError:
+        mode = None
+
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', dir=target.parent, delete=False) as stream:
+            temp_path = Path(stream.name)
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if mode is not None:
+            temp_path.chmod(mode)
+        os.replace(temp_path, target)
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
 
 
 def read_text(path: Path, default: str = '') -> str:
@@ -964,12 +986,20 @@ def prepend_recent_change(project_root: Path, message: str) -> None:
     write_text(hub, content)
 
 
-def update_project_memory(repo_root: Path, project_id: str, project_root: Path, hub_note: str, note_language: str, summary: str | None = None) -> None:
-    path = project_memory_path(repo_root, project_id)
+def update_project_memory(
+    repo_root: Path, project_id: str, project_root: Path, hub_note: str, note_language: str,
+    summary: str | None = None, *, memory_path: Path | None = None,
+    status: str | None = None, auto_sync: bool | None = None,
+) -> None:
+    path = memory_path or project_memory_path(repo_root, project_id)
     content = read_text(path, f'---\nproject_id: {project_id}\nproject_slug: {project_id}\nrepo_root: {repo_root}\nvault_root: {project_root}\nhub_note: {hub_note}\nlanguage: {note_language}\nstatus: active\nauto_sync: true\n---\n\n# Project Memory: {project_id}\n')
     content = set_frontmatter_value(content, 'last_sync_at', now_iso())
     content = set_frontmatter_value(content, 'vault_root', str(project_root))
     content = set_frontmatter_value(content, 'hub_note', hub_note)
+    if status is not None:
+        content = set_frontmatter_value(content, 'status', status)
+    if auto_sync is not None:
+        content = set_frontmatter_value(content, 'auto_sync', 'true' if auto_sync else 'false')
     if summary:
         block = f'## Recent Sync Summary\n- {summary}\n'
         if '## Recent Sync Summary\n' in content:

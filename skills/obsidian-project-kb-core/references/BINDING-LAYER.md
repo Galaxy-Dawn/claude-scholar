@@ -12,9 +12,10 @@ This is the runtime binding layer only.
 Earlier installations may store the same two files in `.claude/project-memory/`.
 The helper reads both registries. An OpenCode entry takes precedence when the
 same project ID appears in both. A sync updates the memory beside the selected
-registry. Purge removes both binding entries and their memory files when they
-point to the same project folder. If the entries point to different project
-folders, resolve the binding conflict before purging.
+registry. When both entries refer to the same project ID and folder, archive
+updates both bindings and memory files, and purge removes them. Resolve binding
+conflicts before purging if the same ID points to different project folders or
+another project ID also uses the selected folder.
 
 It may record:
 - `project_id`

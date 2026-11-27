@@ -248,7 +248,20 @@ def update_binding_entry(repo_root: Path, project_id: str, **updates: Any) -> di
     return entry
 
 
+def matching_archive_entry(registry: dict[str, Any], binding: common.Binding) -> dict[str, Any] | None:
+    entry = (registry.get('projects') or {}).get(binding.project_id)
+    if entry is not None and Path(entry['vault_root']).expanduser().resolve() == binding.project_root:
+        return entry
+    return None
+
+
 def archive_project(binding: common.Binding) -> dict[str, Any]:
+    paths = [
+        path for path in common.binding_registry_paths(binding.repo_root)
+        if matching_archive_entry(common.load_binding_registry(path), binding) is not None
+    ]
+    if not paths:
+        raise SystemExit(f'Project {binding.project_id!r} is no longer bound to {binding.project_root}')
     archive_root = binding.vault_path / 'Research' / '_archived'
     archive_root.mkdir(parents=True, exist_ok=True)
     dest = archive_root / f'{binding.project_slug}-{common.today_str()}'
@@ -257,28 +270,33 @@ def archive_project(binding: common.Binding) -> dict[str, Any]:
         counter += 1
         dest = archive_root / f'{binding.project_slug}-{common.today_str()}-{counter}'
     shutil.move(str(binding.project_root), str(dest))
-    entry = update_binding_entry(
-        binding.repo_root,
-        binding.project_id,
-        vault_root=str(dest),
-        hub_note=common.relative_note_path(dest / '00-Hub.md', binding.vault_path),
-        status='archived',
-        auto_sync=False,
-    )
-    common.update_project_memory(
-        binding.repo_root,
-        binding.project_id,
-        dest,
-        entry['hub_note'],
-        binding.note_language,
-        summary=f'project archived to {dest}',
-    )
+    hub_note = common.relative_note_path(dest / '00-Hub.md', binding.vault_path)
+    for path in paths:
+        registry = common.load_binding_registry(path)
+        entry = matching_archive_entry(registry, binding)
+        if entry is None:
+            continue
+        entry.update(vault_root=str(dest), hub_note=hub_note, status='archived',
+                     auto_sync=False, updated_at=common.now_iso())
+        common.save_binding_registry(path, registry)
+        common.update_project_memory(
+            binding.repo_root, binding.project_id, dest, hub_note,
+            entry.get('note_language', binding.note_language),
+            summary=f'project archived to {dest}', memory_path=path.with_name(f'{binding.project_id}.md'),
+            status='archived', auto_sync=False,
+        )
     return {'project_id': binding.project_id, 'archived_to': str(dest)}
 
 
 def load_purge_registry(binding: common.Binding, path: Path) -> dict[str, Any] | None:
     registry = common.load_binding_registry(path)
-    entry = (registry.get('projects') or {}).get(binding.project_id)
+    projects = registry.get('projects') or {}
+    for project_id, other in projects.items():
+        if project_id != binding.project_id and other.get('vault_root'):
+            if Path(other['vault_root']).expanduser().resolve() == binding.project_root:
+                raise SystemExit(f'Cannot purge project {binding.project_id!r}: project {project_id!r} '
+                                 'also uses this project folder. Resolve the binding conflict first.')
+    entry = projects.get(binding.project_id)
     if entry is None:
         return None
     bound_root = Path(entry['vault_root']).expanduser().resolve()
