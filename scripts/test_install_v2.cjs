@@ -118,6 +118,56 @@ test("a single existing project-root configuration is reused; two locations are 
   assert.deepEqual(JSON.parse(f.read("target/opencode.json")), JSON.parse(user));
 });
 
+for (const relative of [config, ".opencode/" + config]) {
+  test("config backups use private permissions for " + relative, {
+    skip: process.platform === "win32" && "uses POSIX permissions",
+  }, (t) => {
+    const f = fixture(t);
+    const active = path.join(f.project, relative);
+    const sidecar = active + ".bak";
+    const history = path.join(f.dir, ".opencode-scholar-backups");
+    const original = '// original configuration\n{"model":"fixture/model",}\n';
+    const userBackup = 'user-owned backup\n';
+    const modeOf = (file) => fs.statSync(file).mode & 0o777;
+    const run = (operation) => spawnSync("/bin/sh", [
+      "-c", 'umask 022; exec "$@"', "scholar-backup-test",
+      process.execPath, "scripts/install.cjs", operation, f.project,
+    ], { cwd: root, encoding: "utf8" });
+
+    fs.mkdirSync(history, { recursive: true });
+    fs.chmodSync(history, 0o755);
+    fs.writeFileSync(active, original, { mode: 0o600 });
+
+    function readHistory() {
+      assert.equal(modeOf(history), 0o700);
+      return fs.readdirSync(history).map((name) => {
+        const folder = path.join(history, name);
+        const copy = path.join(folder, config);
+        assert.equal(modeOf(folder), 0o700);
+        assert.equal(modeOf(copy), 0o600);
+        return fs.readFileSync(copy, "utf8");
+      });
+    }
+
+    ok(run("install"));
+    const installed = fs.readFileSync(active, "utf8");
+    assert.equal(JSON.parse(installed).model, "fixture/model");
+    assert.equal(modeOf(active), 0o600);
+    assert.equal(modeOf(sidecar), 0o600);
+    assert.equal(fs.readFileSync(sidecar, "utf8"), original);
+    assert.deepEqual(readHistory(), [original]);
+
+    fs.writeFileSync(sidecar, userBackup);
+    fs.chmodSync(sidecar, 0o640);
+    ok(run("uninstall"));
+    assert.deepEqual(JSON.parse(fs.readFileSync(active, "utf8")), { model: "fixture/model" });
+    assert.equal(modeOf(active), 0o600);
+    assert.equal(modeOf(sidecar), 0o640);
+    assert.equal(fs.readFileSync(sidecar, "utf8"), userBackup);
+    assert.deepEqual(readHistory().sort(), [original, installed].sort());
+  });
+}
+
 const shells = ["bash"];
 if (process.platform === "win32") shells.push("powershell.exe", "pwsh.exe");
 for (const shell of shells) {

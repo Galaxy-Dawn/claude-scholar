@@ -59,7 +59,9 @@ const warn = (message) => console.warn(`[WARN] ${message}`);
 const hash = (data) => createHash("sha256").update(data).digest("hex");
 const stat = (file) => fs.lstatSync(file, { throwIfNoEntry: false });
 const json = (value) => JSON.stringify(value, null, 2) + "\n";
-const backupRoot = `.opencode-scholar-backups/${new Date().toISOString().replace(/[:.]/g, "-")}-${process.pid}`;
+const backupDirectory = ".opencode-scholar-backups";
+const backupRoot = `${backupDirectory}/${new Date().toISOString().replace(/[:.]/g, "-")}-${process.pid}`;
+const backupFileOptions = { mode: 0o600, flag: "wx" };
 let backedUp = false;
 
 // The destination may not exist yet. Resolve its existing ancestor first.
@@ -132,7 +134,23 @@ function write(rel, value, mode, base = root) {
 }
 
 function backup(rel, content) {
-  write(`${backupRoot}/${rel}`, content);
+  const file = target(`${backupRoot}/${rel}`);
+  if (!backedUp) {
+    const directory = target(backupDirectory);
+    fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+    if (process.platform !== "win32") {
+      // Older installs may have created a searchable backup directory.
+      const { O_RDONLY, O_DIRECTORY, O_NOFOLLOW } = fs.constants;
+      const fd = fs.openSync(directory, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+      try {
+        fs.fchmodSync(fd, 0o700);
+      } finally {
+        fs.closeSync(fd);
+      }
+    }
+  }
+  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+  fs.writeFileSync(file, content, backupFileOptions);
   if (!backedUp) info(`Previous files backed up in ${path.join(root, backupRoot)}`);
   backedUp = true;
 }
@@ -201,8 +219,14 @@ function configName(previousFile) {
 function setConfig(rel, old, value) {
   if (old) {
     backup(rel.replace(/^\.opencode\//, ""), old);
-    const sidecar = `${rel}.bak`;
-    if (!stat(target(sidecar, project))) write(sidecar, old, undefined, project);
+    const sidecar = target(`${rel}.bak`, project);
+    if (!stat(sidecar)) {
+      try {
+        fs.writeFileSync(sidecar, old, backupFileOptions);
+      } catch (error) {
+        if (error.code !== "EEXIST") throw error;
+      }
+    }
   }
   if (value === undefined) fs.unlinkSync(target(rel, project));
   else write(rel, json(value), undefined, project);
