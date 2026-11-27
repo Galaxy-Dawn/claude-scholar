@@ -83,15 +83,16 @@ NO_PROXY = "localhost,127.0.0.1"
 
 ##### OpenCode
 
-Add to your `~/.opencode/opencode.jsonc`:
+The project installer adds Zotero to the target project's `mcp.servers`. For manual setup, merge the entry below into the project's existing `opencode.json` or `opencode.jsonc` in the root or `.opencode/`. If neither exists, create `.opencode/opencode.jsonc`. Keep a single project config file.
 
 ```jsonc
 {
   "mcp": {
-    "zotero": {
-      "type": "local",
-      "command": ["zotero-mcp", "serve"],
-      "enabled": true
+    "servers": {
+      "zotero": {
+        "type": "local",
+        "command": ["zotero-mcp", "serve"]
+      }
     }
   }
 }
@@ -158,7 +159,7 @@ Workflow note: Claude Scholar's current research startup path prefers `zotero_ad
 
 Used for: Chrome browser control, web page interaction.
 
-#### Configuration
+#### Claude Code configuration
 
 ```json
 {
@@ -170,6 +171,25 @@ Used for: Chrome browser control, web page interaction.
   }
 }
 ```
+
+#### OpenCode V2 configuration
+
+The installer does not add this server. If you already run a browser automation MCP server, merge the example below into your project configuration and replace the URL with your server's Streamable HTTP endpoint. OpenCode does not start the server for you.
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "streamable-mcp-server": {
+        "type": "remote",
+        "url": "http://127.0.0.1:12306/mcp"
+      }
+    }
+  }
+}
+```
+
+To keep a configured server without connecting to it, set `"disabled": true` on its entry.
 
 ### 3. Xquik MCP (Optional)
 
@@ -199,20 +219,22 @@ codex mcp list
 
 #### OpenCode
 
-Add this entry to `opencode.json`:
+Add this entry to the same project configuration:
 
 ```json
 {
   "mcp": {
-    "xquik": {
-      "type": "remote",
-      "url": "https://xquik.com/mcp"
+    "servers": {
+      "xquik": {
+        "type": "remote",
+        "url": "https://xquik.com/mcp"
+      }
     }
   }
 }
 ```
 
-Then run `opencode mcp auth xquik`.
+Then run `opencode mcp auth xquik` from the project directory.
 
 #### Safety boundaries
 

@@ -116,90 +116,47 @@ It can still help in other research settings, but its current workflow design is
 
 ### Requirements
 
-- [OpenCode](https://github.com/sst/opencode)
-- Git
+- [OpenCode V2](https://opencode.ai/) (tested with `v2.4.1`; these plugins do not run on V1)
+- Git and Node.js 22+
 - (Optional) Python + [uv](https://docs.astral.sh/uv/) for Python development
 - (Optional) [Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) for literature workflows
 - (Optional) [Obsidian](https://obsidian.md/) for project knowledge-base workflows
 
-### Option 1: Full Installation (Recommended)
+### Project installation (recommended)
 
-```bash
-git clone -b opencode https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-bash /tmp/claude-scholar/scripts/setup.sh
+From the Scholar checkout, pass the path to an existing project outside the checkout. On Windows:
+
+```powershell
+.\scripts\setup.ps1 'C:\Work\my-research'
 ```
 
-The installer is **backup-aware and incremental-update friendly**:
-- updates repo-managed `skills/commands/plugins/scripts/utils/`,
-- backs up overwritten files to `~/.opencode/.opencode-scholar-backups/<timestamp>/`,
-- backs up `opencode.jsonc` to `opencode.jsonc.bak`,
-- preserves an existing `~/.opencode/AGENTS.md` and installs the repo-managed version as `~/.opencode/AGENTS.scholar.md`,
-- preserves an existing `~/.opencode/AGENTS.zh-CN.md` and installs the repo-managed Chinese version as `~/.opencode/AGENTS.zh-CN.scholar.md`,
-- preserves your existing `env`, model/provider settings, API keys, permissions, auth, and current `mcp` values,
-- adds missing repo-managed `agent/mcp/permission/plugin` entries instead of replacing your entire config.
-
-**Important AGENTS note**: if you already maintain your own `~/.opencode/AGENTS.md`, review `~/.opencode/AGENTS.scholar.md` and `~/.opencode/AGENTS.zh-CN.scholar.md` after installation and manually merge the Claude Scholar sections you want into your own files. Do not assume the sidecar file is applied automatically.
-
-To update later:
+On macOS/Linux (or Git Bash), run:
 
 ```bash
-cd /tmp/claude-scholar
-git pull --ff-only
-bash scripts/setup.sh
+bash scripts/setup.sh "/path/to/my-research"
 ```
 
-To uninstall later:
+The PowerShell installer needs no Git Bash or WSL. Some optional workflows still require Bash or Python.
+The installer puts skills, commands, and plugins in the target project's `.opencode/` directory. It adds V2 `agents` and `mcp.servers` to the project's existing `opencode.json` or `opencode.jsonc` (in the project root or `.opencode/`). If neither exists, it creates `.opencode/opencode.jsonc`. If more than one exists, it stops before writing. Global settings are not changed. Open the target project in OpenCode, or use `/reload` if it's already open.
 
-```bash
-cd /tmp/claude-scholar
-bash scripts/uninstall.sh
-```
+- **Update:** Run the same setup command from the newer checkout.
+- **Uninstall:** Run `.\scripts\uninstall.ps1 'C:\Work\my-research'` or `bash scripts/uninstall.sh "/path/to/my-research"` from the checkout. The target project's `.opencode/scripts/` also contains these scripts if the checkout is unavailable; pass the project path to them as well. User-modified files, writing memory, and backups are retained. If you moved or renamed the config and then edited it, restore its original path (keeping your edits) before installing or uninstalling.
+- **Existing configuration:** The installer preserves your agent and MCP definitions, and does not add permission rules. [OpenCode defaults](https://opencode.ai/docs/permissions#defaults) and your own rules apply; without a custom rule, OpenCode permits most tools and external directory access. Changed JSONC is reserialized; the original with its comments is backed up in `.opencode/.opencode-scholar-backups/`. Scholar's `.opencode/AGENTS.md` is referenced only when the project doesn't already have its own root instructions or a user-owned `.opencode/AGENTS.md`. Otherwise, review the Scholar instructions and merge them manually if desired.
 
-The installer writes:
-- `~/.opencode/.opencode-scholar-manifest.txt` for files managed by Claude Scholar
-- `~/.opencode/.opencode-scholar-install-state` for safe uninstall metadata, including installed `AGENTS*.md` targets and added `opencode.jsonc` entries
+### Upgrade from a V1 install
 
-The uninstaller removes only files and config entries recorded in that install state. It does not guess ownership from the current repo checkout.
+The project installer neither upgrades nor deletes earlier global installations. To bring over writing memory, copy `skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md` from the old install to the same relative path under the target project's `.opencode/`. If the destination exists, compare and merge the two files rather than overwriting either copy.
 
-**Windows**: please use Git Bash or WSL to run the installer.
+For an earlier installation in the same project, setup replaces verified legacy plugins and removes old Scholar config and permission entries it can verify. It keeps user settings and changed entries. If it cannot verify a legacy plugin, back up and move the reported file out of that directory before retrying. Existing Obsidian bindings remain readable; new bindings use `.opencode/project-memory/`.
 
-### Option 2: Minimal Installation
+For an early V1 install with neither ownership records nor local plugin registrations, start with a clean project `.opencode/` directory. Back up the old files first.
 
-Install only a small research-focused subset:
+OpenCode V2 discovers the four ported server plugins automatically. The old `stop-summary` did nothing and is not installed. The V1 slash-command-only skill-match diagnostic is omitted because V2 has no equivalent global hook; Obsidian guidance still runs in the main agent context.
+On v2.4.0, a session created before plugins activate may not produce a startup message. A deletion with no location from OpenCode or from the plugin's current session tracking is skipped rather than logging to the wrong repository.
 
-```bash
-git clone -b opencode https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.opencode/plugins/lib ~/.opencode/skills
-cp /tmp/claude-scholar/plugins/*.ts ~/.opencode/plugins/
-cp /tmp/claude-scholar/plugins/lib/common.ts ~/.opencode/plugins/lib/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/git-workflow ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/bug-detective ~/.opencode/skills/
-```
+### Selective installation
 
-**Post-install**: minimal/manual install does **not** auto-merge `opencode.jsonc`; copy only the plugin or MCP entries you want from `opencode.jsonc`. If you already have your own `~/.opencode/AGENTS.md`, merge the relevant sections from this repo's `AGENTS.md` into your file instead of blindly overwriting it.
-
-### Option 3: Selective Installation
-
-Copy only the parts you need:
-
-```bash
-git clone -b opencode https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-cd /tmp/claude-scholar
-
-cp plugins/*.ts ~/.opencode/plugins/
-cp -r skills/latex-conference-template-organizer ~/.opencode/skills/
-cp -r skills/architecture-design ~/.opencode/skills/
-cp AGENTS.md ~/.opencode/AGENTS.md
-cp AGENTS.zh-CN.md ~/.opencode/AGENTS.zh-CN.md
-```
-
-**Post-install**: selective/manual install does **not** auto-merge `opencode.jsonc`; copy only the plugin or MCP entries you actually want from `opencode.jsonc`. If you already have your own `~/.opencode/AGENTS.md`, merge the relevant sections from this repo's `AGENTS.md` into your file instead of blindly overwriting it.
+Copy only the skill directories and Markdown commands you need into the V2 config directory (global) or `.opencode/` in a project. To include server plugins, copy the `plugins/` directory with its `lib/` subdirectory; do not add individual file URLs to the config. Manual installation does not merge config or record files for the uninstaller.
 
 ## Getting Started Scenarios
 
@@ -288,6 +245,12 @@ Use Obsidian when you want Claude Scholar to maintain a filesystem-first researc
 - `Maps/`
 
 See [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md).
+
+### Granola (optional)
+
+In OpenCode, select a Granola meeting or provide a local export to archive it
+in the research project's bound Obsidian vault. See the
+[setup and import guide](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md). The Granola MCP connection is opt-in.
 
 ### Xquik (optional)
 
@@ -522,7 +485,6 @@ OpenCode plugins provide routine workflow checks and reminders through runtime g
 - `skill-eval.ts`
 - `session-start.ts`
 - `session-summary.ts`
-- `stop-summary.ts`
 - `security-guard.ts`
 
 **How it works**
@@ -585,7 +547,7 @@ Claude Scholar also contains a self-improvement loop for its own skills.
 - [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) — Chinese companion for the lightweight core instructions
 - [README.zh-CN.md](./README.zh-CN.md) — Chinese version of this README
 - [README.ja-JP.md](./README.ja-JP.md) — Japanese version of this README
-- [opencode.jsonc](./opencode.jsonc) — optional OpenCode config template for plugin/MCP/agent/permission entries
+- [opencode.jsonc](./opencode.jsonc) — OpenCode V2 MCP template used by the project installer
 ## Project Rules
 
 Claude Scholar includes project rules for:

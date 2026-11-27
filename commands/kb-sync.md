@@ -13,8 +13,10 @@ tags: [Research, Obsidian, KB]
 
 Use this when you want a deterministic project-KB resync after structural changes, note moves, migrations, or batch updates.
 
+Load `obsidian-project-kb-core`; `skill_dir` is the directory of its active `SKILL.md`.
+
 ```bash
-python3 "${OPENCODE_DIR:-$HOME/.opencode}/skills/obsidian-project-kb-core/scripts/project_kb.py" sync --cwd "$PWD" --scope "$scope"
+python3 "$skill_dir/scripts/project_kb.py" sync --cwd "$PWD" --scope "$scope"
 ```
 
 Typical scopes:

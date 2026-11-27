@@ -1,5 +1,6 @@
 {
-  "dependencies": {
-    "@opencode-ai/plugin": "1.2.9"
+  "private": true,
+  "scripts": {
+    "test": "node --test scripts/test_install_v2.cjs scripts/test_runtime_v2.cjs"
   }
 }

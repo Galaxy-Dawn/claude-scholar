@@ -79,10 +79,10 @@ Prefer updating existing canonical knowledge notes over creating parallel summar
 
 ### Step 4: Refresh the default literature canvas
 
-After batch note creation or substantial note updates, refresh:
+After batch note creation or substantial note updates, load `obsidian-literature-workflow`, set `skill_dir` to the directory of its active `SKILL.md`, and refresh:
 
 ```bash
-python3 "$HOME/.opencode/skills/obsidian-literature-workflow/scripts/build_literature_canvas.py" --cwd "$PWD"
+python3 "$skill_dir/scripts/build_literature_canvas.py" --cwd "$PWD"
 ```
 
 This rebuilds `Maps/literature.canvas` from paper-note and knowledge-note links.

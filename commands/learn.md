@@ -33,9 +33,14 @@ Look for:
 
 ## Output Format
 
-Create a skill file at `~/.opencode/skills/learned/[pattern-name].md`:
+Create `.opencode/skills/[pattern-name]/SKILL.md` under the current project root. Do not write to the global OpenCode config directory:
 
 ```markdown
+---
+name: [pattern-name]
+description: [Trigger conditions - what should activate this skill]
+---
+
 # [Descriptive Pattern Name]
 
 **Extracted:** [Date]
@@ -60,7 +65,7 @@ Create a skill file at `~/.opencode/skills/learned/[pattern-name].md`:
 2. Identify the most valuable/reusable insight
 3. Draft the skill file
 4. Ask user to confirm before saving
-5. Save to `~/.opencode/skills/learned/`
+5. Save the `SKILL.md` in its own directory as shown above.
 
 ## Notes
 

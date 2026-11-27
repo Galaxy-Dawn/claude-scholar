@@ -1,9 +1,18 @@
 /**
  * Shared plugin utilities for OpenCode plugins.
  */
-import { execSync } from "child_process";
+import { execFileSync, execSync } from "child_process";
 import * as fs from "fs";
+import { homedir } from "node:os";
 import * as path from "path";
+import { YAML } from "bun";
+
+export function atLocation(a: string | undefined, b: string): a is string {
+  if (!a || !path.isAbsolute(a)) return false;
+  const normalize = (value: string) => process.platform === "win32"
+    ? path.resolve(value).toLowerCase() : path.resolve(value);
+  return normalize(a) === normalize(b);
+}
 
 export interface GitInfo {
   is_repo: boolean;
@@ -76,30 +85,44 @@ export interface ResearchRepoCandidate {
 }
 
 export function getProjectMemoryBinding(cwd: string): ProjectMemoryBinding {
-  const registryPath = path.join(cwd, ".opencode", "project-memory", "registry.yaml");
-  if (!fs.existsSync(registryPath)) {
-    return { bound: false, registryPath: null, memoryPath: null, projectId: null, vaultRoot: null };
-  }
+  let repo = cwd;
   try {
-    const raw = fs.readFileSync(registryPath, "utf8").trim();
-    const data = raw ? JSON.parse(raw) : {};
-    const projects = data.projects || {};
-    const firstKey = Object.keys(projects)[0];
-    if (!firstKey) {
+    repo = execFileSync("git", ["rev-parse", "--show-toplevel"], { cwd, encoding: "utf8", stdio: "pipe" }).trim() || cwd;
+  } catch {}
+  type Entry = { vault_root?: string; project_root?: string; vault_path?: string; repo_roots?: string[] };
+  const projects = new Map<string, { registryPath: string; entry: Entry }>();
+  for (const dir of [".opencode", ".claude"]) {
+    const registryPath = path.join(repo, dir, "project-memory", "registry.yaml");
+    if (!fs.existsSync(registryPath)) continue;
+    try {
+      const raw = fs.readFileSync(registryPath, "utf8").trim();
+      const data = (raw.startsWith("{") ? JSON.parse(raw) : YAML.parse(raw)) as {
+        projects?: Record<string, Entry>;
+      } | undefined;
+      for (const [id, entry] of Object.entries(data?.projects || {})) {
+        if (entry && /^[a-z\d][a-z\d_-]*$/i.test(id) && !projects.has(id)) {
+          projects.set(id, { registryPath, entry });
+        }
+      }
+    } catch {
       return { bound: false, registryPath, memoryPath: null, projectId: null, vaultRoot: null };
     }
-    const project = projects[firstKey] || {};
-    const memoryPath = path.join(cwd, ".opencode", "project-memory", `${firstKey}.md`);
+  }
+  const entries = [...projects];
+  const match = entries.length === 1 ? entries[0] : entries.find(([, { entry }]) =>
+    Array.isArray(entry.repo_roots) && entry.repo_roots.some((root) =>
+      typeof root === "string" && atLocation(root.replace(/^~(?=[\\/]|$)/, () => homedir()), repo)));
+  if (match) {
+    const [id, { registryPath, entry }] = match;
     return {
       bound: true,
       registryPath,
-      memoryPath,
-      projectId: firstKey,
-      vaultRoot: project.vault_root || project.project_root || project.vault_path || null,
+      memoryPath: path.join(path.dirname(registryPath), `${id}.md`),
+      projectId: id,
+      vaultRoot: entry.vault_root || entry.project_root || entry.vault_path || null,
     };
-  } catch {
-    return { bound: false, registryPath, memoryPath: null, projectId: null, vaultRoot: null };
   }
+  return { bound: false, registryPath: null, memoryPath: null, projectId: null, vaultRoot: null };
 }
 
 export function detectResearchRepoCandidate(cwd: string): ResearchRepoCandidate {

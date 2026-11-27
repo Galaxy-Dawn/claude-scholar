@@ -4,25 +4,27 @@ description: Check and update AGENTS.md memory based on changes to skills, comma
 
 # Update Memory
 
-检查并更新 AGENTS.md 全局记忆文件，确保其内容与 skills、commands、plugins 的源文件保持同步。
+检查并更新当前项目的 `.opencode/AGENTS.md`，确保其内容与已安装的 skills、commands、plugins 保持同步。
 
 ## 功能概述
 
+以下 `<config-dir>` 指当前项目的 `.opencode/`。不要改动项目根目录或全局配置目录中的指令文件。如果 `.opencode/AGENTS.md` 不存在，先报告，不自动创建。
+
 AGENTS.md 是一个汇总记忆文件，包含：
-- 技能目录结构（来自 `~/.opencode/skills/`）
-- 命令列表（来自 `~/.opencode/commands/`）
-- 代理配置（来自 `~/.opencode/opencode.jsonc`）
-- 插件定义（来自 `~/.opencode/plugins/`）
+- 技能目录结构（来自 `<config-dir>/skills/`）
+- 命令列表（来自 `<config-dir>/commands/`）
+- 代理配置（来自实际使用的 `opencode.json` 或 `opencode.jsonc`）
+- 插件定义（来自 `<config-dir>/plugins/`）
 
 当这些源文件发生变化时，AGENTS.md 需要同步更新。
 
 ## 检测逻辑
 
 1. **扫描源文件修改时间**
-   - `~/.opencode/skills/**/SKILL.md`
-   - `~/.opencode/commands/**/*.md`
-   - `~/.opencode/opencode.jsonc`（agent 字段）
-   - `~/.opencode/plugins/*.ts`
+   - `<config-dir>/skills/**/SKILL.md`
+   - `<config-dir>/commands/**/*.md`
+   - 项目根目录或 `<config-dir>` 中实际使用的 `opencode.json` / `opencode.jsonc`（`agents` 字段）
+   - `<config-dir>/plugins/*.ts`
 
 2. **对比 AGENTS.md 最后修改时间**
    - 如果任意源文件比 AGENTS.md 新 → 需要更新

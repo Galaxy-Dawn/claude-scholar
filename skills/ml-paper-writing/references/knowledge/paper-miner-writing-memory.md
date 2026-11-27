@@ -6,9 +6,8 @@ It stores reusable academic writing knowledge mined from papers across venues an
 
 ## Rules
 
-- This is the **only maintained paper-miner writing memory**.
-- `paper-miner` writes here even when invoked inside a specific project.
-- Do **not** create project-specific paper-miner writing memory.
+- This is the **only maintained paper-miner writing memory for this project install**.
+- `paper-miner` writes here, not to a global install or a second file elsewhere in the project.
 - Do **not** split new mined knowledge across multiple maintained category files.
 - Keep source attribution explicit and avoid duplicate entries.
 

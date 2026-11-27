@@ -116,90 +116,19 @@ Claude Scholar は特に次のような人に向いています。
 
 ### 前提条件
 
-- [OpenCode](https://github.com/sst/opencode)
-- Git
+- [OpenCode V2](https://opencode.ai/)（`v2.4.1` で検証済み）
+- Git と Node.js 22 以降
 - （任意）Python + [uv](https://docs.astral.sh/uv/) — Python 開発用
 - （任意）[Zotero](https://www.zotero.org/) + [Galaxy-Dawn/zotero-mcp](https://github.com/Galaxy-Dawn/zotero-mcp) — 文献ワークフロー用
 - （任意）[Obsidian](https://obsidian.md/) — プロジェクト知識ベース用
 
-### オプション 1：フルインストール（推奨）
+### プロジェクト単位でインストール
 
-```bash
-git clone -b opencode https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-bash /tmp/claude-scholar/scripts/setup.sh
-```
+Scholar のチェックアウトから、チェックアウト外にある既存のプロジェクトディレクトリを指定します。Windows では `.\scripts\setup.ps1 'C:\Work\my-research'`、macOS/Linux または Git Bash では `bash scripts/setup.sh "/path/to/my-research"` を実行します。PowerShell でのインストールに Git Bash や WSL は不要です。
 
-インストーラーは現在、**バックアップ付きの安全な増分更新**をサポートしています。
-- リポジトリ管理の `skills/commands/plugins/scripts/utils/` を更新
-- 上書き対象ファイルを `~/.opencode/.opencode-scholar-backups/<timestamp>/` にバックアップ
-- `opencode.jsonc` も `opencode.jsonc.bak` としてバックアップ
-- `~/.opencode/AGENTS.md` が既に存在する場合は元ファイルを保持し、リポジトリ版を `~/.opencode/AGENTS.scholar.md` として保存
-- `~/.opencode/AGENTS.zh-CN.md` が既に存在する場合は元ファイルを保持し、リポジトリ版の中国語 companion を `~/.opencode/AGENTS.zh-CN.scholar.md` として保存
-- 既存の `env`、モデル / provider 設定、API key、permissions、auth、および `mcp` の現在値を保持
-- リポジトリ管理の `agent/mcp/permission/plugin` 条目は、全置換ではなく不足項目を追加する形でマージ
+スキル、コマンド、プラグインはプロジェクトの `.opencode/` に入ります。V2 の `agents` と `mcp.servers` は、プロジェクトルートまたは `.opencode/` にある既存の `opencode.json` / `opencode.jsonc` に追加します。設定がなければ `.opencode/opencode.jsonc` を作成し、複数ある場合は書き込む前に停止します。グローバル設定は変更せず、権限ルールも追加しません。既存のルールと [OpenCode の既定値](https://opencode.ai/docs/permissions#defaults) が適用されます。インストール後は対象プロジェクトを OpenCode で開きます。すでに開いている場合は `/reload` を実行します。
 
-**重要な AGENTS 説明**：すでに自分用の `~/.opencode/AGENTS.md` を持っている場合は、インストール後に `~/.opencode/AGENTS.scholar.md` と `~/.opencode/AGENTS.zh-CN.scholar.md` を確認し、必要な Claude Scholar の内容だけを自分のファイルに手動で merge してください。sidecar ファイルが自動で有効化されるとは考えないでください。
-
-以後の増分更新は次の通りです。
-
-```bash
-cd /tmp/claude-scholar
-git pull --ff-only
-bash scripts/setup.sh
-```
-
-後でアンインストールする場合：
-
-```bash
-cd /tmp/claude-scholar
-bash scripts/uninstall.sh
-```
-
-インストーラーは次のファイルを書き込みます。
-- `~/.opencode/.opencode-scholar-manifest.txt`：Claude Scholar が管理するファイル一覧
-- `~/.opencode/.opencode-scholar-install-state`：安全なアンインストール用 metadata。実際に書き込まれた `AGENTS*.md` の対象と、追加された `opencode.jsonc` エントリを含みます
-
-アンインストーラーは install state に記録されたファイルと設定エントリだけを削除します。現在の repo checkout から所有権を推測しません。
-
-**Windows**：インストーラーは Git Bash / WSL から実行してください。
-
-### オプション 2：最小インストール
-
-研究ワークフローの小さなサブセットのみを導入します。
-
-```bash
-git clone -b opencode https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-mkdir -p ~/.opencode/plugins/lib ~/.opencode/skills
-cp /tmp/claude-scholar/plugins/*.ts ~/.opencode/plugins/
-cp /tmp/claude-scholar/plugins/lib/common.ts ~/.opencode/plugins/lib/
-cp -r /tmp/claude-scholar/skills/ml-paper-writing ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/research-ideation ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/results-analysis ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/results-report ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/review-response ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/writing-anti-ai ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/git-workflow ~/.opencode/skills/
-cp -r /tmp/claude-scholar/skills/bug-detective ~/.opencode/skills/
-```
-
-**インストール後**：最小化 / 手動インストールでは `opencode.jsonc` は**自動マージされません**。必要な plugin や MCP 条目だけを手動で取り込んでください。自分の `~/.opencode/AGENTS.md` がある場合も、関連部分だけを手動で merge し、丸ごと上書きしないでください。
-
-### オプション 3：選択インストール
-
-必要な部分だけをコピーします。
-
-```bash
-git clone -b opencode https://github.com/Galaxy-Dawn/claude-scholar.git /tmp/claude-scholar
-cd /tmp/claude-scholar
-
-cp plugins/*.ts ~/.opencode/plugins/
-cp -r skills/latex-conference-template-organizer ~/.opencode/skills/
-cp -r skills/architecture-design ~/.opencode/skills/
-cp AGENTS.md ~/.opencode/AGENTS.md
-cp AGENTS.zh-CN.md ~/.opencode/AGENTS.zh-CN.md
-```
-
-**インストール後**：選択的 / 手動インストールでも `opencode.jsonc` は自動マージされません。必要な plugin / MCP 条目だけを手動で取り込んでください。既に `~/.opencode/AGENTS.md` を持っている場合も、必要な内容だけを手動で merge してください。
+更新は同じコマンドを再実行します。アンインストールは `.\scripts\uninstall.ps1 'C:\Work\my-research'` または `bash scripts/uninstall.sh "/path/to/my-research"` を実行します。チェックアウトがない場合は、対象プロジェクトの `.opencode/scripts/` 内のスクリプトに同じパスを渡します。設定ファイルを移動または改名してから編集した場合は、編集内容を残したまま元の場所と名前に戻してから再実行します。旧グローバル版の自動移行や削除は行いません。[移行手順（英語）](README.md#upgrade-from-a-v1-install)を参照してください。
 
 ## 使い始めのシナリオ
 
@@ -288,6 +217,11 @@ Claude Scholar は現在、次の CLI ワークフローを対象にしていま
 - `Maps/`
 
 詳細は [OBSIDIAN_SETUP.ja-JP.md](./OBSIDIAN_SETUP.ja-JP.md) を参照。
+
+### Granola（オプション）
+
+OpenCode で Granola の会議を選ぶかローカルのエクスポートを渡すと、研究プロジェクトに紐づく Obsidian 保管庫に記録できます。
+[セットアップとインポートのガイド](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md)を参照してください。Granola MCP は必要に応じて設定します。
 
 ### Xquik（任意）
 
@@ -520,7 +454,6 @@ OpenCode plugins が runtime guards として日常的なチェックとリマ�
 - `skill-eval.ts`
 - `session-start.ts`
 - `session-summary.ts`
-- `stop-summary.ts`
 - `security-guard.ts`
 
 **進め方**
@@ -583,7 +516,7 @@ Claude Scholar には self-improving な skill ワークフローも内蔵され
 - [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) — 軽量コア指示の中国語 companion ファイル
 - [README.md](./README.md) — 英語版 README
 - [README.zh-CN.md](./README.zh-CN.md) — 中国語版 README
-- [opencode.jsonc](./opencode.jsonc) — plugin / MCP / agent / permission の任意設定テンプレート
+- [opencode.jsonc](./opencode.jsonc) — プロジェクトインストーラーが使う OpenCode V2 の MCP 設定テンプレート
 
 ## プロジェクトルール
 

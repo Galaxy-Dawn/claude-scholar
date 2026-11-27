@@ -5,11 +5,15 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
+import tempfile
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
+from uuid import UUID
 
 IGNORE_DIRS = {
     '.git', '.hg', '.svn', '.venv', 'venv', 'node_modules', '__pycache__',
@@ -28,6 +32,7 @@ SECTION_COLUMNS: dict[str, list[str]] = {
     'Archive': ['ID', 'Title', 'Old Path', 'Archived Path', 'Reason', 'Archived At'],
 }
 SECTION_ORDER = list(SECTION_COLUMNS)
+CANONICAL_DIRECTORIES = ('Sources', 'Knowledge', 'Experiments', 'Results', 'Writing', 'Maps')
 SOURCE_TYPES = {
     'Papers': 'paper',
     'Web': 'web',
@@ -104,11 +109,25 @@ def find_repo_root(cwd: Path) -> Path:
 
 
 def binding_registry_path(repo_root: Path) -> Path:
-    return repo_root / '.claude' / 'project-memory' / 'registry.yaml'
+    return repo_root / '.opencode' / 'project-memory' / 'registry.yaml'
+
+
+def binding_registry_paths(repo_root: Path) -> tuple[Path, Path]:
+    return binding_registry_path(repo_root), repo_root / '.claude' / 'project-memory' / 'registry.yaml'
+
+
+def registered_projects(repo_root: Path) -> dict[str, tuple[Path, dict[str, Any]]]:
+    projects = {}
+    for registry in binding_registry_paths(repo_root):
+        for project_id, entry in (load_binding_registry(registry).get('projects') or {}).items():
+            projects.setdefault(project_id, (registry, entry))
+    return projects
 
 
 def project_memory_path(repo_root: Path, project_id: str) -> Path:
-    return repo_root / '.claude' / 'project-memory' / f'{project_id}.md'
+    project = registered_projects(repo_root).get(project_id)
+    registry = project[0] if project else binding_registry_path(repo_root)
+    return registry.with_name(f'{project_id}.md')
 
 
 def load_binding_registry(path: Path) -> dict[str, Any]:
@@ -132,13 +151,39 @@ def load_binding_registry(path: Path) -> dict[str, Any]:
         raise SystemExit(f'Unsupported binding registry format: {path}')
 
 
-def save_binding_registry(path: Path, data: dict[str, Any]) -> None:
+def write_atomic(path: Path, content: str | bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Follow an existing symlink as before, and replace its target atomically.
+    target = path.resolve()
+    if isinstance(content, str):
+        content = content.replace('\n', os.linesep).encode('utf-8')
+    try:
+        mode = stat.S_IMODE(target.stat().st_mode)
+    except FileNotFoundError:
+        mode = None
+
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile('wb', dir=target.parent, delete=False) as stream:
+            temp_path = Path(stream.name)
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if mode is not None:
+            temp_path.chmod(mode)
+        os.replace(temp_path, target)
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+
+
+def save_binding_registry(path: Path, data: dict[str, Any]) -> None:
     try:
         import yaml  # type: ignore
-        path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding='utf-8')
+        content = yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
     except Exception:
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        content = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
+    write_atomic(path, content)
 
 
 def read_text(path: Path, default: str = '') -> str:
@@ -150,6 +195,24 @@ def read_text(path: Path, default: str = '') -> str:
 def write_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding='utf-8')
+
+
+@contextmanager
+def project_write_lock(project_root: Path) -> Iterator[None]:
+    root = project_root.resolve()
+    lock_path = root / '_system' / '.kb-write.lock'
+    if not lock_path.resolve().is_relative_to(root):
+        raise ValueError('the write lock must stay inside the bound Obsidian project')
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open('a+b') as lock:
+        lock.seek(0)
+        if os.name == 'nt':
+            import msvcrt
+            msvcrt.locking(lock.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        yield
 
 
 def relative_note_path(target: Path, vault_path: Path) -> str:
@@ -179,6 +242,81 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     return data
 
 
+# Escape sequences supported by YAML double-quoted scalars beyond JSON.
+_YAML_JSON_ESCAPES = {
+    '0': r'\u0000', 'a': r'\u0007', 'v': r'\u000b', 'e': r'\u001b',
+    ' ': r'\u0020', '\t': r'\t', 'N': r'\u0085', '_': r'\u00a0',
+    'L': r'\u2028', 'P': r'\u2029',
+}
+
+
+def _yaml_escape_as_json(match: re.Match[str]) -> str:
+    escape = match[1]
+    if len(escape) > 1:
+        return json.dumps(chr(int(escape[1:], 16)))[1:-1]
+    return _YAML_JSON_ESCAPES.get(escape, match[0])
+
+
+def _frontmatter_scalar(value: str) -> str | None:
+    if value.startswith("'"):
+        quoted = re.fullmatch(r"'((?:[^']|'')*)'(?:[ \t]+#.*)?", value)
+        return quoted[1].replace("''", "'") if quoted else None
+    if value.startswith('"'):
+        quoted = re.fullmatch(r'("(?:[^"\\]|\\.)*")(?:[ \t]+#.*)?', value)
+        if quoted is None:
+            return None
+        try:
+            return json.loads(re.sub(r'\\(x[0-9a-fA-F]{2}|U[0-9a-fA-F]{8}|.)', _yaml_escape_as_json, quoted[1]))
+        except ValueError:
+            return None
+    return re.split(r'[ \t]+#', value, maxsplit=1)[0].rstrip()
+
+
+def read_frontmatter_fields(path: Path, *fields: str) -> dict[str, str]:
+    """Read selected top-level, single-line scalars without reading the note body."""
+    names = {field.encode('utf-8'): field for field in fields}
+    values: dict[str, str] = {}
+    root_indent = None
+    with path.open('rb') as stream:
+        # The longest valid opener is a UTF-8 BOM followed by "---\r\n".
+        if stream.readline(8).removeprefix(b'\xef\xbb\xbf').rstrip(b'\r\n') != b'---':
+            return {}
+        for line in stream:
+            if line.rstrip(b'\r\n') in {b'---', b'...'}:
+                return values
+            content = line.lstrip(b' ')
+            if not content.strip() or content.startswith(b'#'):
+                continue
+            indent = len(line) - len(content)
+            if root_indent is None:
+                root_indent = indent
+            if indent != root_indent:
+                continue
+            raw_name, separator, raw_value = content.partition(b':')
+            field = names.get(raw_name.rstrip())
+            if separator and field:
+                try:
+                    value = _frontmatter_scalar(raw_value.decode('utf-8').strip())
+                except UnicodeDecodeError:
+                    continue
+                if value is not None:
+                    values[field] = value
+    return {}
+
+
+def meeting_source_key(note: Path, providers: set[str]) -> str | None:
+    """Match a provider's persisted meeting UUID without loading its integration."""
+    fields = read_frontmatter_fields(note, 'source_provider', *(f'{p}_meeting_id' for p in providers))
+    provider = fields.get('source_provider', '').strip().casefold()
+    if provider not in providers:
+        return None
+    try:
+        identifier = UUID(fields.get(f'{provider}_meeting_id', '').strip())
+    except ValueError:
+        return None
+    return f'{provider}:{identifier}'
+
+
 def set_frontmatter_value(text: str, key: str, value: str) -> str:
     value_text = str(value)
     if not text.startswith('---\n'):
@@ -206,8 +344,7 @@ def project_root_for(vault_path: Path, project_slug: str) -> Path:
 
 
 def resolve_binding(repo_root: Path, project_id: str | None = None) -> Binding:
-    registry = load_binding_registry(binding_registry_path(repo_root))
-    projects = registry.get('projects') or {}
+    projects = registered_projects(repo_root)
     if not projects:
         raise SystemExit('No registered projects found in .opencode/project-memory/registry.yaml')
     if project_id is None:
@@ -219,9 +356,10 @@ def resolve_binding(repo_root: Path, project_id: str | None = None) -> Binding:
             project_id = project.get('project_id')
             if not project_id:
                 raise SystemExit('Multiple projects registered; pass --project-id')
-    entry = projects.get(project_id)
-    if not entry:
+    project = projects.get(project_id)
+    if not project:
         raise SystemExit(f'Project {project_id!r} not found in binding registry')
+    _, entry = project
     project_root = Path(entry['vault_root']).expanduser().resolve()
     vault_path = project_root.parent.parent
     return Binding(
@@ -264,10 +402,9 @@ def detect_project_features(repo_root: Path) -> dict[str, Any]:
 
 
 def detect(repo_root: Path) -> dict[str, Any]:
-    registry = load_binding_registry(binding_registry_path(repo_root))
     features = detect_project_features(repo_root)
     project = None
-    for project_id, entry in (registry.get('projects') or {}).items():
+    for project_id, (_, entry) in registered_projects(repo_root).items():
         roots = [Path(item).expanduser().resolve() for item in entry.get('repo_roots') or []]
         if repo_root.resolve() in roots:
             project = {
@@ -361,6 +498,7 @@ def bootstrap_binding(repo_root: Path, vault_path: Path, project_name: str | Non
     migrated = maybe_migrate_old_layout(project_root)
 
     reg_path = binding_registry_path(repo_root)
+    previous_memory = project_memory_path(repo_root, project_slug)
     registry = load_binding_registry(reg_path)
     registry.setdefault('projects', {})
     registry['projects'][project_slug] = {
@@ -375,9 +513,15 @@ def bootstrap_binding(repo_root: Path, vault_path: Path, project_name: str | Non
         'note_language': note_language,
         'updated_at': now_iso(),
     }
+    if previous_memory.parent != reg_path.parent:
+        legacy = load_binding_registry(previous_memory.with_name(reg_path.name))
+        prior_root = (legacy.get('projects') or {}).get(project_slug, {}).get('vault_root')
+        if not prior_root or Path(prior_root).expanduser().resolve() != project_root:
+            # An identically named project in another vault has its own memory.
+            previous_memory = reg_path.with_name(previous_memory.name)
     save_binding_registry(reg_path, registry)
 
-    memory = project_memory_path(repo_root, project_slug)
+    memory = reg_path.with_name(f'{project_slug}.md')
     content = f'''---
 project_id: {project_slug}
 project_slug: {project_slug}
@@ -403,7 +547,10 @@ auto_sync: true
 ## Recent Sync Summary
 - Bootstrap completed at {now_iso()}.
 '''
-    write_text(memory, content)
+    if previous_memory != memory and previous_memory.is_file() and not memory.exists():
+        shutil.copyfile(previous_memory, memory)
+    else:
+        write_text(memory, content)
     return {
         'project_id': project_slug,
         'project_slug': project_slug,
@@ -422,13 +569,28 @@ def default_registry_tables() -> dict[str, list[dict[str, str]]]:
     return {section: [] for section in SECTION_ORDER}
 
 
+def split_table_cells(line: str) -> list[str]:
+    line = line.rstrip()
+    cells = []
+    start = 1  # The caller has checked the opening pipe.
+    backslashes = 0
+    for index, char in enumerate(line[1:], start=1):
+        if char == '|' and backslashes % 2 == 0:
+            cells.append(line[start:index].strip())
+            start = index + 1
+        backslashes = backslashes + 1 if char == '\\' else 0
+    if start < len(line):
+        cells.append(line[start:].strip())
+    return cells
+
+
 def parse_table_row(line: str, columns: list[str]) -> dict[str, str] | None:
     if not line.startswith('|'):
         return None
-    parts = [part.strip() for part in line.strip().strip('|').split('|')]
+    parts = split_table_cells(line)
     if len(parts) != len(columns):
         return None
-    if set(parts) == {'---'}:
+    if all(re.fullmatch(r':?-{3,}:?', part) for part in parts):
         return None
     return dict(zip(columns, parts))
 
@@ -450,18 +612,22 @@ def parse_registry_md(path: Path) -> dict[str, list[dict[str, str]]]:
         if current_section is None or not line.startswith('|'):
             continue
         if columns is None:
-            header = [part.strip() for part in line.strip().strip('|').split('|')]
+            header = split_table_cells(line)
             if header == SECTION_COLUMNS[current_section]:
                 columns = header
             continue
         row = parse_table_row(line, columns)
-        if not row or '---' in ''.join(row.values()):
+        if not row:
             continue
         if current_section == 'Archive':
             if row.get('Old Path', '') or row.get('Archived Path', ''):
                 rows[current_section].append(row)
             continue
         if row.get(columns[0], ''):
+            stamp, marker, key = row['Updated'].rpartition(' <!-- source-key: ')
+            if marker and re.fullmatch(r'[\w.:-]+ -->', key):
+                row['Updated'] = stamp
+                row['Source Key'] = key.removesuffix(' -->')
             rows[current_section].append(row)
     return rows
 
@@ -475,7 +641,11 @@ def render_registry_md(rows: dict[str, list[dict[str, str]]], last_updated: str 
         lines.append('| ' + ' | '.join(columns) + ' |')
         lines.append('|' + '|'.join(['---'] * len(columns)) + '|')
         for row in rows.get(section, []):
-            lines.append('| ' + ' | '.join(row.get(col, '') for col in columns) + ' |')
+            cells = [row.get(col, '') for col in columns]
+            if row.get('Source Key'):
+                # Keep the visible columns readable by older KB installations.
+                cells[columns.index('Updated')] += f" <!-- source-key: {row['Source Key']} -->"
+            lines.append('| ' + ' | '.join(cells) + ' |')
         lines.append('')
     return '\n'.join(lines).rstrip() + '\n'
 
@@ -484,14 +654,16 @@ def write_registry(project_root: Path, rows: dict[str, list[dict[str, str]]]) ->
     write_text(registry_path(project_root), render_registry_md(rows))
 
 
-def section_and_row_for_relpath(rel_path: str) -> tuple[str, dict[str, str]] | None:
+def section_and_row_for_relpath(
+    rel_path: str, *, imported_source_type: str | None = None,
+) -> tuple[str, dict[str, str]] | None:
     rel = rel_path.replace('\\', '/')
     updated = now_iso()
     title = Path(rel).stem.replace('-', ' ')
     if rel.startswith('Sources/'):
         parts = rel.split('/', 2)
         source_folder = parts[1] if len(parts) >= 2 else ''
-        source_type = SOURCE_TYPES.get(source_folder)
+        source_type = SOURCE_TYPES.get(source_folder) or imported_source_type
         if not source_type:
             return None
         return 'Sources', {
@@ -551,28 +723,119 @@ def prefix_for_section_row(section: str, row: dict[str, str]) -> str:
     }[section]
 
 
-def registry_add_or_update(project_root: Path, rel_path: str, *, status: str | None = None) -> dict[str, Any]:
+def imported_source_metadata(
+    project_root: Path, relative: str, *, content_path: str | None = None,
+) -> dict[str, str]:
+    path = project_root / (content_path or relative)
+    if Path(relative).suffix != '.md' or path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(project_root.resolve()):
+        return {}
+    try:
+        fields = read_frontmatter_fields(path, 'type', 'source_type', 'source_provider', 'title')
+    except OSError:
+        return {}
+    note_type = fields.get('type', '')
+    if note_type.startswith('source-'):
+        fields['source_type'] = note_type.removeprefix('source-')
+    elif note_type != 'source':
+        return {}
+    if not fields.get('source_type') or not fields.get('source_provider', '').strip():
+        return {}
+    return fields
+
+
+def _metadata_cell(value: str) -> str | None:
+    value = ' '.join(value.split())
+    try:
+        value.encode('utf-8')
+    except UnicodeEncodeError:
+        return None
+    return value or None
+
+
+def registry_add_or_update(
+    project_root: Path, rel_path: str, *, status: str | None = None,
+    title: str | None = None, origin: str | None = None, source_key: str | None = None,
+    previous_link: str | None = None,
+    rows: dict[str, list[dict[str, str]]] | None = None, content_path: str | None = None,
+) -> dict[str, Any]:
+    """Stage an update in supplied rows, or persist it when called on its own."""
+    metadata = None
     payload = section_and_row_for_relpath(rel_path)
+    if payload is None and rel_path.replace('\\', '/').startswith('Sources/'):
+        metadata = imported_source_metadata(project_root, rel_path, content_path=content_path)
+        source_type = metadata.get('source_type')
+        if source_type in SOURCE_TYPES.values():
+            payload = section_and_row_for_relpath(rel_path, imported_source_type=source_type)
     if payload is None:
         return {'updated': False, 'reason': 'path-not-registrable'}
     section, row = payload
-    rows = parse_registry_md(registry_path(project_root))
-    existing = None
-    for item in rows[section]:
-        if item.get('Path') == wikilink(rel_path):
-            existing = item
+    persist = rows is None
+    if rows is None:
+        rows = parse_registry_md(registry_path(project_root))
+    if source_key:
+        link = row['Path'].casefold()
+        path_rows = [(name, item) for name, entries in rows.items() if name != 'Archive'
+                     for item in entries if item['Path'].casefold() == link]
+        if len(path_rows) > 1 or any(
+            name != section
+            or item.get('Source Key') not in (None, source_key)
+            or (item.get('Source Key') is None and item['Path'] not in (row['Path'], previous_link))
+            for name, item in path_rows
+        ):
+            return {'updated': False, 'reason': 'path-owned-by-another-source'}
+        existing = path_rows[0][1] if path_rows else None
+    else:
+        existing = next((item for item in rows[section] if item.get('Path') == row['Path']), None)
+    if source_key:
+        for old_section, entries in rows.items():
+            prior = next((item for item in entries if item.get('Source Key') == source_key), None)
+            if prior is None and previous_link is not None:
+                prior = next((item for item in entries
+                              if item.get('Path') == previous_link and not item.get('Source Key')), None)
+            if prior is None:
+                continue
+            if prior is existing:
+                break
+            if existing is not None:
+                if prior.get('Source Key') and not existing.get('Source Key'):
+                    return {'updated': False, 'reason': 'path-owned-by-another-source'}
+                rows[section].remove(existing)
+            if old_section == section:
+                existing = prior
+            else:
+                entries.remove(prior)
+                existing = {**row, 'ID': prior['ID'], 'Status': prior['Status'], 'Title': prior['Title']}
+                rows[section].append(existing)
             break
     if existing is None:
-        row['ID'] = next_registry_id(rows[section], prefix_for_section_row(section, row))
+        active_rows = [item for name, entries in rows.items() if name != 'Archive' for item in entries]
+        row['ID'] = next_registry_id(active_rows, prefix_for_section_row(section, row))
         if status:
             row['Status'] = status
         rows[section].append(row)
+        if metadata is None:
+            metadata = imported_source_metadata(project_root, rel_path, content_path=content_path)
+        if metadata:
+            if title is None:
+                title = _metadata_cell(metadata.get('title', ''))
+            if origin is None:
+                provider = _metadata_cell(metadata['source_provider'])
+                if provider is not None:
+                    origin = provider[0].upper() + provider[1:]
     else:
         existing['Path'] = row['Path']
         existing['Updated'] = row['Updated']
         if status is not None:
             existing['Status'] = status
-    write_registry(project_root, rows)
+        row = existing
+    if title is not None:
+        row['Title'] = title.replace('|', '｜')
+    if origin is not None and section == 'Sources':
+        row['Origin'] = origin.replace('|', '｜')
+    if source_key is not None:
+        row['Source Key'] = source_key
+    if persist:
+        write_registry(project_root, rows)
     return {'updated': True, 'section': section, 'path': rel_path}
 
 
@@ -633,7 +896,7 @@ def registry_remove_path(project_root: Path, rel_path: str, reason: str = 'purge
 
 def scan_canonical_relpaths(project_root: Path) -> list[str]:
     rels: list[str] = []
-    for base in ['Sources', 'Knowledge', 'Experiments', 'Results', 'Writing', 'Maps']:
+    for base in CANONICAL_DIRECTORIES:
         path = project_root / base
         if not path.exists():
             continue
@@ -685,10 +948,11 @@ def update_index(project_root: Path) -> None:
         ]).rstrip() + '\n'
     else:
         content = set_frontmatter_value(content, 'updated', now_iso())
+        # Keep link backslashes literal when inserting the generated index text.
         if AUTO_INDEX_BEGIN in content and AUTO_INDEX_END in content:
             content = re.sub(
                 rf'{re.escape(AUTO_INDEX_BEGIN)}[\s\S]*?{re.escape(AUTO_INDEX_END)}',
-                auto_block,
+                lambda _: auto_block,
                 content,
                 count=1,
             )
@@ -703,7 +967,7 @@ def update_index(project_root: Path) -> None:
             if re.search(r'(?m)^## Auto Index\s*$', content):
                 content = re.sub(
                     r'(?ms)^## Auto Index\s*\n.*?(?=^## |\Z)',
-                    auto_section,
+                    lambda _: auto_section,
                     content,
                     count=1,
                 ).rstrip() + '\n'
@@ -735,19 +999,30 @@ def prepend_recent_change(project_root: Path, message: str) -> None:
     write_text(hub, content)
 
 
-def update_project_memory(repo_root: Path, project_id: str, project_root: Path, hub_note: str, note_language: str, summary: str | None = None) -> None:
-    path = project_memory_path(repo_root, project_id)
+def update_project_memory(
+    repo_root: Path, project_id: str, project_root: Path, hub_note: str, note_language: str,
+    summary: str | None = None, *, memory_path: Path | None = None,
+    status: str | None = None, auto_sync: bool | None = None, atomic: bool = False,
+) -> None:
+    path = memory_path or project_memory_path(repo_root, project_id)
     content = read_text(path, f'---\nproject_id: {project_id}\nproject_slug: {project_id}\nrepo_root: {repo_root}\nvault_root: {project_root}\nhub_note: {hub_note}\nlanguage: {note_language}\nstatus: active\nauto_sync: true\n---\n\n# Project Memory: {project_id}\n')
     content = set_frontmatter_value(content, 'last_sync_at', now_iso())
     content = set_frontmatter_value(content, 'vault_root', str(project_root))
     content = set_frontmatter_value(content, 'hub_note', hub_note)
+    if status is not None:
+        content = set_frontmatter_value(content, 'status', status)
+    if auto_sync is not None:
+        content = set_frontmatter_value(content, 'auto_sync', 'true' if auto_sync else 'false')
     if summary:
         block = f'## Recent Sync Summary\n- {summary}\n'
         if '## Recent Sync Summary\n' in content:
-            content = re.sub(r'## Recent Sync Summary\n(?:- .*\n?)*', block, content, count=1)
+            content = re.sub(r'## Recent Sync Summary\n(?:- .*\n?)*', lambda _: block, content, count=1)
         else:
             content = content.rstrip() + '\n\n' + block
-    write_text(path, content)
+    if atomic:
+        write_atomic(path, content)
+    else:
+        write_text(path, content)
 
 
 def list_kind_notes(project_root: Path, kind: str) -> list[Path]:

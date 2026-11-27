@@ -33,8 +33,10 @@ Refresh the literature canvas when:
 
 ## Recommended command
 
+Set `skill_dir` to the directory of the active `obsidian-literature-workflow` skill.
+
 ```bash
-python3 "${OPENCODE_DIR:-$HOME/.opencode}/skills/obsidian-literature-workflow/scripts/build_literature_canvas.py" --cwd "$PWD"
+python3 "$skill_dir/scripts/build_literature_canvas.py" --cwd "$PWD"
 ```
 
 ## Display rule

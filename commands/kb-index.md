@@ -6,8 +6,10 @@ tags: [Research, Obsidian, KB]
 
 # /kb-index
 
+Load `obsidian-project-kb-core`; `skill_dir` is the directory of its active `SKILL.md`.
+
 ```bash
-python3 "${OPENCODE_DIR:-$HOME/.opencode}/skills/obsidian-project-kb-core/scripts/project_kb.py" sync --cwd "$PWD" --scope index
+python3 "$skill_dir/scripts/project_kb.py" sync --cwd "$PWD" --scope index
 ```
 
 The index is a human navigation note, not a registry mirror.

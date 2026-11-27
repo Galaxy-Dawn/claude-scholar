@@ -83,15 +83,16 @@ NO_PROXY = "localhost,127.0.0.1"
 
 ##### OpenCode
 
-`~/.opencode/opencode.jsonc`に追加:
+プロジェクトインストーラーは Zotero を対象プロジェクトの `mcp.servers` に追加します。手動設定の場合は、プロジェクトルートまたは `.opencode/` にある既存の `opencode.json` / `opencode.jsonc` に以下を追加します。設定がまだなければ `.opencode/opencode.jsonc` を作成し、設定ファイルは一つだけにします。
 
 ```jsonc
 {
   "mcp": {
-    "zotero": {
-      "type": "local",
-      "command": ["zotero-mcp", "serve"],
-      "enabled": true
+    "servers": {
+      "zotero": {
+        "type": "local",
+        "command": ["zotero-mcp", "serve"]
+      }
     }
   }
 }
@@ -158,7 +159,7 @@ export UNSAFE_OPERATIONS="all"
 
 用途: Chromeブラウザ制御、Webページインタラクション。
 
-#### 設定
+#### Claude Code の設定
 
 ```json
 {
@@ -170,6 +171,25 @@ export UNSAFE_OPERATIONS="all"
   }
 }
 ```
+
+#### OpenCode V2 の設定
+
+インストーラーはこのサーバーを追加しません。ブラウザ自動化 MCP サーバーをすでに起動している場合は、次の例をプロジェクト設定に追加し、URL を実際の Streamable HTTP エンドポイントに置き換えてください。OpenCode はこのサーバーを起動しません。
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "streamable-mcp-server": {
+        "type": "remote",
+        "url": "http://127.0.0.1:12306/mcp"
+      }
+    }
+  }
+}
+```
+
+設定を残したまま接続を無効にする場合は、該当エントリーに `"disabled": true` を指定します。
 
 ### 3. Xquik MCP（任意）
 
@@ -198,20 +218,22 @@ codex mcp list
 
 #### OpenCode
 
-`opencode.json`に次を追加します:
+同じプロジェクト設定に次を追加します。
 
 ```json
 {
   "mcp": {
-    "xquik": {
-      "type": "remote",
-      "url": "https://xquik.com/mcp"
+    "servers": {
+      "xquik": {
+        "type": "remote",
+        "url": "https://xquik.com/mcp"
+      }
     }
   }
 }
 ```
 
-次に`opencode mcp auth xquik`を実行します。
+次にプロジェクトディレクトリで `opencode mcp auth xquik` を実行します。
 
 #### 安全上の境界
 

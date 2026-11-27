@@ -322,7 +322,7 @@ with the Nature writing, polishing, response, and other academic writing skills:
 
 This memory belongs to the active installed skill home, not to the source checkout copy.
 
-Even when `paper-miner` is invoked while working inside a specific repository, it still writes mined writing knowledge only into the active installed skill memory. It does **not** maintain project-local writing memory unless the user explicitly requests that.
+With a project install, `paper-miner` writes only to the memory shipped with that project's `.opencode/skills/ml-paper-writing/` directory. It does not write to a global installation or maintain a second copy elsewhere in the project by default.
 
 ### Canonical memory structure
 
@@ -389,7 +389,7 @@ Read narrowly, not exhaustively:
 Every paper mined by `paper-miner` should improve the same active installed memory.
 
 Do not scatter newly mined knowledge across multiple maintained files.
-Do not create project-specific paper-miner memory.
+Do not create a second paper-miner memory outside the installed skill.
 Do not duplicate near-identical patterns from the same source.
 
 See `references/knowledge/README.md` for the detailed knowledge-base contract.

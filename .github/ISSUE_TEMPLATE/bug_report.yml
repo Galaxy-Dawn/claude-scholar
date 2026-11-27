@@ -58,7 +58,7 @@ body:
         OS: macOS 15.4
         Shell: zsh
         Install mode: scripts/setup.sh
-        Client version: Claude Code 2.1.42
+        Client version: OpenCode v2.4.1
     validations:
       required: true
 
@@ -67,7 +67,7 @@ body:
     attributes:
       label: Exact command or exact prompt
       placeholder: |
-        bash scripts/setup.sh
+        bash scripts/setup.sh "/path/to/my-research"
 
         or
 

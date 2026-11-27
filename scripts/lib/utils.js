@@ -89,8 +89,9 @@ function runCommand(cmd, options = {}) {
  * @returns {string} OpenCode 配置目录路径
  */
 function getOpenCodeConfigDir() {
-  const homeDir = getHomeDir();
-  return path.join(homeDir, '.opencode');
+  return path.resolve(process.env.OPENCODE_DIR || process.env.OPENCODE_CONFIG_DIR || path.join(
+    process.env.XDG_CONFIG_HOME || path.join(getHomeDir(), '.config'), 'opencode',
+  ));
 }
 
 /**
