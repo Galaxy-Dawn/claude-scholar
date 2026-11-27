@@ -47,7 +47,13 @@ test_created_config_roundtrip() {
   assert_file_exists "$home/skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md"
   assert_file_exists "$home/skills/granola-meeting-ingest/scripts/ingest_granola.py"
   python3 -B "$home/skills/granola-meeting-ingest/scripts/ingest_granola.py" --help >/dev/null
-  python3 -c 'import json, sys; assert "granola" not in json.load(open(sys.argv[1], encoding="utf-8")).get("mcp", {})' "$home/opencode.jsonc"
+  node - "$home/opencode.jsonc" <<'NODE'
+const fs = require('fs');
+const { mcp = {} } = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+if ('granola' in mcp || 'granola' in (mcp.servers || {})) {
+  throw new Error('Granola MCP must be configured explicitly');
+}
+NODE
   assert_file_exists "$home/skills/post-acceptance/references/xquik-promotion.md"
   assert_file_exists "$home/skills/ml-paper-writing/references/knowledge/paper-miner-writing-memory.md"
   assert_file_exists "$home/commands/promote.md"
