@@ -110,11 +110,13 @@ def binding_registry_path(repo_root: Path) -> Path:
     return repo_root / '.opencode' / 'project-memory' / 'registry.yaml'
 
 
+def binding_registry_paths(repo_root: Path) -> tuple[Path, Path]:
+    return binding_registry_path(repo_root), repo_root / '.claude' / 'project-memory' / 'registry.yaml'
+
+
 def registered_projects(repo_root: Path) -> dict[str, tuple[Path, dict[str, Any]]]:
-    paths = (binding_registry_path(repo_root),
-             repo_root / '.claude' / 'project-memory' / 'registry.yaml')
     projects = {}
-    for registry in paths:
+    for registry in binding_registry_paths(repo_root):
         for project_id, entry in (load_binding_registry(registry).get('projects') or {}).items():
             projects.setdefault(project_id, (registry, entry))
     return projects

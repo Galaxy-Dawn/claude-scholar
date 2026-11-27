@@ -982,6 +982,75 @@ ingest_granola.main()
         self.assertFalse(memory.exists())
         self.assertFalse((self.repo / '.opencode/project-memory').exists())
 
+    def test_purge_with_only_a_native_binding(self) -> None:
+        self.ingest()
+        memory = self.binding_registry.with_name('granola-demo.md')
+        result = json.loads(self.kb('lifecycle', '--mode', 'purge').stdout)
+        self.assertEqual(Path(result['removed_memory']), memory)
+        self.assertFalse(self.root.exists())
+        self.assertFalse(memory.exists())
+        self.assertFalse((self.repo / '.claude/project-memory').exists())
+
+    def test_purge_refuses_same_id_in_different_vaults_without_writes(self) -> None:
+        legacy = self.place_binding('.claude')
+        self.ingest()
+        other_vault = self.repo.parent / 'Other vault'
+        result = json.loads(self.kb('bootstrap', '--vault-path', str(other_vault),
+                                    '--project-name', 'Granola Demo').stdout)
+        files = [
+            self.note, legacy / 'registry.yaml', legacy / 'granola-demo.md',
+            Path(result['project_root']) / '00-Hub.md', Path(result['binding_registry']), Path(result['memory_path']),
+        ]
+        before = {path: path.read_bytes() for path in files}
+
+        for _ in range(2):
+            rejected = self.run_cli(KB_HELPER, 'lifecycle', '--mode', 'purge',
+                                    '--project-id', 'granola-demo', check=False)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn('different project folders', rejected.stderr)
+            self.assertEqual({path: path.read_bytes() for path in files}, before)
+
+    def test_purge_retries_partial_delete_and_removes_both_same_vault_aliases(self) -> None:
+        self.ingest()
+        other = json.loads(self.kb('bootstrap', '--vault-path', str(self.vault),
+                                   '--project-name', 'Other Study').stdout)
+        legacy = self.place_binding('.claude')
+        native = json.loads(self.kb('bootstrap', '--vault-path', str(self.vault),
+                                    '--project-name', 'Granola Demo').stdout)
+        native_memory = Path(native['memory_path'])
+        legacy_memory = legacy / 'granola-demo.md'
+        other_memory = legacy / 'other-study.md'
+        untouched = [self.binding_registry, Path(native['binding_registry']), native_memory, legacy_memory, other_memory]
+        before = {path: path.read_bytes() for path in untouched}
+
+        with patch.object(sys, 'path', [str(KB_HELPER.parent), *sys.path]):
+            import project_kb
+
+        def partial_delete(root: Path) -> None:
+            self.assertEqual(root, self.root.resolve())
+            self.note.unlink()
+            raise OSError('fixture interruption during project deletion')
+
+        binding = project_kb.common.resolve_binding(self.repo.resolve(), 'granola-demo')
+        with patch.object(project_kb.shutil, 'rmtree', side_effect=partial_delete):
+            with self.assertRaisesRegex(OSError, 'fixture interruption'):
+                project_kb.purge_project(binding)
+        self.assertTrue(self.root.is_dir())
+        self.assertFalse(self.note.exists())
+        self.assertEqual({path: path.read_bytes() for path in untouched}, before)
+
+        purged = json.loads(self.kb('lifecycle', '--mode', 'purge', '--project-id', 'granola-demo').stdout)
+        self.assertEqual(Path(purged['removed_memory']), native_memory)
+        self.assertFalse(self.root.exists())
+        self.assertFalse(native_memory.exists())
+        self.assertFalse(legacy_memory.exists())
+        self.assertEqual(other_memory.read_bytes(), before[other_memory])
+        self.assertTrue(Path(other['project_root']).is_dir())
+        self.assertEqual(json.loads(self.kb('status', '--project-id', 'other-study').stdout)['status'], 'active')
+        repeat = self.run_cli(KB_HELPER, 'lifecycle', '--mode', 'purge', '--project-id', 'granola-demo', check=False)
+        self.assertNotEqual(repeat.returncode, 0)
+        self.assertTrue(Path(other['project_root']).is_dir())
+
     def test_mixed_bindings_require_a_choice_and_prefer_native_for_the_same_id(self) -> None:
         native = self.place_binding('.opencode')
         primary = native / 'registry.yaml'

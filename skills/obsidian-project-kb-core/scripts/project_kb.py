@@ -276,20 +276,47 @@ def archive_project(binding: common.Binding) -> dict[str, Any]:
     return {'project_id': binding.project_id, 'archived_to': str(dest)}
 
 
+def load_purge_registry(binding: common.Binding, path: Path) -> dict[str, Any] | None:
+    registry = common.load_binding_registry(path)
+    entry = (registry.get('projects') or {}).get(binding.project_id)
+    if entry is None:
+        return None
+    bound_root = Path(entry['vault_root']).expanduser().resolve()
+    if bound_root != binding.project_root:
+        raise SystemExit(
+            f'Cannot purge project {binding.project_id!r}: its bindings point to different project folders '
+            f'({binding.project_root} and {bound_root}). Resolve the binding conflict first.'
+        )
+    return registry
+
+
 def purge_project(binding: common.Binding) -> dict[str, Any]:
-    reg_path = registry_for_existing_project(binding.repo_root, binding.project_id)
-    memory_path = reg_path.with_name(f'{binding.project_id}.md')
-    registry = common.load_binding_registry(reg_path)
-    registry.setdefault('projects', {}).pop(binding.project_id, None)
-    common.save_binding_registry(reg_path, registry)
-    if memory_path.exists():
-        memory_path.unlink()
+    paths = [
+        path for path in common.binding_registry_paths(binding.repo_root)
+        if load_purge_registry(binding, path) is not None
+    ]
+    if not paths:
+        raise SystemExit(f'Project {binding.project_id!r} not found in binding registry')
+
+    # Keep bindings on disk until the project directory has been removed so a
+    # failed deletion can be retried against the same project.
     if binding.project_root.exists():
         shutil.rmtree(binding.project_root)
+
+    memory_name = f'{binding.project_id}.md'
+    for path in reversed(paths):
+        # Other projects may have been registered during filesystem deletion.
+        registry = load_purge_registry(binding, path)
+        if registry is None:
+            continue
+        path.with_name(memory_name).unlink(missing_ok=True)
+        registry['projects'].pop(binding.project_id)
+        common.save_binding_registry(path, registry)
+
     return {
         'project_id': binding.project_id,
         'purged_project_root': str(binding.project_root),
-        'removed_memory': str(memory_path),
+        'removed_memory': str(paths[0].with_name(memory_name)),
     }
 
 
