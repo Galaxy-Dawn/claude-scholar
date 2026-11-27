@@ -332,6 +332,12 @@ Use Obsidian when you want Claude Scholar to maintain a filesystem-first researc
 
 See [OBSIDIAN_SETUP.md](./OBSIDIAN_SETUP.md).
 
+### Granola (optional)
+
+In Claude Code, select a Granola meeting or provide a local export to archive it
+in the research project's bound Obsidian vault. See the
+[setup and import guide](./skills/granola-meeting-ingest/references/GRANOLA-MEETING-NOTES.md). The Granola MCP connection is opt-in.
+
 ### Xquik (optional)
 
 Use Xquik when `/promote` needs bounded public X research, draft analysis, or
